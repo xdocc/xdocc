@@ -1,0 +1,4 @@
+#!/bin/sh
+# postinst script for xdocc
+
+/etc/init.d/xdocc start

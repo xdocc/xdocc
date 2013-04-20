@@ -1,0 +1,3 @@
+ = Example Mediawiki =
+
+Here ''comes'' '''the''' text!

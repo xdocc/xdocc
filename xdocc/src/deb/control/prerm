@@ -1,0 +1,8 @@
+#!/bin/sh
+# prerm script for xdocc
+
+if [ -f /etc/init.d/xdocc ]; then
+  /etc/init.d/xdocc stop
+fi
+
+rm -rf /var/log/xdocc

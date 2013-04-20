@@ -1,0 +1,29 @@
+Release Management
+==================
+To make a release, use the maven plugin:
+
+  mvn release:prepare
+  mvn release:perform
+  
+if using a netbook or similar, use:
+
+  mvn release:prepare -Darguments='-Dmaven.test.skip=true'
+  mvn release:perform -Darguments='-Dmaven.test.skip=true'
+  
+Announce on:
+
+ * ...
+
+Adding 3rd party libraries to repository
+========================================
+
+E.g. upload snapshot of xyz using scp from the xdocc working directory
+
+mvn deploy:deploy-file \
+ -DgroupId=io.netty \
+ -DartifactId=netty \
+ -Dversion=3.5.x.Patched \
+ -Dpackaging=jar \
+ -Dfile=netty-3.5.x.Patched.jar \
+ -DrepositoryId=ssh-xdocc \
+ -Durl=scp://xdocc.net/home/##username##/maven

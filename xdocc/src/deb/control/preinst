@@ -1,0 +1,9 @@
+#!/bin/sh
+# preinst script for xdocc
+
+mkdir -p /var/log/xdocc
+mkdir -p /var/www/example-xdocc
+
+if [ -f /etc/init.d/xdocc ]; then
+  /etc/init.d/xdocc stop
+fi
