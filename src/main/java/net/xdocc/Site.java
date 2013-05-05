@@ -242,24 +242,33 @@ public class Site {
 			return filesize;
 		}
 
-		public Collection<Path> getOwnDependencies() {
-			return dependencies;
-		}
-
 		public Collection<Path> getFlatDependencies() {
-			Collection<Path> result = new HashSet<>(dependencies);
-			for (Collection<Path> tmp : forgeinDependencies) {
-				result.addAll(tmp);
+			final Collection<Path> result;
+			synchronized (dependencies) {
+				result = new HashSet<>(dependencies);
+			}
+			synchronized (forgeinDependencies) {
+				for (Collection<Path> tmp : forgeinDependencies) {
+					result.addAll(tmp);
+				}
 			}
 			return result;
 		}
 
 		public void addDependency(Path dependency) {
-			dependencies.add(dependency);
+			synchronized (dependencies) {
+				dependencies.add(dependency);
+			}
 		}
 
-		public void addDependencies(Collection<Path> dependencies) {
-			this.forgeinDependencies.add(dependencies);
+		public void addDependencies(TemplateBean parent) {
+			final Collection<Path> tmp;
+			synchronized (parent.dependencies) {
+				tmp = new HashSet<>(parent.dependencies);
+			}
+			synchronized (forgeinDependencies) {
+				forgeinDependencies.add(tmp);
+			}
 		}
 
 		public void setTemplate(Template template) {

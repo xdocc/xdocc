@@ -354,9 +354,7 @@ public class Utils {
 			//templateBean.setFilesize(filesize);
 
 			//
-			Collection<Path> dependencies = parentTemplateBean
-					.getOwnDependencies();
-			templateBean.addDependencies(dependencies);
+			templateBean.addDependencies(parentTemplateBean);
 
 			return source;
 		}
@@ -420,6 +418,9 @@ public class Utils {
 
 	public static String searchXPath(Path parent, String xPath)
 			throws IOException {
+		if(!Files.exists(parent)) {
+			return null;
+		}
 		try (DirectoryStream<Path> ds = Files.newDirectoryStream(parent)) {
 			for (Path p : ds) {
 				if (Files.isDirectory(p)) {
