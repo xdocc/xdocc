@@ -43,7 +43,7 @@ stop ()
     echo "Stopping xdocc ..."
     SLEEP=5
     while [ $SLEEP -ge 0 ]; do
-      kill -0 $PID >/dev/null 2>&1
+      kill $PID >/dev/null 2>&1
       if [ $? -gt 0 ]; then
         rm -f /var/run/xdocc.pid >/dev/null 2>&1
         if [ $? != 0 ]; then
