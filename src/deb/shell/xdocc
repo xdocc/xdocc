@@ -7,7 +7,7 @@ start ()
 {
   if [ "$1" = "fg" ]; then
     echo "xdocc starting in foreground with debugging options enabled..."
-    java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Duser.dir=/usr/lib/xdocc -jar /usr/lib/xdocc/xdocc*.jar -f -c /etc/xdocc/
+    java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Duser.dir=/usr/lib/xdocc -jar /usr/lib/xdocc/xdocc*.jar -f -c /etc/xdocc/ -s /var/lib/xdocc/xdocc.mapdb
     exit 0;
   fi
 
@@ -31,7 +31,7 @@ start ()
     fi
   fi
   #now start the application
-  nohup java -Duser.dir=/usr/lib/xdocc -jar /usr/lib/xdocc/xdocc*.jar -f -c /etc/xdocc/ < /dev/null > /var/log/xdocc/output.log 2>&1 &
+  nohup java -Duser.dir=/usr/lib/xdocc -jar /usr/lib/xdocc/xdocc*.jar -f -c /etc/xdocc/ -s /var/lib/xdocc/xdocc.mapdb < /dev/null > /var/log/xdocc/output.log 2>&1 &
   echo $! > /var/run/xdocc.pid
   echo "xdocc started ..."
 }
