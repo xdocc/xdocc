@@ -49,7 +49,7 @@ public class HandlerCopy implements Handler {
 			generatedFile = xPath.getTargetPath(xPath.getTargetURL());
 		}
 		try {
-			if (Files.isDirectory(generatedFile)) {
+			if (Files.isDirectory(xPath.getPath())) {
 				Path generatedDir2 = Files.createDirectories(generatedFile);
 				dirtyset.add(generatedDir2);
 				if (LOG.isDebugEnabled()) {
@@ -85,6 +85,7 @@ public class HandlerCopy implements Handler {
 				return new CompileResult(document, xPath.getPath(), generatedFile);
 			}
 		} catch (IOException e) {
+			e.printStackTrace();
 			LOG.error("Copy handler faild, cannot copy from " + xPath.getPath()
 					+ " to " + generatedFile + " - " + e);
 		}
