@@ -15,6 +15,7 @@ public class Document implements Comparable<Document>, Serializable {
 	private final String filename;
 	private final DocumentGenerator documentGenerator;
 	private boolean highlight;
+	private boolean preview;
 	private final Map<String, Object> model;
 	private final XPath source;
 	// may change
@@ -35,6 +36,7 @@ public class Document implements Comparable<Document>, Serializable {
 		setDate(date);
 		this.filename = filename;
 		this.highlight = highlight;
+		setPreview(false);
 	}
 
 	private Document(XPath source, String filename,
@@ -43,6 +45,7 @@ public class Document implements Comparable<Document>, Serializable {
 		this.documentGenerator = documentGenerator;
 		this.filename = filename;
 		this.source = source;
+		setPreview(false);
 	}
 
 	public String getName() {
@@ -191,10 +194,19 @@ public class Document implements Comparable<Document>, Serializable {
 		Document document = new Document(source, filename,
 				getDocumentGenerator().copy());
 		document.highlight = highlight;
+		document.preview = preview;
 		return document;
 	}
 
 	public XPath getXPath() {
 		return source;
+	}
+
+	public Boolean isPreview() {
+		return (Boolean) model.get("preview");
+	}
+
+	public void setPreview(boolean preview) {
+		model.put("preview", preview);
 	}
 }

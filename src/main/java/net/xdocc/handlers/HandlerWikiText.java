@@ -79,6 +79,7 @@ public class HandlerWikiText implements Handler {
 		String documentFilename = xPath.getFileName();
 		Map<String, Object> model = new HashMap<>();
 		Utils.copyModelValues(model, previousModel, "document_size");
+		model.put("preview", xPath.isPreview());
 		HandlerUtils.fillModel(documentName,
 				documentURL, documentDate, documentNr, documentFilename, null, model);
 
@@ -96,6 +97,8 @@ public class HandlerWikiText implements Handler {
 		Map<String, Object> modelSite = HandlerUtils
 				.fillModel(site, xPath, doc);
 		Utils.copyModelValues(modelSite, model, "document_size");
+		model.put("preview", xPath.isPreview());
+	
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 		// write to disk
 		Path generatedFile = xPath

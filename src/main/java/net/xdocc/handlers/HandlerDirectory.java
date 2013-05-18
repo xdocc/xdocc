@@ -76,18 +76,18 @@ public class HandlerDirectory implements Handler {
 		}
 		
 		model.put("document_size", documents.size());
+		model.put("preview", xPath.isPreview());
 
 		String target = xPath.resolveTargetURL("index.html");
 
 		// change the path for the documents, if we find a highlighted document,
 		// we want to point to the whole folder
 		applyPath(documents, relativePathToRoot);
-		//apply(documents, "document_size", documents.size());
 
 		// create the site
 		TemplateBean template  = site.getTemplate(xPath.getLayoutSuffix(), "document", xPath.getPath());
 		final Document documentFull = createDocumentCollection(site, xPath, xPath, relativePathToRoot,
-				documents, model);
+				documents, model, "documents");
 		model.put("document", documentFull);
 		String html = Utils.applyTemplate(site, template, model);
 		html = Utils.postApplyTemplate(html, model, "path");
@@ -107,6 +107,8 @@ public class HandlerDirectory implements Handler {
 			documentPreview.setName(xPath.getName());
 			documentPreview.setHighlightUrl(target);
 			documentPreview.setHighlight(true);
+			documentPreview.setPreview(true);
+			model.put("preview", true);
 			compileResult = new CompileResult(documentPreview, xPath.getPath(), generatedFile);
 		} else {
 			compileResult = new CompileResult(documentFull, xPath.getPath(), generatedFile);
@@ -196,7 +198,7 @@ public class HandlerDirectory implements Handler {
 	}
 
 	public static Document createDocumentCollection(Site site, XPath xPath,
-			XPath original, String path, List<Document> documents, Map<String, Object> previousModel)
+			XPath original, String path, List<Document> documents, Map<String, Object> previousModel, String templateName)
 			throws IOException {
 		Map<String, Object> model = new HashMap<>();
 		HandlerUtils.fillModel(xPath.getName(),
@@ -213,16 +215,18 @@ public class HandlerDirectory implements Handler {
 			}
 			model.put("documents", documents2);
 			model.put("document_size", documents2.size());
+			model.put("preview", xPath.isPreview());
 		} else {
 			model.put("documents", documents);
 			model.put("document_size", documents.size());
+			model.put("preview", xPath.isPreview());
 		}
 
 		String prefix = original.getLayoutSuffix();
 		if (prefix.equals("")) {
 			prefix = xPath.getLayoutSuffix();
 		}
-		TemplateBean templateText = site.getTemplate(prefix, "documents", xPath.getPath());
+		TemplateBean templateText = site.getTemplate(prefix, templateName, xPath.getPath());
 		Document document = new Document(xPath, xPath.getName(),
 				xPath.getTargetURL(), xPath.getDate(), 0, xPath.getFileName(),
 				false, path, new DocumentGenerator(site, templateText, model));

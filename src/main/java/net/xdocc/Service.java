@@ -70,6 +70,8 @@ public class Service {
 
 	private static boolean fileChangeListener = true;
 	
+	private static boolean clearCache = false;
+	
 	private static int compilerCounter = 0;
 
 	static {
@@ -81,6 +83,8 @@ public class Service {
 				"run the file-change-listener to recompile if files changed");
 		options.addOption("s", "cache", true,
 				"set the path to persist the cached data");
+		options.addOption("x", "clear-cache", false,
+				"clear cache at startup");
 		// read config file from project if run in eclipse, otherwise use
 		// directory
 		try {
@@ -162,9 +166,12 @@ public class Service {
 		}
 	}
 
-	static void setupCache(File cacheDir) {
+	static void setupCache(File cacheDir) {	
 		db = DBMaker.newFileDB(cacheDir).closeOnJvmShutdown().make();
 		cache = db.getHashMap("results");
+		if(clearCache) {
+			cache.clear();
+		}
 	}
 
 	private static List<Site> initCompile() throws FileNotFoundException,
@@ -194,6 +201,7 @@ public class Service {
 			throw new IOException("Could not find config file");
 		}
 		fileChangeListener = cmd.hasOption("f");
+		clearCache = cmd.hasOption("x");
 		configDir = new File(file);
 		String tmpCacheDir = cmd.getOptionValue("s");
 		if (tmpCacheDir == null) {
