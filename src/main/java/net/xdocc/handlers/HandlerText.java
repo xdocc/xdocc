@@ -38,7 +38,7 @@ public class HandlerText implements Handler {
 		Document doc = Utils.createDocument(site, xPath, relativePathToRoot,
 				htmlContent, "text");
 		// always create a single page for that
-		Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile);
+		Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "single");
 		return new CompileResult(doc, xPath.getPath(), generatedFile);
 	}
 

@@ -616,4 +616,16 @@ public class XPath implements Comparable<XPath> {
 		}
 		return false;
 	}
+
+	public int getPageSize() {
+		String pagesString = getProperty("p", "pages");
+		if(pagesString == null) {
+			return 0;
+		}
+		try {
+			return Integer.parseInt(pagesString.trim());
+		} catch (NumberFormatException nfe){
+			return 0;
+		}
+	}
 }

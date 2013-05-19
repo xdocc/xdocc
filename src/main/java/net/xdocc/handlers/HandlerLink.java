@@ -19,13 +19,8 @@ import net.xdocc.XPath;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HandlerLink implements Handler {
-
-	private static final Logger LOG = LoggerFactory
-			.getLogger(HandlerLink.class);
 
 	@Override
 	public boolean canHandle(Site site, XPath xPath) {
@@ -45,7 +40,7 @@ public class HandlerLink implements Handler {
 		Configuration config = new PropertiesConfiguration(xPath.getPath().toFile());
 		
 		List<Object> urls = config.getList("url", new ArrayList<>());
-		int limit = config.getInt("limit", Integer.MAX_VALUE);
+		int limit = config.getInt("limit", -1);
 		
 		List<XPath> founds = new ArrayList<>();
 		
@@ -56,11 +51,16 @@ public class HandlerLink implements Handler {
 				|| (founds.size() > 0 && !founds.get(0).isVisible())) {
 			return CompileResult.DONE;
 		} else {
-			
-			Path generatedFile = xPath
-					.getTargetPath(xPath.getTargetURL() + ".html");
-			
 			List<Document> documents = new ArrayList<>();
+			
+			final boolean ascending;
+			if (xPath.isAutoSort()) {
+				ascending = Utils.guessAutoSort(founds);
+			} else {
+				ascending = xPath.isAscending();
+			}
+			Utils.sort2(founds, ascending);
+			
 			for(XPath found:founds) {
 				Service.waitFor(found.getPath());
 				CompileResult compileResult = Service.getCompileResult(
@@ -70,13 +70,7 @@ public class HandlerLink implements Handler {
 				Map<Path, Set<Path>> dependenciesUp = compileResult.getDependenciesUp();
 				Map<Path, Set<Path>> dependenciesDown = compileResult.getDependenciesDown();
 				
-				//check if its a document collection, if yes, add the collection.
-				if(compileResult.getDocument().getDocumentGenerator().getModel().containsKey("documents")) {
-					List<Document> documents2 = (List<Document>) compileResult.getDocument().getDocumentGenerator().getModel().get("documents");
-					documents.addAll(documents2);
-				} else {
-					documents.add(compileResult.getDocument());
-				}
+				//documents.add(compileResult.getDocument());
 				
 				Set<FileInfos> result = new HashSet<>();
 				if(compileResult.getFileInfos() != null) {
@@ -94,13 +88,43 @@ public class HandlerLink implements Handler {
 				if (compileResult.getDocument() != null) {
 					setRelavtive(compileResult.getDocument(), relativePathToRoot);
 				}
-				
+				//this may happen is a file is not hidden, but also not visible  
+				if(compileResult.getDocument()!=null) {
+					documents.add(compileResult.getDocument());
+				}
 			}
 			
-			Document doc = HandlerDirectory.createDocumentCollection(site, xPath, xPath, relativePathToRoot, documents, previousModel, "link");
+			if(limit >= 0) {
+				documents = documents.subList(0, documents.size() < limit? documents.size():limit );
+			}
 			
-			Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile);
-			return new CompileResult(doc, xPath.getPath(), generatedFile);
+			int pageSize = xPath.getPageSize();
+			int pages = pageSize == 0 ? 0 : documents.size() / (pageSize + 1);
+			List<List<Document>> tmp = Utils.split(documents, pages, pageSize);
+			String[] pageURLs=Utils.paging(xPath, pages);
+			int counter = 0;
+			
+			
+			
+			Document doc0 = null;
+			Path generatedFile0 = null;
+			for(List<Document> list:tmp) {
+
+				Document doc = HandlerDirectory.createDocumentCollection(site, xPath, xPath, relativePathToRoot, list, previousModel, "link", pageURLs, counter);
+				final Path generatedFile;
+				if(counter==0) {
+					generatedFile = xPath.getTargetPath(xPath.getTargetURL() + ".html");
+					generatedFile0 = generatedFile;
+					doc0 = doc;
+				} else {
+					generatedFile = xPath.getTargetPath(xPath.getTargetURL() + "_"+counter+".html");
+				}
+				counter++;
+				Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "collection");
+			
+			}
+			
+			return new CompileResult(doc0, xPath.getPath(), generatedFile0);
 		}
 	}
 

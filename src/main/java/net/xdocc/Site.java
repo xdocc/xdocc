@@ -96,6 +96,10 @@ public class Site {
 	public Path getSource() {
 		return source;
 	}
+	
+	public XPath getSourceX() {
+		return new XPath(this, source);
+	}
 
 	public Path getGenerated() {
 		return generated;

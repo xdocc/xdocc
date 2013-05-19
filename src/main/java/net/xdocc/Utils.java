@@ -1,6 +1,7 @@
 package net.xdocc;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -13,13 +14,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +26,9 @@ import java.util.StringTokenizer;
 
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.handlers.HandlerUtils;
+
+import org.apache.commons.io.filefilter.WildcardFileFilter;
+
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
@@ -318,7 +320,17 @@ public class Utils {
 							new Custom2FileTemplateLoader(site
 									.getTemplatePath().toFile(), site,
 									templateText));
-			templateText.getTemplate().process(model, sw);
+			try {
+				templateText.getTemplate().process(model, sw);
+			} catch (TemplateException e) {
+				e.printStackTrace();
+				System.err.println("available data:");
+				for (Map.Entry<String, Object> entry : model.entrySet()) {
+					System.err.println("key:[" + entry.getKey() + "]=["
+							+ entry.getValue() + "]");
+				}
+				System.err.println("Template is: " + templateText.getFile());
+			}
 
 			sw.flush();
 			return sw.getBuffer().toString();
@@ -347,11 +359,11 @@ public class Utils {
 			}
 
 			TemplateBean templateBean = site.getTemplates().get(name);
-			//FileTime fileTime = Files.getLastModifiedTime(templateBean
-			//		.getFile());
-			//long filesize = Files.size(templateBean.getFile());
-			//templateBean.setTimestamp(fileTime.toMillis());
-			//templateBean.setFilesize(filesize);
+			// FileTime fileTime = Files.getLastModifiedTime(templateBean
+			// .getFile());
+			// long filesize = Files.size(templateBean.getFile());
+			// templateBean.setTimestamp(fileTime.toMillis());
+			// templateBean.setFilesize(filesize);
 
 			//
 			templateBean.addDependencies(parentTemplateBean);
@@ -418,7 +430,7 @@ public class Utils {
 
 	public static String searchXPath(Path parent, String xPath)
 			throws IOException {
-		if(!Files.exists(parent)) {
+		if (!Files.exists(parent)) {
 			return null;
 		}
 		try (DirectoryStream<Path> ds = Files.newDirectoryStream(parent)) {
@@ -476,20 +488,35 @@ public class Utils {
 		return "800x600^";
 	}
 
-	/*
-	 * public static XPath findXPathFromURL(String url, Site site) throws
-	 * IOException { XPath current = new XPath(site, site.getSource()); return
-	 * findXPathFromURL( url, site, current ); } public static XPath
-	 * findXPathFromURL(String url, Site site, XPath current) throws IOException
-	 * { RelativeURL rUrl = RelativeURL.create(url);
+	/**
+	 * Performs a wildcard matching for the text and pattern provided.
 	 * 
-	 * current = Utils.findChildURL(site, current, rUrl.getCurrent()); for(;;) {
-	 * if(current.getUrl().equals(rUrl.getCurrent())) { if(rUrl.getChild() ==
-	 * null && current.getExtensions().equals(rUrl.getExtensions())) { return
-	 * current; } rUrl = rUrl.getChild(); current = Utils.findChildURL(site,
-	 * current, rUrl.getCurrent()); if(current == null) { return null; } } else
-	 * { return null; } } }
+	 * @param text
+	 *            the text to be tested for matches.
+	 * 
+	 * @param pattern
+	 *            the pattern to be matched for. This can contain the wildcard
+	 *            character '*' (asterisk).
+	 * 
+	 * @return <tt>true</tt> if a match is found, <tt>false</tt> otherwise.
 	 */
+
+	public static boolean wildCardMatch(String text, String pattern) {
+		// Create the cards by splitting using a RegEx. If more speed
+		// is desired, a simpler character based splitting can be done.
+		String[] cards = pattern.split("\\*");
+		// Iterate over the cards.
+		for (String card : cards) {
+			int idx = text.indexOf(card);
+			// Card not detected in the text.
+			if (idx == -1) {
+				return false;
+			}
+			// Move ahead, towards the right of the text.
+			text = text.substring(idx + card.length());
+		}
+		return true;
+	}
 
 	public static List<XPath> findChildURL(Site site, XPath current,
 			String url, String extension) throws IOException {
@@ -497,7 +524,7 @@ public class Utils {
 				current.getPath());
 		List<XPath> result = new ArrayList<>();
 		for (XPath child : children) {
-			if (child.getUrl().equals(url)) {
+			if (wildCardMatch(child.getUrl(), url)) {
 				if (extension == null
 						|| extension.equals(child.getExtensions())) {
 					result.add(child);
@@ -509,20 +536,31 @@ public class Utils {
 
 	public static List<XPath> findURL(Site site, XPath current, String url)
 			throws IOException {
+		// split the search url
 		String[] parsedURL = url.split("/");
-		List<XPath> founds = new ArrayList<>();
-		founds.add(current.getParent());
-		for (int i = 0; i < parsedURL.length; i++) {
-			String pURL = parsedURL[i];
-			List<XPath> result = new ArrayList<>();
-			for (Iterator<XPath> iterator = founds.iterator(); iterator
-					.hasNext();) {
-				XPath found = iterator.next();
-				result.addAll(Utils.findChildURL(site, found, pURL, null));
+		boolean root = url.startsWith("/");
+		final XPath rootPath;
+		if (root) {
+			rootPath = site.getSourceX();
+		} else {
+			if (current.isDirectory()) {
+				rootPath = current;
+			} else {
+				rootPath = current.getParent();
 			}
-			founds = result;
 		}
-		return founds;
+		List<XPath> tmpMatches = new ArrayList<>();
+		tmpMatches.add(rootPath);
+
+		for (int i = 0; i < parsedURL.length; i++) {
+			final String pURL = parsedURL[i];
+			final List<XPath> tmpMatches2 = new ArrayList<>();
+			for (XPath tmpMatch : tmpMatches) {
+				tmpMatches2.addAll(findChildURL(site, tmpMatch, pURL, null));
+			}
+			tmpMatches = tmpMatches2;
+		}
+		return tmpMatches;
 	}
 
 	public static class RelativeURL {
@@ -739,7 +777,7 @@ public class Utils {
 	}
 
 	public static void writeHTML(Site site, XPath xPath, Set<Path> dirtyset,
-			String relativePathToRoot, Document doc, Path generatedFile)
+			String relativePathToRoot, Document doc, Path generatedFile, String type)
 			throws IOException, TemplateException {
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
 				"document", xPath.getPath());
@@ -748,6 +786,7 @@ public class Utils {
 		// root.put("navigation", site.getNavigation());
 		modelSite.put("path", relativePathToRoot);
 		modelSite.put("document", doc);
+		modelSite.put("type", type);
 		Link current = Utils.find(xPath.getParent(), site.getNavigation());
 		List<Link> pathToRoot = Utils.linkToRoot(site.getSource(),
 				xPath.getParent());
@@ -760,6 +799,36 @@ public class Utils {
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
 		dirtyset.add(generatedDir);
 		Utils.write(htmlSite, xPath, generatedFile);
+	}
+
+	public static String[] paging(XPath xPath, int pages) {
+		String[] pagesURLs = new String[pages+1];
+		for (int i = 0; i <= pages; i++) {
+			// first is special, no _ in the URL
+			if (i == 0) {
+				pagesURLs[i] = xPath.getTargetURL() + ".html";
+			} else {
+				pagesURLs[i] = xPath.getTargetURL() + "_" + i + ".html";
+			}
+		}
+		return pagesURLs;
+	}
+
+	public static List<List<Document>> split(List<Document> documents,
+			int pages, int pageSize) {
+		List<List<Document>> result = new ArrayList<>();
+		if (pages == 0) {
+			result.add(documents);
+			return result;
+		} else {
+			for (int i = 0; i <= pages; i++) {
+				int start = i * pageSize;
+				int stop = start + pageSize - 1;
+				result.add(documents.subList(start,
+						documents.size() < stop ? documents.size() : stop));
+			}
+		}
+		return result;
 	}
 
 }

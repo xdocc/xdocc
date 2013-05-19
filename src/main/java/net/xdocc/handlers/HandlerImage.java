@@ -116,6 +116,7 @@ public class HandlerImage implements Handler {
 				"document", xPath.getPath());
 		Map<String, Object> modelSite = HandlerUtils
 				.fillModel(site, xPath, doc);
+		modelSite.put("type", "single");
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 		// write to disk
 		Path generatedFile2 = xPath.getTargetPath(xPath.getTargetURL()

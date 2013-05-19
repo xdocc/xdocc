@@ -1,5 +1,6 @@
 package net.xdocc.handlers;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -76,7 +77,7 @@ public class HandlerDirectory implements Handler {
 		}
 		
 		model.put("document_size", documents.size());
-		model.put("preview", xPath.isPreview());
+		//model.put("preview", xPath.isPreview());
 
 		String target = xPath.resolveTargetURL("index.html");
 
@@ -84,11 +85,30 @@ public class HandlerDirectory implements Handler {
 		// we want to point to the whole folder
 		applyPath(documents, relativePathToRoot);
 
-		// create the site
-		TemplateBean template  = site.getTemplate(xPath.getLayoutSuffix(), "document", xPath.getPath());
+		
+		int pageSize = xPath.getPageSize();
+		int pages = pageSize == 0 ? 0 : documents.size() / (pageSize + 1);
+		List<List<Document>> tmp = Utils.split(documents, pages, pageSize);
+		String[] pageURLs=Utils.paging(xPath, pages);
+		int counter = 0;
+		
+
+		TemplateBean template = null;
+		if(xPath.isPreview()) {
+			String suffix ="_pre" + xPath.getLayoutSuffix();
+			try {
+				template  = site.getTemplate(suffix, "document", xPath.getPath());
+			} catch (FileNotFoundException nfe) {
+				template  = site.getTemplate(xPath.getLayoutSuffix(), "document", xPath.getPath());
+			}
+		} else {
+			template  = site.getTemplate(xPath.getLayoutSuffix(), "document", xPath.getPath());
+		}
+		// create the site		
 		final Document documentFull = createDocumentCollection(site, xPath, xPath, relativePathToRoot,
-				documents, model, "documents");
+				documents, model, "documents", pageURLs, 0);
 		model.put("document", documentFull);
+		model.put("type", "collection");
 		String html = Utils.applyTemplate(site, template, model);
 		html = Utils.postApplyTemplate(html, model, "path");
 		Path generatedFile = xPath.getTargetPath(target);
@@ -198,7 +218,7 @@ public class HandlerDirectory implements Handler {
 	}
 
 	public static Document createDocumentCollection(Site site, XPath xPath,
-			XPath original, String path, List<Document> documents, Map<String, Object> previousModel, String templateName)
+			XPath original, String path, List<Document> documents, Map<String, Object> previousModel, String templateName, String[] pageURLs, int current)
 			throws IOException {
 		Map<String, Object> model = new HashMap<>();
 		HandlerUtils.fillModel(xPath.getName(),
@@ -215,18 +235,34 @@ public class HandlerDirectory implements Handler {
 			}
 			model.put("documents", documents2);
 			model.put("document_size", documents2.size());
-			model.put("preview", xPath.isPreview());
+			
 		} else {
 			model.put("documents", documents);
 			model.put("document_size", documents.size());
-			model.put("preview", xPath.isPreview());
 		}
+		
+		model.put("preview", xPath.isPreview());
+		model.put("pageURLs", pageURLs);
+		model.put("current_page", current);
 
 		String prefix = original.getLayoutSuffix();
 		if (prefix.equals("")) {
 			prefix = xPath.getLayoutSuffix();
 		}
-		TemplateBean templateText = site.getTemplate(prefix, templateName, xPath.getPath());
+		
+		TemplateBean templateText=null;
+		if(xPath.isPreview()) {
+			String prefix1 ="_pre" + prefix;
+			try {
+				templateText  = site.getTemplate(prefix1, templateName, xPath.getPath());
+			} catch (FileNotFoundException nfe) {
+				templateText  = site.getTemplate(prefix, templateName, xPath.getPath());
+			}
+		} else {
+			templateText  = site.getTemplate(prefix, templateName, xPath.getPath());
+		}
+		
+		//TemplateBean templateText = site.getTemplate(prefix, templateName, xPath.getPath());
 		Document document = new Document(xPath, xPath.getName(),
 				xPath.getTargetURL(), xPath.getDate(), 0, xPath.getFileName(),
 				false, path, new DocumentGenerator(site, templateText, model));

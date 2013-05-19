@@ -96,6 +96,7 @@ public class HandlerWikiText implements Handler {
 				"document", xPath.getPath());
 		Map<String, Object> modelSite = HandlerUtils
 				.fillModel(site, xPath, doc);
+		modelSite.put("type", "single");
 		Utils.copyModelValues(modelSite, model, "document_size");
 		model.put("preview", xPath.isPreview());
 	

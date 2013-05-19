@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.SetMultimap;
+
 import freemarker.template.TemplateException;
 
 public class Document implements Comparable<Document>, Serializable {

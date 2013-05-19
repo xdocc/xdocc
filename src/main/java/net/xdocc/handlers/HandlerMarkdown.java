@@ -55,7 +55,7 @@ public class HandlerMarkdown implements Handler {
 			String htmlContent = out.toString();
 			Document doc = Utils.createDocument(site, xPath,
 					relativePathToRoot, htmlContent, "markdown");
-			Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile);
+			Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "single");
 			return new CompileResult(doc, xPath.getPath(), generatedFile);
 		}
 	}
