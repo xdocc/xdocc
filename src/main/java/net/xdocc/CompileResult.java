@@ -65,7 +65,7 @@ public class CompileResult implements Serializable {
 		addDependencyDown(child, parent);
 	}
 
-	public void addDependencyUp(Path child, Path parent) {
+	private void addDependencyUp(Path child, Path parent) {
 		Set<Path> parentSet = getDependenciesUp().get(child);
 		if (parentSet == null) {
 			parentSet = new HashSet<>();
@@ -74,7 +74,7 @@ public class CompileResult implements Serializable {
 		parentSet.add(parent);
 	}
 
-	public void addDependencyDown(Path child, Path parent) {
+	private void addDependencyDown(Path child, Path parent) {
 
 		Set<Path> childSet = getDependenciesDown().get(parent);
 		if (childSet == null) {
@@ -92,7 +92,7 @@ public class CompileResult implements Serializable {
 		return result;
 	}
 
-	public void findDependenciesUpRec(Path up, Set<Path> result) {
+	private void findDependenciesUpRec(Path up, Set<Path> result) {
 		CompileResult cr = Service.getCompileResult(up);
 		if (cr == null) {
 			return;
@@ -107,7 +107,7 @@ public class CompileResult implements Serializable {
 		}
 	}
 
-	public void findDependenciesDownRec(Path down, Set<Path> result) {
+	private void findDependenciesDownRec(Path down, Set<Path> result) {
 		CompileResult cr = Service.getCompileResult(down);
 		if (cr == null) {
 			return;

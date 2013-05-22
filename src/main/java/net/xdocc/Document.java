@@ -12,8 +12,6 @@ import org.apache.commons.lang.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import freemarker.template.TemplateException;
-
 /**
  * This document class represents the content of the document. It is used on the
  * one hand to create the document using the model and template from freemarker.
