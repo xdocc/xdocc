@@ -108,7 +108,7 @@ public class HandlerDirectory implements Handler {
 		final Document documentFull = createDocumentCollection(site, xPath, xPath, relativePathToRoot,
 				documents, model, "documents", pageURLs, 0);
 		model.put("document", documentFull);
-		model.put("type", "collection");
+		model.put("type	", "collection");
 		String html = Utils.applyTemplate(site, template, model);
 		html = Utils.postApplyTemplate(html, model, "path");
 		Path generatedFile = xPath.getTargetPath(target);
@@ -158,15 +158,12 @@ public class HandlerDirectory implements Handler {
 	private void applyPath(List<Document> documents, String path) {
 		for (Document document : documents) {
 
-			if (document.isHighlight()) {
+			if (document.getHighlight()) {
 				document.setOriginalUrl(document.getHighlightUrl());
 			}
 			document.applyPath(path);
-			Object obj = document.getDocumentGenerator().getModel()
-					.get("documents");
-			if (obj != null && obj instanceof List) {
-				@SuppressWarnings("unchecked")
-				List<Document> documents2 = (List<Document>) obj;
+			List<Document> documents2 = document.getDocuments();
+			if(documents2 != null) {
 				applyPath(documents2, path);
 			}
 		}
@@ -263,12 +260,9 @@ public class HandlerDirectory implements Handler {
 		}
 		
 		//TemplateBean templateText = site.getTemplate(prefix, templateName, xPath.getPath());
-		Document document = new Document(xPath, xPath.getName(),
-				xPath.getTargetURL(), xPath.getDate(), 0, xPath.getFileName(),
-				false, path, new DocumentGenerator(site, templateText, model));
-		if (!xPath.isDirectory()) {
-			document.setSize(Files.size(xPath.getPath()));
-		}
+		DocumentGenerator gen = new DocumentGenerator(site, templateText, model);
+		Document document = new Document(xPath, gen,
+				xPath.getTargetURL(), path);
 		return document;
 	}
 }

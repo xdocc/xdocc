@@ -2,128 +2,312 @@ package net.xdocc;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.SetMultimap;
+import org.apache.commons.lang.BooleanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import freemarker.template.TemplateException;
 
+/**
+ * This document class represents the content of the document. It is used on the
+ * one hand to create the document using the model and template from freemarker.
+ * On the other hand it can be passed to a freemarker template. Thus, the model
+ * should match the methods.
+ * 
+ * @author Thomas Bocek
+ * 
+ */
 public class Document implements Comparable<Document>, Serializable {
-	// can never change
 
+	private static final Logger LOG = LoggerFactory.getLogger(Document.class);
 	private static final long serialVersionUID = 136066054966377823L;
-	private final String filename;
 	private final DocumentGenerator documentGenerator;
-	private boolean highlight;
-	private boolean preview;
-	private final Map<String, Object> model;
+	private final Map<String, String> paths = new HashMap<>();
 	private final XPath source;
-	// may change
-	private int level = 0;
-	private Map<String, String> paths = new HashMap<>();
 
-	public Document(XPath source, String name, String url, Date date, long nr,
-			String filename, boolean highlight, String path,
-			DocumentGenerator documentGenerator) {
-		this.model = documentGenerator.getModel();
+	/**
+	 * Set the document. The name will be set to xPath.getName() as default.
+	 * 
+	 * @param xPath
+	 *            The parsed path of the document. This is either a single file
+	 *            or a directory in case of a collection of documents.
+	 * @param documentGenerator
+	 *            The generator is lazy generating. Thus, paths can be adapted
+	 *            until getContent() is called.
+	 * @param url
+	 *            The full URL from the root to this xPath. To be used with
+	 *            relativePathToRoot
+	 * @param relativePathToRoot
+	 *            Set the relative path back to root. The path will look
+	 *            something like this ../../
+	 */
+	public Document(XPath xPath, DocumentGenerator documentGenerator,
+			String url, String relativePathToRoot) {
 		this.documentGenerator = documentGenerator;
-		this.source = source;
-		setPath(path);
-		setName(name);
-		paths.put("url", url);
-		paths.put("highlightUrl", url);
-		applyPath(path);
-		setDate(date);
-		this.filename = filename;
-		this.highlight = highlight;
+		this.source = xPath;
+		setName(xPath.getName());
+		setDate(xPath.getDate());
+		setFilename(xPath.getFileName());
+		setNr(xPath.getNr());
+		setHighlight(xPath.isHighlight());
+		initFilesize(xPath);
+		// now set the paths
+		addPath("url", url);
+		addPath("highlightUrl", url);
+		applyPath(relativePathToRoot);
 		setPreview(false);
 	}
 
-	private Document(XPath source, String filename,
-			DocumentGenerator documentGenerator) {
-		this.model = documentGenerator.getModel();
-		this.documentGenerator = documentGenerator;
-		this.filename = filename;
-		this.source = source;
-		setPreview(false);
+	/**
+	 * @param xPath
+	 *            Sets the filesize of xPath
+	 */
+	private void initFilesize(XPath xPath) {
+		if (!xPath.isDirectory()) {
+			try {
+				setFilesize(Files.size(xPath.getPath()));
+			} catch (IOException e) {
+				setFilesize(-1);
+				if (LOG.isWarnEnabled()) {
+					LOG.warn(
+							"cannot get the file size, see syserr for more info",
+							e);
+				}
+			}
+		}
 	}
 
+	/**
+	 * @return The xPath that represents this document
+	 */
+	public XPath getXPath() {
+		return source;
+	}
+
+	/**
+	 * @return The name of the document. Default is xPath.getName()
+	 */
 	public String getName() {
-		return (String) model.get("name");
+		return (String) documentGenerator.getModel().get("name");
 	}
 
-	public void setName(String name) {
-		model.put("name", name);
+	/**
+	 * @param name
+	 *            The name of the document. Can be overwritten. Default is
+	 *            xPath.getName()
+	 * @return this class
+	 */
+	public Document setName(String name) {
+		documentGenerator.getModel().put("name", name);
+		return this;
 	}
 
+	/**
+	 * @return The URL is always set using addPath() and modified by
+	 *         applyPath().
+	 */
 	public String getUrl() {
-		return (String) model.get("url");
+		return (String) documentGenerator.getModel().get("url");
+	}
+
+	/**
+	 * @return relative path from the link handler.
+	 */
+	public String getRelative() {
+		return (String) documentGenerator.getModel().get("relative");
+	}
+
+	/**
+	 * @param relative
+	 *            Set the relative path in the link handler
+	 * @return this class
+	 */
+	public Document setRelative(String relative) {
+		documentGenerator.getModel().put("relative", relative);
+		return this;
+	}
+
+	/**
+	 * @return The date of the xPath. Default is xPath.getDate()
+	 */
+	public Date getDate() {
+		return (Date) documentGenerator.getModel().get("date");
+	}
+
+	/**
+	 * @param date
+	 *            The date of the xPath. Can be overwritten. Default is
+	 *            xPath.getDate()
+	 * @return this class
+	 */
+	public Document setDate(Date date) {
+		documentGenerator.getModel().put("date", date);
+		return this;
+	}
+
+	/**
+	 * @return The filename of xPath. Default is xPath.getFileName()
+	 */
+	public String getFilename() {
+		return (String) documentGenerator.getModel().get("filename");
+	}
+
+	/**
+	 * @param filename
+	 *            The filename of xPath. Default is xPath.getFileName()
+	 * @return this class
+	 */
+	public Document setFilename(String filename) {
+		documentGenerator.getModel().put("filename", filename);
+		return this;
+	}
+
+	/**
+	 * @return The number of the document. Default is xPath.getNr().
+	 */
+	public long getNr() {
+		return (long) documentGenerator.getModel().get("nr");
+	}
+
+	/**
+	 * @param nr
+	 *            The number of the document. Default is xPath.getNr().
+	 * @return this class
+	 */
+	public Document setNr(long nr) {
+		documentGenerator.getModel().put("nr", nr);
+		return this;
+	}
+
+	/**
+	 * @return Return if document marked as highlight. Default is
+	 *         xPath.isHighlight()
+	 */
+	public boolean getHighlight() {
+		return BooleanUtils.isTrue((Boolean) documentGenerator.getModel().get(
+				"highlight"));
+	}
+
+	/**
+	 * @param highlight
+	 *            Set if document marked as highlight. Default is
+	 *            xPath.isHighlight()
+	 * @param this class
+	 */
+	public Document setHighlight(boolean highlight) {
+		documentGenerator.getModel().put("highlight", highlight);
+		return this;
+	}
+
+	/**
+	 * @return The relative path to root
+	 */
+	public String getPath() {
+		return (String) documentGenerator.getModel().get("path");
+	}
+
+	/**
+	 * @param path
+	 *            Set the relative path to root
+	 * @return this class
+	 */
+	public Document setPath(String path) {
+		documentGenerator.getModel().put("path", path);
+		return this;
+	}
+
+	/**
+	 * @return the file size if xPath is a file, or 0 if its a directory or
+	 *         empty file.
+	 */
+	public long getSize() {
+		Long val = (Long) documentGenerator.getModel().get("filesize");
+		return val == null ? 0 : val;
+	}
+
+	/**
+	 * @param size
+	 *            Set the file size if xPath is a file
+	 * @return this class
+	 */
+	public Document setFilesize(long filesize) {
+		documentGenerator.getModel().put("filesize", filesize);
+		return this;
+	}
+
+	public void increaseLevel() {
+
+		Integer int0 = (int) documentGenerator.getModel().get("level");
+		if (int0 == null) {
+			documentGenerator.getModel().put("level", 1);
+		} else {
+			documentGenerator.getModel().put("level", int0 + 1);
+		}
+	}
+
+	public int getLevel() {
+		Integer int0 = (int) documentGenerator.getModel().get("level");
+		return int0 == null ? 0 : int0;
+	}
+
+	/**
+	 * Lazy loading of the content that will be generated on the fly.
+	 * 
+	 * @return The content that applies the model to the freemarker template
+	 */
+	public String getContent() {
+		return documentGenerator.generate();
+	}
+
+	/**
+	 * @return a list of documents if present in the model or null
+	 */
+	public List<Document> getDocuments() {
+		@SuppressWarnings("unchecked")
+		List<Document> documents = (List<Document>) documentGenerator
+				.getModel().get("documents");
+		return documents;
+	}
+
+	public void setOriginalUrl(String originalUrl) {
+		paths.put("url", originalUrl);
+	}
+
+	public void setHighlightUrl(String highlightUrl) {
+		paths.put("highlightUrl", highlightUrl);
+	}
+
+	public String getHighlightUrl() {
+		return paths.get("highlightUrl");
+	}
+
+	public Boolean getPreview() {
+		return BooleanUtils.isTrue((Boolean) documentGenerator.getModel().get(
+				"preview"));
+	}
+
+	public void setPreview(boolean preview) {
+		documentGenerator.getModel().put("preview", preview);
 	}
 
 	public void applyPath(String path) {
 		setPath(path);
 		for (Map.Entry<String, String> entry : paths.entrySet()) {
-			model.put(entry.getKey(), path + entry.getValue());
-			model.put(entry.getKey() + "_orig", entry.getValue());
+			documentGenerator.getModel().put(entry.getKey(),
+					path + entry.getValue());
+			documentGenerator.getModel().put(entry.getKey() + "_orig",
+					entry.getValue());
 		}
 	}
 
 	public void addPath(String key, String value) {
 		paths.put(key, value);
-	}
-
-	public void setValue(String key, String value) {
-		model.put(key, value);
-	}
-
-	public Date getDate() {
-		return (Date) model.get("date");
-	}
-
-	public void setDate(Date date) {
-		model.put("date", date);
-	}
-
-	public boolean isHighlight() {
-		return highlight;
-	}
-
-	public long getNr() {
-		return (long) model.get("nr");
-	}
-
-	public void setNr(long nr) {
-		model.put("nr", nr);
-	}
-
-	public long getSize() {
-		return (long) model.get("size");
-	}
-
-	public void setSize(long size) {
-		model.put("size", size);
-	}
-
-	public String getFilename() {
-		return filename;
-	}
-
-	public void increaseLevel() {
-		level++;
-	}
-
-	public int getLevel() {
-		return level;
-	}
-
-	public String getContent() throws TemplateException, IOException {
-		return documentGenerator.generate();
-	}
-
-	public DocumentGenerator getDocumentGenerator() {
-		return documentGenerator;
 	}
 
 	@Override
@@ -162,53 +346,9 @@ public class Document implements Comparable<Document>, Serializable {
 			sb.append(getName());
 		}
 		if (getFilename() != null) {
-			sb.append("f:");
+			sb.append(",f:");
 			sb.append(getFilename());
 		}
 		return sb.toString();
-	}
-
-	public void setOriginalUrl(String originalUrl) {
-		paths.put("url", originalUrl);
-	}
-
-	public void setHighlightUrl(String highlightUrl) {
-		paths.put("highlightUrl", highlightUrl);
-	}
-
-	public String getHighlightUrl() {
-		return paths.get("highlightUrl");
-	}
-
-	public void setHighlight(boolean highlight) {
-		this.highlight = highlight;
-	}
-
-	public String getPath() {
-		return (String) model.get("path");
-	}
-
-	public void setPath(String path) {
-		model.put("path", path);
-	}
-
-	public Document copy() {
-		Document document = new Document(source, filename,
-				getDocumentGenerator().copy());
-		document.highlight = highlight;
-		document.preview = preview;
-		return document;
-	}
-
-	public XPath getXPath() {
-		return source;
-	}
-
-	public Boolean isPreview() {
-		return (Boolean) model.get("preview");
-	}
-
-	public void setPreview(boolean preview) {
-		model.put("preview", preview);
 	}
 }

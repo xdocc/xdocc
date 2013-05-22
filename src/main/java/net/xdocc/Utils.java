@@ -247,7 +247,7 @@ public class Utils {
 	 */
 	public static Document searchHighlight(List<Document> documents) {
 		for (Document document : documents) {
-			if (document.isHighlight()) {
+			if (document.getHighlight()) {
 				return document;
 			}
 		}
@@ -627,26 +627,6 @@ public class Utils {
 		}
 	}
 
-	public static CompileResult subList(CompileResult compileResult, int limit) {
-		Document document = compileResult.getDocument();
-		if (document == null) {
-			return compileResult;
-		}
-		@SuppressWarnings("unchecked")
-		List<Document> documents = (List<Document>) document
-				.getDocumentGenerator().getModel().get("documents");
-		if (documents == null) {
-			return compileResult;
-		}
-		documents = documents.subList(0,
-				limit > documents.size() ? documents.size() : limit);
-		Document copy = document.copy();
-		copy.getDocumentGenerator().getModel().put("documents", documents);
-		Set<FileInfos> fileInfos = compileResult.getFileInfos();
-
-		return new CompileResult(copy, fileInfos);
-	}
-
 	/**
 	 * Returns a list of links that goes to the root. This is typically used for
 	 * breadcrumbs.
@@ -769,10 +749,8 @@ public class Utils {
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				template, xPath.getPath());
 		// create the document
-		Document doc = new Document(xPath, documentName, documentURL,
-				documentDate, documentNr, documentFilename,
-				xPath.isHighlight(), relativePathToRoot, new DocumentGenerator(
-						site, templateText, model));
+		DocumentGenerator gen = new DocumentGenerator(site, templateText, model);
+		Document doc = new Document(xPath, gen, documentURL, relativePathToRoot);
 		return doc;
 	}
 

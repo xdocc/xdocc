@@ -128,11 +128,11 @@ public class HandlerLink implements Handler {
 		}
 	}
 
+	//TODO: is this method really necessary? 
 	private void setRelavtive(Document document, String url) {
-		document.setValue("relative", url);
+		document.setRelative(url);
 		@SuppressWarnings("unchecked")
-		List<Document> documents = (List<Document>) document
-				.getDocumentGenerator().getModel().get("documents");
+		List<Document> documents = document.getDocuments();
 		if (documents != null) {
 			for (Document document2 : documents) {
 				setRelavtive(document2, url);

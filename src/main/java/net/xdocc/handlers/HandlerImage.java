@@ -100,11 +100,9 @@ public class HandlerImage implements Handler {
 		} else {
 			model.put("css_class", "image");
 		}
-
-		Document doc = new Document(xPath, xPath.getName(),
-				xPath.getTargetURL() + ".html", xPath.getDate(), xPath.getNr(),
-				xPath.getFileName(), xPath.isHighlight(), relativePathToRoot,
-				new DocumentGenerator(site, templateText, model));
+		DocumentGenerator gen = new DocumentGenerator(site, templateText, model);
+		Document doc = new Document(xPath, gen,
+				xPath.getTargetURL() + ".html", relativePathToRoot);
 		doc.addPath("image_normal",
 				xPath.getTargetURL() + "_n" + xPath.getExtensions());
 		doc.addPath("image_thumb",

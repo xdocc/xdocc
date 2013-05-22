@@ -85,11 +85,10 @@ public class HandlerWikiText implements Handler {
 
 		// String htmlText = Utils.applyTemplate( templateText, model );
 		// create the document
-		Document doc = new Document(xPath, xPath.getName(),
-				xPath.getTargetURL() + ".html", xPath.getDate(), xPath.getNr(),
-				xPath.getFileName(), xPath.isHighlight(), path,
-				new WikiTextDocumentGenerator(templateText, model, site, xPath,
-						dirtyset));
+		DocumentGenerator gen = new WikiTextDocumentGenerator(templateText, model, site, xPath,
+				dirtyset);
+		Document doc = new Document(xPath, gen,
+				xPath.getTargetURL() + ".html", path);
 
 		// create the site to layout ftl
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
@@ -254,9 +253,19 @@ public class HandlerWikiText implements Handler {
 			this.model = model;
 		}
 
-		public String generate() throws TemplateException, IOException {
-			fillHTML(site, xPath, dirtyset, "BLABAL");
-			return Utils.applyTemplate(site, getTemplateText(), getModel());
+		public String generate() {
+			try {
+				fillHTML(site, xPath, dirtyset, "BLABAL");
+				return Utils.applyTemplate(site, getTemplateText(), getModel());
+			} catch (IOException | TemplateException e) {
+				if (LOG.isWarnEnabled()) {
+					LOG.warn("cannot generate wiki document "
+							+ getTemplateText().getFile().getFileName() + ". Model is "
+							+ getModel(), e);
+				}
+				return null;
+			} 
+			
 		}
 
 		private void fillHTML(Site site, XPath xPath, Set<Path> dirtyset,

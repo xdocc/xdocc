@@ -105,15 +105,13 @@ public class HandlerCopy implements Handler {
 				xPath.getFileName(), "", model);
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				"file", xPath.getPath());
+		
+		DocumentGenerator gen = new DocumentGenerator(site, templateText, model);
+		Document document = new Document(xPath, gen,
+				xPath.getTargetURLFilename(), path);
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.getPath())
 				.toMillis());
-		Document document = new Document(xPath, xPath.getName(),
-				xPath.getTargetURLFilename(), lastModified, 0,
-				xPath.getFileName(), false, path, new DocumentGenerator(site, 
-						templateText, model));
-		if (!xPath.isDirectory()) {
-			document.setSize(Files.size(xPath.getPath()));
-		}
+		document.setDate(lastModified);
 		return document;
 	}
 
@@ -124,14 +122,13 @@ public class HandlerCopy implements Handler {
 				xPath.getTargetURL(), new Date(), 0, xPath.getFileName(), "", model);
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				"browse", xPath.getPath());
+		DocumentGenerator gen = new DocumentGenerator(site, templateText, model);
+		Document document = new Document(xPath, gen,
+				xPath.getTargetURL(), path);
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.getPath())
 				.toMillis());
-		Document document = new Document(xPath, xPath.getFileName(),
-				xPath.getTargetURL(), lastModified, 0, xPath.getFileName(),
-				false, path, new DocumentGenerator(site, templateText, model));
-		if (!xPath.isDirectory()) {
-			document.setSize(Files.size(xPath.getPath()));
-		}
+		document.setDate(lastModified);
+		document.setName(xPath.getFileName());
 		return document;
 	}
 }
