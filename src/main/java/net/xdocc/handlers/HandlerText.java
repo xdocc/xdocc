@@ -35,8 +35,9 @@ public class HandlerText implements Handler {
 		Charset charset = HandlerUtils.detectCharset(xPath.getPath());
 		List<String> lines = Files.readAllLines(xPath.getPath(), charset);
 		String htmlContent = convertHTML(lines);
-		Document doc = Utils.createDocument(site, xPath, relativePathToRoot,
-				htmlContent, "text");
+		Document doc = 
+				Utils.createDocument(site, xPath, relativePathToRoot,
+				htmlContent, "text", "file");
 		// always create a single page for that
 		Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "single");
 		return new CompileResult(doc, xPath.getPath(), generatedFile);

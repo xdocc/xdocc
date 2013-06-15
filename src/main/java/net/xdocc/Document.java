@@ -5,8 +5,10 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.BooleanUtils;
 import org.slf4j.Logger;
@@ -18,6 +20,8 @@ import org.slf4j.LoggerFactory;
  * On the other hand it can be passed to a freemarker template. Thus, the model
  * should match the methods.
  * 
+ * Available variables are: - name - url - content - date - nr - filename
+ * 
  * @author Thomas Bocek
  * 
  */
@@ -28,6 +32,9 @@ public class Document implements Comparable<Document>, Serializable {
 	private final DocumentGenerator documentGenerator;
 	private final Map<String, String> paths = new HashMap<>();
 	private final XPath source;
+	private final String url;
+	private final String relativePathToRoot;
+	private final String type;
 
 	/**
 	 * Set the document. The name will be set to xPath.getName() as default.
@@ -46,9 +53,12 @@ public class Document implements Comparable<Document>, Serializable {
 	 *            something like this ../../
 	 */
 	public Document(XPath xPath, DocumentGenerator documentGenerator,
-			String url, String relativePathToRoot) {
+			String url, String relativePathToRoot, String type) {
 		this.documentGenerator = documentGenerator;
 		this.source = xPath;
+		this.url = url;
+		this.relativePathToRoot = relativePathToRoot;
+		this.type = type;
 		setName(xPath.getName());
 		setDate(xPath.getDate());
 		setFilename(xPath.getFileName());
@@ -60,6 +70,8 @@ public class Document implements Comparable<Document>, Serializable {
 		addPath("highlightUrl", url);
 		applyPath(relativePathToRoot);
 		setPreview(false);
+		setType(type);
+		setLayout(xPath.getLayoutSuffix());
 	}
 
 	/**
@@ -239,27 +251,12 @@ public class Document implements Comparable<Document>, Serializable {
 		return this;
 	}
 
-	public void increaseLevel() {
-
-		Integer int0 = (int) documentGenerator.getModel().get("level");
-		if (int0 == null) {
-			documentGenerator.getModel().put("level", 1);
-		} else {
-			documentGenerator.getModel().put("level", int0 + 1);
-		}
-	}
-
-	public int getLevel() {
-		Integer int0 = (int) documentGenerator.getModel().get("level");
-		return int0 == null ? 0 : int0;
-	}
-
 	/**
 	 * Lazy loading of the content that will be generated on the fly.
 	 * 
 	 * @return The content that applies the model to the freemarker template
 	 */
-	public String getContent() {
+	public String getGenerate() {
 		return documentGenerator.generate();
 	}
 
@@ -271,6 +268,147 @@ public class Document implements Comparable<Document>, Serializable {
 		List<Document> documents = (List<Document>) documentGenerator
 				.getModel().get("documents");
 		return documents;
+	}
+
+	/**
+	 * @param documents
+	 *            The list of documents in a collection
+	 * @return this class
+	 */
+	public Document setDocuments(List<Document> documents) {
+		documentGenerator.getModel().put("documents", documents);
+		documentGenerator.getModel().put("document_size", documents.size());
+		return this;
+	}
+
+	/**
+	 * Set the data for paging. This is the the URLs for the other pages and the
+	 * current site
+	 * 
+	 * @param pageURLs
+	 * @param current
+	 */
+	public void setPaging(List<String> pageURLs, int current) {
+		documentGenerator.getModel().put("page_urls", pageURLs);
+		documentGenerator.getModel().put("current_page", current);
+
+	}
+
+	/**
+	 * @return The content
+	 */
+	public String getContent() {
+		return (String) documentGenerator.getModel().get("content");
+	}
+
+	/**
+	 * @param path
+	 *            Set the content
+	 * @return this class
+	 */
+	public Document setContent(String content) {
+		documentGenerator.getModel().put("content", content);
+		return this;
+	}
+
+	/**
+	 * @return The type
+	 */
+	public String getType() {
+		return (String) documentGenerator.getModel().get("type");
+	}
+
+	/**
+	 * @param path
+	 *            Set the type
+	 * @return this class
+	 */
+	public Document setType(String type) {
+		documentGenerator.getModel().put("type", type);
+		return this;
+	}
+
+	/**
+	 * @return The template
+	 */
+	public String getTemplate() {
+		return (String) documentGenerator.getModel().get("template");
+	}
+
+	/**
+	 * @param path
+	 *            Set the template
+	 * @return this class
+	 */
+	public Document setTemplate(String template) {
+		documentGenerator.getModel().put("template", template);
+		return this;
+	}
+
+	/**
+	 * @return The layout
+	 */
+	public String getLayout() {
+		return (String) documentGenerator.getModel().get("layout");
+	}
+
+	/**
+	 * @param path
+	 *            Set the layout
+	 * @return this class
+	 */
+	public Document setLayout(String layout) {
+		documentGenerator.getModel().put("layout", layout);
+		return this;
+	}
+
+	/**
+	 * Print out all the available keys and a preview of the content
+	 * 
+	 * @return The debug string in a HTML format
+	 */
+	public String getDebug() {
+		return Utils.getDebug(documentGenerator.getModel());
+	}
+
+	/**
+	 * Creates a copy and sets the level of the copy. If it has document inside
+	 * a document, the level increases
+	 * 
+	 * @param level
+	 *            The level of the document
+	 * @return this class
+	 */
+	public Document copy(int level) {
+		DocumentGenerator gen = documentGenerator.copy();
+		Document document = new Document(source, gen, url, relativePathToRoot,
+				type);
+		document.paths.putAll(new HashMap<>(paths));
+		document.setLevel(level);
+		// document name may have changed, also other parameters
+		document.setPreview(getPreview());
+		document.setName(getName());
+		document.setHighlight(getHighlight());
+		document.setDate(getDate());
+		return document;
+	}
+
+	/**
+	 * @param level
+	 *            Set the level of this document
+	 * @return this class
+	 */
+	public Document setLevel(int level) {
+		documentGenerator.getModel().put("level", level);
+		return this;
+	}
+
+	/**
+	 * @return The level of this document
+	 */
+	public int getLevel() {
+		Integer int0 = (int) documentGenerator.getModel().get("level");
+		return int0 == null ? 0 : int0;
 	}
 
 	public void setOriginalUrl(String originalUrl) {
@@ -294,13 +432,45 @@ public class Document implements Comparable<Document>, Serializable {
 		documentGenerator.getModel().put("preview", preview);
 	}
 
+	/**
+	 * Applies a new path to all documents and sub documents.
+	 * 
+	 * @param path
+	 *            The path to apply
+	 */
 	public void applyPath(String path) {
+		applyPath(path, new HashSet<Document>());
+	}
+
+	/**
+	 * To avoid a stack overflow, we need to know which document we already
+	 * visited.
+	 * 
+	 * @param path
+	 *            The path to apply
+	 * @param seen
+	 *            The documents we have already seen.
+	 */
+	private void applyPath(String path, Set<Document> seen) {
+		if (seen.contains(this)) {
+			return;
+		}
+		seen.add(this);
 		setPath(path);
 		for (Map.Entry<String, String> entry : paths.entrySet()) {
 			documentGenerator.getModel().put(entry.getKey(),
 					path + entry.getValue());
 			documentGenerator.getModel().put(entry.getKey() + "_orig",
 					entry.getValue());
+		}
+
+		if (getDocuments() != null) {
+			for (Document doc : getDocuments()) {
+				doc.applyPath(path, seen);
+			}
+		}
+		if (getCompleteDocument() != null) {
+			getCompleteDocument().applyPath(path, seen);
 		}
 	}
 
@@ -349,4 +519,23 @@ public class Document implements Comparable<Document>, Serializable {
 		}
 		return sb.toString();
 	}
+
+	/**
+	 * @param documentFull
+	 *            Set the full document. If this is set, preview is always true.
+	 * @return this class
+	 */
+	public Document setCompleteDocument(Document documentFull) {
+		documentGenerator.getModel().put("complete_document", documentFull);
+		return this;
+
+	}
+
+	/**
+	 * @return The the full document. If this is set, preview is always true.
+	 */
+	public Document getCompleteDocument() {
+		return (Document) documentGenerator.getModel().get("complete_document");
+	}
+
 }

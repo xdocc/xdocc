@@ -71,35 +71,20 @@ public class HandlerWikiText implements Handler {
 		// apply text ftl
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				"wikitext", xPath.getPath());
-
-		String documentName = xPath.getName();
-		String documentURL = xPath.getTargetURL() + ".html";
-		Date documentDate = xPath.getDate();
-		long documentNr = xPath.getNr();
-		String documentFilename = xPath.getFileName();
-		Map<String, Object> model = new HashMap<>();
-		Utils.copyModelValues(model, previousModel, "document_size");
-		model.put("preview", xPath.isPreview());
-		HandlerUtils.fillModel(documentName,
-				documentURL, documentDate, documentNr, documentFilename, null, model);
-
+	
 		// String htmlText = Utils.applyTemplate( templateText, model );
 		// create the document
-		DocumentGenerator gen = new WikiTextDocumentGenerator(templateText, model, site, xPath,
+		DocumentGenerator documentGenerator = new WikiTextDocumentGenerator(templateText, site, xPath,
 				dirtyset);
-		Document doc = new Document(xPath, gen,
-				xPath.getTargetURL() + ".html", path);
-
+		Document doc = new Document(xPath, documentGenerator, xPath.getTargetURL() + ".html", path, "file");
+		doc.setPreview(xPath.isPreview());
+		doc.setTemplate("wikitext");
 		// create the site to layout ftl
-		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
-				"document", xPath.getPath());
-		Map<String, Object> modelSite = HandlerUtils
-				.fillModel(site, xPath, doc);
-		modelSite.put("type", "single");
-		Utils.copyModelValues(modelSite, model, "document_size");
-		model.put("preview", xPath.isPreview());
+		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(), "page", xPath.getPath());
+		Map<String, Object> model = HandlerUtils.fillPage(site, xPath, doc);
+		model.put("type", "document");
 	
-		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
+		String htmlSite = Utils.applyTemplate(site, templateSite, model);
 		// write to disk
 		Path generatedFile = xPath
 				.getTargetPath(xPath.getTargetURL() + ".html");
@@ -139,15 +124,13 @@ public class HandlerWikiText implements Handler {
 		final private Site site;
 		final private Set<Path> dirtyset;
 		final private XPath current;
-		final private Map<String, Object> model;
 
 		public XdoccHtmlDocumentBuilder(Writer out, Site site,
-				Set<Path> dirtyset, XPath current,  Map<String, Object> model) {
+				Set<Path> dirtyset, XPath current) {
 			super(out);
 			this.site = site;
 			this.dirtyset = dirtyset;
 			this.current = current;
-			this.model = model;
 		}
 
 		@Override
@@ -189,7 +172,7 @@ public class HandlerWikiText implements Handler {
 					String relativePathToRoot = Utils.relativePathToRoot(site.getSource(),
 							found.getPath());
 					CompileResult compileResult = handlerImage.compile(site,
-							found, dirtyset, (ImageAttributes) attributes, model, relativePathToRoot);
+							found, dirtyset, (ImageAttributes) attributes, relativePathToRoot);
 					String base = getBase() == null ? null : getBase()
 							.toString();
 					if (StringUtils.isEmpty(base)) {
@@ -241,16 +224,16 @@ public class HandlerWikiText implements Handler {
 		final private Site site;
 		final private XPath xPath;
 		final private Set<Path> dirtyset;
-		final private Map<String, Object> model;
+		//final private Map<String, Object> model;
 
 		public WikiTextDocumentGenerator(TemplateBean templateText,
-				Map<String, Object> model, Site site, XPath xPath,
+				 Site site, XPath xPath,
 				Set<Path> dirtyset) {
-			super(site, templateText, model);
+			super(site, templateText);
 			this.site = site;
 			this.xPath = xPath;
 			this.dirtyset = dirtyset;
-			this.model = model;
+			//this.model = model;
 		}
 
 		public String generate() {
@@ -272,7 +255,7 @@ public class HandlerWikiText implements Handler {
 				String linkRel) throws IOException {
 			StringWriter writer = new StringWriter();
 			HtmlDocumentBuilder builder = new XdoccHtmlDocumentBuilder(writer,
-					site, dirtyset, xPath, model);
+					site, dirtyset, xPath);
 			try {
 				if (getModel().containsKey("relative")) {
 					String rel = (String) getModel().get("relative");
@@ -322,7 +305,7 @@ public class HandlerWikiText implements Handler {
 			String rawFileContent = FileUtils.readFileToString(xPath.getPath()
 					.toFile(), charset);
 			parser.parse(rawFileContent);
-			getModel().put("type", type);
+			getModel().put("handler", type);
 			getModel().put("content", writer.toString());
 		}
 

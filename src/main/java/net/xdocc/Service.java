@@ -363,7 +363,7 @@ public class Service {
 
 	public static void addCompileResult(Path path, CompileResult result) {
 		compileResult.put(path, result);
-		if (result.getFileInfos() != null) {
+		if (cache != null && result.getFileInfos() != null) {
 			cache.put(path.toFile(), result.getFileInfos());
 			db.commit();
 		}
@@ -374,6 +374,9 @@ public class Service {
 	}
 
 	public static boolean isCached(Path source, Path target) {
+		if(cache == null) {
+			return false;
+		}
 		Set<FileInfos> infos = cache.get(source.toFile());
 		if (infos == null) {
 			return false;
@@ -461,7 +464,9 @@ public class Service {
 						dependencies.addAll(compileResult2.getValue()
 								.findDependencies(source));
 						iterater.remove();
-						cache.remove(source.toFile());
+						if(cache!=null) {
+							cache.remove(source.toFile());
+						}
 						break;
 					}
 				}
@@ -469,7 +474,9 @@ public class Service {
 		}
 		for (Path dependency : dependencies) {
 			//System.err.println("removing dependency " + dependency);
-			cache.remove(dependency.toFile());
+			if(cache!=null) {
+				cache.remove(dependency.toFile());
+			}
 			compileResult.remove(dependency);
 		}
 	}

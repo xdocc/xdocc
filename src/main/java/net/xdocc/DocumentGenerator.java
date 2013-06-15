@@ -2,6 +2,7 @@ package net.xdocc;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -19,11 +20,10 @@ public class DocumentGenerator implements Serializable {
 	final private Map<String, Object> model;
 	final private Site site;
 
-	public DocumentGenerator(Site site, TemplateBean templateText,
-			Map<String, Object> model) {
+	public DocumentGenerator(Site site, TemplateBean templateText) {
 		this.site = site;
 		this.templateText = templateText;
-		this.model = model;
+		this.model = new HashMap<String, Object>();
 	}
 
 	public String generate() {
@@ -45,5 +45,16 @@ public class DocumentGenerator implements Serializable {
 
 	public Map<String, Object> getModel() {
 		return model;
+	}
+
+	public DocumentGenerator copy() {
+		DocumentGenerator documentGenerator = new DocumentGenerator(site,
+				templateText);
+		documentGenerator.setModel(getModel());
+		return documentGenerator;
+	}
+
+	private void setModel(Map<String, Object> model) {
+		this.model.putAll(model);
 	}
 }

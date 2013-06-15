@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import net.xdocc.Document;
 import net.xdocc.Link;
@@ -78,18 +80,42 @@ public class HandlerUtils {
 		return model;
 	}
 
-	public static Map<String, Object> fillModel(Site site, XPath xPath,
-			Document doc) throws IOException {
-		Map<String, Object> modelSite = new HashMap<>();
-		String path = Utils.relativePathToRoot(site.getSource(),
+	public static Map<String, Object> fillPage(Site site, XPath xPath,
+			Document document) throws IOException {
+		String relativePathToRoot = Utils.relativePathToRoot(site.getSource(),
 				xPath.getPath());
-		modelSite.put("path", path);
-		modelSite.put("document", doc);
+		Map<String, Object> model = new HashMap<>();
+		model.put("document", document);
 		Link current = Utils.find(xPath.getParent(), site.getNavigation());
 		List<Link> pathToRoot = Utils.linkToRoot(site.getSource(), xPath);
-		modelSite.put("current", current);
-		modelSite.put("breadcrumb", pathToRoot);
-		modelSite.put("navigation", site.getNavigation());
-		return modelSite;
+		model.put("current", current);
+		model.put("breadcrumb", pathToRoot);
+		model.put("navigation", site.getNavigation());
+		model.put("path", relativePathToRoot);
+		return model;
+	}
+	
+	public static List<Document> copy (List<Document> documents, String pathToRoot) {
+		return copy(documents, 1, pathToRoot);
+	}
+	
+	public static List<Document> copy (List<Document> documents, int level, String pathToRoot) {
+		List<Document> retVal = new ArrayList<>();
+		for(Document document:documents) {
+			if(document.getDocuments()!=null) {
+				document.setDocuments(copy(document.getDocuments(), level + 1, pathToRoot));
+			}
+			final Document docCopy;
+			if(Boolean.TRUE.equals(document.getPreview())) {
+				docCopy = document.copy(level + 1);
+				docCopy.applyPath(pathToRoot);
+				retVal.add(docCopy);
+			} else {
+				docCopy = document.copy(level);
+				docCopy.applyPath(pathToRoot);
+				retVal.add(docCopy);
+			}
+		}
+		return retVal;
 	}
 }

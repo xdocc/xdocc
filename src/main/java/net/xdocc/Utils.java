@@ -1,7 +1,6 @@
 package net.xdocc;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -16,7 +15,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -25,13 +23,10 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import net.xdocc.Site.TemplateBean;
-import net.xdocc.handlers.HandlerUtils;
-
-import org.apache.commons.io.filefilter.WildcardFileFilter;
-
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
+import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
 public class Utils {
 	public static XPath find(Path resolved, List<Site> sites) {
@@ -299,10 +294,54 @@ public class Utils {
 		}
 	}
 
+	/**
+	 * Escapes for inclusion as an attribute ->
+	 * http://stackoverflow.com/questions
+	 * /8909613/html-entity-escaping-to-prevent-xss.
+	 * 
+	 * @param s1
+	 *            string.
+	 * @return The string that is safe to place as an attribute
+	 */
+	public static String escapeAttribute(String s1) {
+		return s1.replace("&", "&amp;").replace("\"", "&quot;");
+	}
+
+	/**
+	 * Prints the complete model as a debug table and adds it to the model.
+	 * 
+	 * @param model
+	 *            The model for the output.
+	 * @return A HTML formated string
+	 */
+	public static String getDebug(final Map<String, Object> model) {
+		final int previewSize = 50;
+		final StringBuilder sb = new StringBuilder(
+				"<table border=1><th colspan=2>this document contains</th>\n");
+		for (Map.Entry<String, Object> entry : model.entrySet()) {
+			if("debug".equals(entry.getKey())) {
+				continue;
+			}
+			sb.append("<tr><td>");
+			sb.append(escapeHtml(entry.getKey()));
+			sb.append("</td><td title=\"");
+			String value = entry.getValue() == null ? "null" : entry.getValue()
+					.toString();
+			sb.append(escapeAttribute(value));
+			sb.append("\">");
+			value = escapeHtml(value);
+			sb.append(value.length() > previewSize ? value.substring(0,
+					previewSize) : value);
+			sb.append("</td></tr>\n");
+		}
+		return sb.append("</table>").toString();
+	}
+
 	public static Object lock = new Object();
 
 	public static String applyTemplate(Site site, TemplateBean templateText,
 			Map<String, Object> model) throws TemplateException, IOException {
+		model.put("debug", getDebug(model));
 		StringWriter sw = new StringWriter();
 		synchronized (lock) {
 
@@ -322,7 +361,7 @@ public class Utils {
 									templateText));
 			try {
 				templateText.getTemplate().process(model, sw);
-			} catch (TemplateException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 				System.err.println("available data:");
 				for (Map.Entry<String, Object> entry : model.entrySet()) {
@@ -734,37 +773,33 @@ public class Utils {
 	}
 
 	public static Document createDocument(Site site, XPath xPath,
-			String relativePathToRoot, String htmlContent, String template)
-			throws IOException {
-		Map<String, Object> model;
-		String documentName = xPath.getName();
-		String documentURL = xPath.getTargetURL() + ".html";
-		Date documentDate = xPath.getDate();
-		long documentNr = xPath.getNr();
-		String documentFilename = xPath.getFileName();
-		// apply text ftl
-		model = new HashMap<>();
-		HandlerUtils.fillModel(documentName, documentURL, documentDate,
-				documentNr, documentFilename, htmlContent, model);
+			String relativePathToRoot, String htmlContent, String template,
+			String type) throws IOException {
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				template, xPath.getPath());
 		// create the document
-		DocumentGenerator gen = new DocumentGenerator(site, templateText, model);
-		Document doc = new Document(xPath, gen, documentURL, relativePathToRoot);
+		DocumentGenerator documentGenerator = new DocumentGenerator(site,
+				templateText);
+		String documentURL = xPath.getTargetURL() + ".html";
+		Document doc = new Document(xPath, documentGenerator, documentURL,
+				relativePathToRoot, type);
+		doc.setContent(htmlContent);
+		doc.setTemplate(template);
 		return doc;
 	}
 
 	public static void writeHTML(Site site, XPath xPath, Set<Path> dirtyset,
-			String relativePathToRoot, Document doc, Path generatedFile, String type)
-			throws IOException, TemplateException {
+			String relativePathToRoot, Document doc, Path generatedFile,
+			String type) throws IOException, TemplateException {
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
-				"document", xPath.getPath());
+				"page", xPath.getPath());
 		// create the site
 		Map<String, Object> modelSite = new HashMap<>();
 		// root.put("navigation", site.getNavigation());
 		modelSite.put("path", relativePathToRoot);
 		modelSite.put("document", doc);
 		modelSite.put("type", type);
+		modelSite.put("template", "page");
 		Link current = Utils.find(xPath.getParent(), site.getNavigation());
 		List<Link> pathToRoot = Utils.linkToRoot(site.getSource(),
 				xPath.getParent());
@@ -780,7 +815,7 @@ public class Utils {
 	}
 
 	public static String[] paging(XPath xPath, int pages) {
-		String[] pagesURLs = new String[pages+1];
+		String[] pagesURLs = new String[pages + 1];
 		for (int i = 0; i <= pages; i++) {
 			// first is special, no _ in the URL
 			if (i == 0) {

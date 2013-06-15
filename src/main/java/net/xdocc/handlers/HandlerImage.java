@@ -40,7 +40,7 @@ public class HandlerImage implements Handler {
 	}
 
 	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset,
-			ImageAttributes attributes, Map<String, Object> previousModel, String relativePathToRoot) throws TemplateException, IOException,
+			ImageAttributes attributes, String relativePathToRoot) throws TemplateException, IOException,
 			InterruptedException {
 		// copy the original image
 		Path generatedFile = xPath.getTargetPath(xPath.getTargetURL()
@@ -90,7 +90,9 @@ public class HandlerImage implements Handler {
 		Date documentDate = xPath.getDate();
 		long documentNr = xPath.getNr();
 		String documentFilename = xPath.getFileName();
-		Map<String, Object> model = new HashMap<>();
+		DocumentGenerator gen = new DocumentGenerator(site, templateText);
+		Map<String, Object> model = gen.getModel();
+		
 		HandlerUtils.fillModel(documentName,
 				documentURL, documentDate, documentNr, documentFilename, "", model);
 
@@ -100,21 +102,22 @@ public class HandlerImage implements Handler {
 		} else {
 			model.put("css_class", "image");
 		}
-		DocumentGenerator gen = new DocumentGenerator(site, templateText, model);
+		
 		Document doc = new Document(xPath, gen,
-				xPath.getTargetURL() + ".html", relativePathToRoot);
+				xPath.getTargetURL() + ".html", relativePathToRoot, "file");
 		doc.addPath("image_normal",
 				xPath.getTargetURL() + "_n" + xPath.getExtensions());
 		doc.addPath("image_thumb",
 				xPath.getTargetURL() + "_t" + xPath.getExtensions());
 		doc.applyPath(relativePathToRoot);
+		doc.setTemplate("image");
 		//
 		// create the site to layout ftl
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
-				"document", xPath.getPath());
+				"page", xPath.getPath());
 		Map<String, Object> modelSite = HandlerUtils
-				.fillModel(site, xPath, doc);
-		modelSite.put("type", "single");
+				.fillPage(site, xPath, doc);
+		modelSite.put("type", "file");
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 		// write to disk
 		Path generatedFile2 = xPath.getTargetPath(xPath.getTargetURL()
@@ -132,7 +135,7 @@ public class HandlerImage implements Handler {
 	@Override
 	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset, Map<String, Object> model, String relativePathToRoot)
 			throws Exception {
-		return compile(site, xPath, dirtyset, null, model, relativePathToRoot);
+		return compile(site, xPath, dirtyset, (ImageAttributes)null, relativePathToRoot);
 	}
 
 	@Override

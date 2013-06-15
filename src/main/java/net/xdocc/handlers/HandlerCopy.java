@@ -40,7 +40,8 @@ public class HandlerCopy implements Handler {
 	}
 
 	@Override
-	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset, Map<String, Object> previousModel, String relativePathToRoot) {
+	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset,
+			Map<String, Object> previousModel, String relativePathToRoot) {
 		Map<String, Object> model = new HashMap<>(previousModel);
 		final Path generatedFile;
 		if (xPath.isVisible()) {
@@ -76,13 +77,17 @@ public class HandlerCopy implements Handler {
 				// new Date(Files.getLastModifiedTime( xPath.getPath()
 				// ).toMillis())
 				// create the document
-				Document document = createDocumentBrowse(site, xPath, relativePathToRoot, model);
-				return new CompileResult(document, xPath.getPath(), generatedFile);
+				Document document = createDocumentBrowse(site, xPath,
+						relativePathToRoot, model);
+				return new CompileResult(document, xPath.getPath(),
+						generatedFile);
 			} else if (xPath.isVisible()) {
 				// we have a file with an unknown extension, but we want to have
 				// it visible
-				Document document = createDocumentFile(site, xPath, relativePathToRoot, model);
-				return new CompileResult(document, xPath.getPath(), generatedFile);
+				Document document = createDocumentFile(site, xPath,
+						relativePathToRoot, model);
+				return new CompileResult(document, xPath.getPath(),
+						generatedFile);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -100,35 +105,32 @@ public class HandlerCopy implements Handler {
 
 	public static Document createDocumentFile(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
-		HandlerUtils.fillModel(xPath.getName(),
-				xPath.getTargetURLFilename(), new Date(), 0,
-				xPath.getFileName(), "", model);
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				"file", xPath.getPath());
-		
-		DocumentGenerator gen = new DocumentGenerator(site, templateText, model);
-		Document document = new Document(xPath, gen,
-				xPath.getTargetURLFilename(), path);
+		DocumentGenerator documentGenerator = new DocumentGenerator(site,
+				templateText);
+		Document document = new Document(xPath, documentGenerator,
+				xPath.getTargetURLFilename(), path, "file");
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.getPath())
 				.toMillis());
 		document.setDate(lastModified);
+		document.setTemplate("file");
 		return document;
 	}
 
 	public static Document createDocumentBrowse(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
-		model = new HashMap<String, Object>();
-		HandlerUtils.fillModel(xPath.getFileName(),
-				xPath.getTargetURL(), new Date(), 0, xPath.getFileName(), "", model);
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				"browse", xPath.getPath());
-		DocumentGenerator gen = new DocumentGenerator(site, templateText, model);
-		Document document = new Document(xPath, gen,
-				xPath.getTargetURL(), path);
+		DocumentGenerator documentGenerator = new DocumentGenerator(site,
+				templateText);
+		Document document = new Document(xPath, documentGenerator,
+				xPath.getTargetURL(), path, "file");
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.getPath())
 				.toMillis());
 		document.setDate(lastModified);
 		document.setName(xPath.getFileName());
+		document.setTemplate("file");
 		return document;
 	}
 }

@@ -49,7 +49,7 @@ public class HandlerHTML implements Handler {
 		
 		String htmlContent = e.toString();
 		Document doc = Utils.createDocument(site, xPath, relativePathToRoot,
-				htmlContent, "text");
+				htmlContent, "text", "file");
 		// always create a single page for that
 		Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "single");
 		return new CompileResult(doc, xPath.getPath(), generatedFile);
