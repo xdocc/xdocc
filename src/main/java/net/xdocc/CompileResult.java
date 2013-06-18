@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,7 +20,6 @@ import java.util.Set;
 public class CompileResult implements Serializable {
 
 	private static final long serialVersionUID = -673796597290628935L;
-	public final static CompileResult EMPTY = new CompileResult(null, null);
 	public final static CompileResult DONE = new CompileResult(null, null);
 	public final static CompileResult ERROR = new CompileResult(null, null);
 	private final Document document;
@@ -135,5 +136,30 @@ public class CompileResult implements Serializable {
 			Map<Path, Set<Path>> dependenciesDown) {
 		this.dependenciesUp.putAll(dependenciesUp);
 		this.dependenciesDown.putAll(dependenciesDown);
+	}
+
+	public CompileResult copyDocument() {
+		if(document!=null) {
+			copy(document, document.getDocuments());
+			return new CompileResult(document.copy(), fileInfos);
+		}
+		else return this;
+	}
+	
+	private void copy(Document documentOrig, List<Document> documents) {
+		if(documentOrig.getCompleteDocument()!=null) {
+			documentOrig.setCompleteDocument(documentOrig.getCompleteDocument().copy());
+		}
+		if(documents == null) {
+			return;
+		}
+		List<Document> copies = new ArrayList<>();
+		for(Document document:documentOrig.getDocuments()) {
+			if(document.getDocuments()!=null) {
+				copy(document, document.getDocuments());
+			}
+			copies.add(document.copy());
+		}
+		documentOrig.setDocuments(copies);
 	}
 }

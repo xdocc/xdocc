@@ -1,6 +1,5 @@
 package net.xdocc.handlers;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,21 +50,14 @@ public class HandlerDirectory implements Handler {
 	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset,
 			Map<String, Object> previousModel, String relativePathToRoot)
 			throws Exception {
-		Map<String, Object> model = new HashMap<>(previousModel);
+		//
 		List<Document> documents = recursiveHandler(site, xPath);
 		// Utils.adjustUrls(xPath, documents, path);
 
-		model.put("path", relativePathToRoot);
-		if (!xPath.isRoot()) {
-			Link current = Service.readNavigation(site, xPath);
-			model.put("local_navigation", current);
-		}
-		List<Link> pathToRoot = Utils.linkToRoot(site.getSource(), xPath);
-		model.put("breadcrumb", pathToRoot);
-		model.put("navigation",
-				Utils.setSelected(pathToRoot, site.getNavigation()));
+		
+		
 		String url = xPath.getTargetURL();
-		model.put("url", url);
+		
 		if (documents.size() == 0) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("The directory [" + xPath + "] has no elements");
@@ -76,56 +68,89 @@ public class HandlerDirectory implements Handler {
 			dirtyset.add(generatedDir);
 			return CompileResult.DONE;
 		}
+		int pageSize = xPath.getPageSize();
+		if(pageSize == 5) {
+			System.err.println("wtf");
+		}
+		
+		documents = promoteLinks(documents);
 
-		model.put("document_size", documents.size());
+		
 		// model.put("preview", xPath.isPreview());
 
 		String target = xPath.resolveTargetURL("index.html");
 
-		// change the path for the documents, if we find a highlighted document,
-		// we want to point to the whole folder
-		applyPath(documents, relativePathToRoot);
+		
 
-		int pageSize = xPath.getPageSize();
+		
+		
 		int pages = pageSize == 0 ? 0 : documents.size() / (pageSize + 1);
 		List<List<Document>> tmp = Utils.split(documents, pages, pageSize);
 		String[] pageURLs = Utils.paging(xPath, pages);
 		int counter = 0;
-
-		TemplateBean template = site.getTemplate(xPath.getLayoutSuffix(), "page",
-					xPath.getPath());
 		
 		// create the site
-		final Document documentFull = createDocumentCollection(site, xPath,
-				xPath, relativePathToRoot, documents, model, "collection",
-				pageURLs, 0);
-		model.put("document", documentFull);
-		model.put("type", "directory");
-		String html = Utils.applyTemplate(site, template, model);
-		html = Utils.postApplyTemplate(html, model, "path");
-		Path generatedFile = xPath.getTargetPath(target);
-		dirtyset.add(generatedFile);
-		Path generatedDir = Files.createDirectories(generatedFile.getParent());
-		dirtyset.add(generatedDir);
-		if (!Service.isCached(xPath.getPath(), generatedFile)) {
-			Utils.write(html, xPath, generatedFile);
+		
+		Document doc0 = null;
+		Path generatedFile0 = null;
+		
+		for(List<Document> list:tmp) {
+
+			Document doc = HandlerDirectory.createDocumentCollection(site, xPath, xPath, relativePathToRoot, list, previousModel, "collection", "directory",pageURLs, counter);
+			doc.applyPath1(relativePathToRoot);
+			//doc.applyPath1("BBB"+relativePathToRoot);
+			final Path generatedFile;
+			if(counter==0) {
+				generatedFile = xPath.getTargetPath(xPath.resolveTargetURL("index.html"));
+				generatedFile0 = generatedFile;
+				doc0 = doc;
+			} else {
+				generatedFile = xPath.getTargetPath(xPath.resolveTargetURL("index_"+counter+".html"));
+			}
+			Map<String, Object> model = new HashMap<>();
+			model.put("page_nr", list.size());
+			model.put("page_urls", pageURLs);
+			model.put("current_page", counter);
+			model.put("document_size", documents.size());
+			model.put("url", url);
+			if (!xPath.isRoot()) {
+				Link current = Service.readNavigation(site, xPath);
+				model.put("local_navigation", current);
+			}
+			Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "directory", model);
+			counter++;
 		}
 
 		final CompileResult compileResult;
 		if (xPath.isPreview()) {
-			Document documentPreview = Utils.searchHighlight(documentFull.getDocuments());
+			Document documentPreview = Utils.searchHighlight(doc0.getDocuments());
+			//documentPreview = documentPreview.copy(documentPreview.getLevel());
 			documentPreview.setHighlightUrl(target);
 			documentPreview.setHighlight(true);
 			documentPreview.setPreview(true);
-			documentPreview.setCompleteDocument(documentFull);
+			//Document dd = documentFull.copy().applyPath1(relativePathToRoot);
+			documentPreview.setCompleteDocument(doc0);
 			documentPreview.setDate(xPath.getDate());
 			compileResult = new CompileResult(documentPreview, xPath.getPath(),
-					generatedFile);
+					generatedFile0);
 		} else {
-			compileResult = new CompileResult(documentFull, xPath.getPath(),
-					generatedFile);
+			compileResult = new CompileResult(doc0, xPath.getPath(),
+					generatedFile0);
 		}
 		return compileResult;
+	}
+
+	private List<Document> promoteLinks(List<Document> documents) {
+		List<Document> retVal = new ArrayList<>();
+		for(Document document:documents) {
+			if("link".equals(document.getType()) && document.getDocuments()!=null) {
+				retVal.addAll(document.getDocuments());
+			}
+			else {
+				retVal.add(document);
+			}
+		}
+		return retVal;
 	}
 
 	/*
@@ -145,8 +170,8 @@ public class HandlerDirectory implements Handler {
 	 * }
 	 */
 
-	private void applyPath(List<Document> documents, String path) {
-		for (Document document : documents) {
+	//private void applyPath(List<Document> documents, String path) {
+		/*for (Document document : documents) {
 
 			if (document.getHighlight()) {
 				document.setOriginalUrl(document.getHighlightUrl());
@@ -156,8 +181,8 @@ public class HandlerDirectory implements Handler {
 			if (documents2 != null) {
 				applyPath(documents2, path);
 			}
-		}
-	}
+		}*/
+	//}
 
 	private List<Document> recursiveHandler(Site site, XPath xPath)
 			throws IOException, InterruptedException {
@@ -204,34 +229,21 @@ public class HandlerDirectory implements Handler {
 	}
 
 	public static Document createDocumentCollection(Site site, XPath xPath,
-			XPath original, String relativePathToRoot, List<Document> documents,
-			Map<String, Object> previousModel, String templateName,
+			XPath original, String relativePathToRoot, List<Document> documentsA,
+			Map<String, Object> previousModel, String templateName, String type,
 			String[] pageURLs, int current) throws IOException {
 		//since we set the level, we need to work on a copy of this
-		documents = HandlerUtils.copy(documents, relativePathToRoot);
+		List<Document> documents = HandlerUtils.copy(documentsA, relativePathToRoot);
 		String prefix = original.getLayoutSuffix();
 		if (prefix.equals("")) {
 			prefix = xPath.getLayoutSuffix();
 		}
 
-		TemplateBean templateText = null;
-		if (xPath.isPreview()) {
-			String prefix1 = "_pre" + prefix;
-			try {
-				templateText = site.getTemplate(prefix1, templateName,
-						xPath.getPath());
-			} catch (FileNotFoundException nfe) {
-				templateText = site.getTemplate(prefix, templateName,
-						xPath.getPath());
-			}
-		} else {
-			templateText = site.getTemplate(prefix, templateName,
-					xPath.getPath());
-		}
+		TemplateBean templateText = site.getTemplate(prefix, templateName, xPath.getPath());
 
 		DocumentGenerator gen = new DocumentGenerator(site, templateText);
 
-		Document document = new Document(xPath, gen, xPath.getTargetURL(), relativePathToRoot, "directory");
+		Document document = new Document(xPath, gen, xPath.getTargetURL(), type);
 		document.setPreview(xPath.isPreview());
 		document.setPaging(Arrays.asList(pageURLs), current);
 		document.setTemplate(templateName);

@@ -325,7 +325,6 @@ public class XPath implements Comparable<XPath> {
 		if (path.getFileName() == null) {
 			LOG.error("[" + path + "], cannot deal with an empty path");
 			throw new RuntimeException("cannot deal with an empty path");
-
 		}
 		return path.getFileName().toString();
 	}
@@ -570,16 +569,31 @@ public class XPath implements Comparable<XPath> {
 			return getTargetURL() + "/" + string;
 		}
 	}
-
+	
+	@Override
 	public int compareTo(XPath o2) {
 		long diff = getNr() - o2.getNr();
 		if (diff != 0) {
 			return diff > 0 ? 1 : -1;
-		} else if (getName() != null && o2.getName() != null) {
-			return getName().compareTo(o2.getName());
-		} else {
-			return getPath().compareTo(o2.getPath());
+		} 
+		if (getName() != null && o2.getName() != null) {
+			diff = getName().compareTo(o2.getName());
+			if (diff != 0) {
+				return diff > 0 ? 1 : -1;
+			}
 		}
+		if (getFileName() != null && o2.getFileName() != null) {
+			diff = getFileName().compareTo(o2.getFileName());
+			if (diff != 0) {
+				return diff > 0 ? 1 : -1;
+			}
+		}
+		return path.compareTo(o2.path);
+	}
+	
+	@Override
+	public int hashCode() {
+		return path.hashCode();
 	}
 
 	public boolean isRoot() {

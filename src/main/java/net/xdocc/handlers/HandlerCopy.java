@@ -94,7 +94,6 @@ public class HandlerCopy implements Handler {
 			LOG.error("Copy handler faild, cannot copy from " + xPath.getPath()
 					+ " to " + generatedFile + " - " + e);
 		}
-
 		return new CompileResult(null, xPath.getPath(), generatedFile);
 	}
 
@@ -110,11 +109,12 @@ public class HandlerCopy implements Handler {
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,
 				templateText);
 		Document document = new Document(xPath, documentGenerator,
-				xPath.getTargetURLFilename(), path, "file");
+				xPath.getTargetURLFilename(), "file");
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.getPath())
 				.toMillis());
 		document.setDate(lastModified);
 		document.setTemplate("file");
+		document.applyPath1(path);
 		return document;
 	}
 
@@ -125,12 +125,13 @@ public class HandlerCopy implements Handler {
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,
 				templateText);
 		Document document = new Document(xPath, documentGenerator,
-				xPath.getTargetURL(), path, "file");
+				xPath.getTargetURL(), "file");
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.getPath())
 				.toMillis());
 		document.setDate(lastModified);
 		document.setName(xPath.getFileName());
 		document.setTemplate("file");
+		document.applyPath1(path);
 		return document;
 	}
 }

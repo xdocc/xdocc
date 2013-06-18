@@ -86,7 +86,8 @@ public class HandlerLink implements Handler {
 				compileResult.addAllDependencies(dependenciesUp, dependenciesDown);
 
 				if (compileResult.getDocument() != null) {
-					setRelavtive(compileResult.getDocument(), relativePathToRoot);
+					compileResult.getDocument().applyPath1(relativePathToRoot);
+					//setRelavtive(compileResult.getDocument(), relativePathToRoot);
 				}
 				//this may happen is a file is not hidden, but also not visible  
 				if(compileResult.getDocument()!=null) {
@@ -98,38 +99,17 @@ public class HandlerLink implements Handler {
 				documents = documents.subList(0, documents.size() < limit? documents.size():limit );
 			}
 			
-			int pageSize = xPath.getPageSize();
-			int pages = pageSize == 0 ? 0 : documents.size() / (pageSize + 1);
-			List<List<Document>> tmp = Utils.split(documents, pages, pageSize);
-			String[] pageURLs=Utils.paging(xPath, pages);
-			int counter = 0;
-			
-			
-			
-			Document doc0 = null;
-			Path generatedFile0 = null;
-			for(List<Document> list:tmp) {
-
-				Document doc = HandlerDirectory.createDocumentCollection(site, xPath, xPath, relativePathToRoot, list, previousModel, "link", pageURLs, counter);
-				final Path generatedFile;
-				if(counter==0) {
-					generatedFile = xPath.getTargetPath(xPath.getTargetURL() + ".html");
-					generatedFile0 = generatedFile;
-					doc0 = doc;
-				} else {
-					generatedFile = xPath.getTargetPath(xPath.getTargetURL() + "_"+counter+".html");
-				}
-				counter++;
-				Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "collection");
-			
-			}
-			
-			return new CompileResult(doc0, xPath.getPath(), generatedFile0);
+			Document doc = HandlerDirectory.createDocumentCollection(site, xPath, xPath, relativePathToRoot, documents, previousModel, "link", "link", new String[0], 0);
+			Path generatedFile = xPath
+					.getTargetPath(xPath.getTargetURL() + ".html");
+			Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "link");
+			System.err.println("got id="+System.identityHashCode(doc));
+			return new CompileResult(doc, xPath.getPath(), generatedFile);
 		}
 	}
 
 	//TODO: is this method really necessary? 
-	private void setRelavtive(Document document, String url) {
+	/*private void setRelavtive(Document document, String url) {
 		document.setRelative(url);
 		@SuppressWarnings("unchecked")
 		List<Document> documents = document.getDocuments();
@@ -138,5 +118,5 @@ public class HandlerLink implements Handler {
 				setRelavtive(document2, url);
 			}
 		}
-	}
+	}*/
 }

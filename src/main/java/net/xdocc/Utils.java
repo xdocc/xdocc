@@ -1,5 +1,7 @@
 package net.xdocc;
 
+import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -26,7 +28,6 @@ import net.xdocc.Site.TemplateBean;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
-import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
 public class Utils {
 	public static XPath find(Path resolved, List<Site> sites) {
@@ -438,6 +439,10 @@ public class Utils {
 	}
 
 	public static Link find(XPath xPath, Link navigation) {
+		//we pass xPath as null if it is root
+		if(xPath == null) {
+			return navigation;
+		}
 		if (navigation.getTarget().getPath().equals(xPath.getPath())) {
 			return navigation;
 		}
@@ -675,7 +680,10 @@ public class Utils {
 	 * @return the list of links
 	 */
 	public static List<Link> linkToRoot(Path root, XPath xPath) {
-
+		//if we are root, return an empty list
+		if(xPath == null) {
+			return Collections.emptyList();
+		}
 		List<XPath> xPaths = new ArrayList<>();
 		while (!root.equals(xPath.getPath())) {
 			xPaths.add(0, xPath);
@@ -781,37 +789,44 @@ public class Utils {
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,
 				templateText);
 		String documentURL = xPath.getTargetURL() + ".html";
-		Document doc = new Document(xPath, documentGenerator, documentURL,
-				relativePathToRoot, type);
+		Document doc = new Document(xPath, documentGenerator, documentURL, type);
 		doc.setContent(htmlContent);
 		doc.setTemplate(template);
+		doc.applyPath1(relativePathToRoot);
 		return doc;
+	}
+	
+	public static void writeHTML(Site site, XPath xPath, Set<Path> dirtyset,
+			String relativePathToRoot, Document doc, Path generatedFile,
+			String type) throws IOException, TemplateException {
+		writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, type, new HashMap<String, Object>());
 	}
 
 	public static void writeHTML(Site site, XPath xPath, Set<Path> dirtyset,
 			String relativePathToRoot, Document doc, Path generatedFile,
-			String type) throws IOException, TemplateException {
+			String type, Map<String, Object> modelSite) throws IOException, TemplateException {
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
 				"page", xPath.getPath());
-		// create the site
-		Map<String, Object> modelSite = new HashMap<>();
-		// root.put("navigation", site.getNavigation());
 		modelSite.put("path", relativePathToRoot);
 		modelSite.put("document", doc);
 		modelSite.put("type", type);
 		modelSite.put("template", "page");
 		Link current = Utils.find(xPath.getParent(), site.getNavigation());
-		List<Link> pathToRoot = Utils.linkToRoot(site.getSource(),
-				xPath.getParent());
+		List<Link> pathToRoot = Utils.linkToRoot(site.getSource(), xPath);
 		modelSite.put("current", current);
+		modelSite.put("navigation",
+				Utils.setSelected(pathToRoot, site.getNavigation()));
 		modelSite.put("breadcrumb", pathToRoot);
-		modelSite.put("navigation", site.getNavigation());
+		
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
-
+		
+		htmlSite = Utils.postApplyTemplate(htmlSite, modelSite, "path");
 		dirtyset.add(generatedFile);
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
 		dirtyset.add(generatedDir);
-		Utils.write(htmlSite, xPath, generatedFile);
+		if (!Service.isCached(xPath.getPath(), generatedFile)) {
+			Utils.write(htmlSite, xPath, generatedFile);
+		}
 	}
 
 	public static String[] paging(XPath xPath, int pages) {
@@ -819,9 +834,9 @@ public class Utils {
 		for (int i = 0; i <= pages; i++) {
 			// first is special, no _ in the URL
 			if (i == 0) {
-				pagesURLs[i] = xPath.getTargetURL() + ".html";
+				pagesURLs[i] = xPath.resolveTargetURL("index.html");
 			} else {
-				pagesURLs[i] = xPath.getTargetURL() + "_" + i + ".html";
+				pagesURLs[i] = xPath.resolveTargetURL("index_"+i+".html");
 			}
 		}
 		return pagesURLs;
@@ -836,7 +851,7 @@ public class Utils {
 		} else {
 			for (int i = 0; i <= pages; i++) {
 				int start = i * pageSize;
-				int stop = start + pageSize - 1;
+				int stop = start + pageSize;
 				result.add(documents.subList(start,
 						documents.size() < stop ? documents.size() : stop));
 			}

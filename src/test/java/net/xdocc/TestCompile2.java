@@ -62,4 +62,63 @@ public class TestCompile2 {
 			}
 		}
 	}
+	
+	/**
+	 * Test the compiler twice. The result should not change.
+	 * 
+	 * @throws IOException .
+	 * @throws InterruptedException .
+	 */
+	@Test
+	public void testCompileTwiceWithLinks() throws IOException, InterruptedException {
+		Path source = Paths.get("/tmp/src.xdocc");
+		Utils.deleteDirectory(source);
+		Path generated = Paths.get("/tmp/gen.xdocc");
+		Utils.deleteDirectory(generated);
+		// src and dst directories set
+		Utils.createFile(source, ".templates/page.ftl", "!header!<br>[${document.generate}]<br>!footer!");
+		Utils.createFile(source, ".templates/collection.ftl", "!col-beg!<br><#list documents as document>${document.generate}</#list><br>!col-end!");
+		Utils.createFile(source, ".templates/text.ftl", "text:[${content}]<#if preview><a href=\"${complete_document.url}\">${complete_document.name}</a></#if>  / <a href=\"${url}\">${name}</a>");
+		Utils.createFile(source, ".templates/link.ftl", "<#list documents as document>${document.generate}</#list>");
+		List<Handler> handlers = Service.findHandlers();
+		Site site = new Site(source, generated, handlers, null);
+		// create content
+		Utils.createFile(site.getSource(), "1|index|.link", "url=evenmore/*");
+		Utils.createFile(site.getSource(), "1|more|more/2|more|.txt", "AAmoreAA");
+		for(int i=0;i<10;i++) {
+			Utils.createFile(site.getSource(), "2|evenmore|evenmore/3|next|next"+i+".pre/4|even"+i+"|.txt", "JUP"+i);
+		}
+		
+		
+	
+		Service.compile(site);
+		Service.waitFor(site.getSource());
+		
+		Thread.sleep(2000);
+		
+		//Service.compile(site);
+		//Service.waitFor(site.getSource());
+		
+		/*CompileResult cr = Service.getCompileResult(site.getSource());
+		List<Document> docs = cr.getDocument().getDocuments();
+		Assert.assertEquals(3, docs.size());
+		for(Document doc:docs) {
+			Assert.assertEquals(1, doc.getLevel());
+			if(doc.getName().equals("index")) {
+				Assert.assertEquals("file", doc.getType());			
+			} else if (doc.getName().equals("more")) {
+				List<Document> docs2 = doc.getDocuments();
+				Assert.assertEquals(1, docs2.size());
+				Assert.assertEquals("more", docs2.get(0).getName());
+				Assert.assertEquals(2, docs2.get(0).getLevel());
+			} else if (doc.getName().equals("evenmore")) {
+				List<Document> docs2 = doc.getDocuments();
+				Assert.assertEquals(1, docs2.size());
+				Assert.assertEquals("even1", docs2.get(0).getName());
+				Assert.assertEquals(3, docs2.get(0).getLevel());
+			} else {
+				Assert.fail("unknown name " + doc.getName());
+			}
+		}*/
+	}
 }

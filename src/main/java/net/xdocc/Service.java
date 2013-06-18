@@ -34,6 +34,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -275,14 +276,28 @@ public class Service {
 					System.err.println("delete " + pathToDelete);
 				}
 			}
+		}		
+		if(compilerCounter == 1) {
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//some templates may be used within a template -> find those and get the file size and date
+			Map<String, TemplateBean> templates = site.getTemplates();
+			for (Map.Entry<String, TemplateBean> entry : templates.entrySet()) {
+				if (entry.getValue().isDirty()) {
+					String baseName = FilenameUtils.getBaseName(entry.getKey());
+					site.getTemplate("", baseName, null);
+				}
+			}
+			//go again, because now we have the dependencies and some files may have changed
+			compile(site);
 		}
 		if (!fileChangeListener) {
 			// wait until everything is compiled and exit;
 			shutdown();
-		}
-		if(compilerCounter == 1) {
-			//go again, because now we have the dependencies and some files may have changed
-			compile(site);
 		}
 	}
 
@@ -362,9 +377,13 @@ public class Service {
 	}
 
 	public static void addCompileResult(Path path, CompileResult result) {
+		if(compileResult.containsKey(path)) {
+			System.err.println("Path "+path+ " already there. Overwriting");
+		}
 		compileResult.put(path, result);
 		if (cache != null && result.getFileInfos() != null) {
 			cache.put(path.toFile(), result.getFileInfos());
+			//System.err.println("add to cache "+path.toFile()+" / "+(result.getFileInfos()==null));
 			db.commit();
 		}
 
@@ -379,24 +398,37 @@ public class Service {
 		}
 		Set<FileInfos> infos = cache.get(source.toFile());
 		if (infos == null) {
+			//System.err.println("not found in cache "+source.toFile());
 			return false;
 		}
 		for (FileInfos info : infos) {
 			if (info.getTarget().equals(target.toFile())) {
 				try {
 					// now we have all the files found
-					long sourceSize = Files.size(source);
-					long targetSize = Files.size(target);
-					long targetTimestamp = Files.getLastModifiedTime(target)
-							.toMillis();
-					long sourceTimestamp = Files.getLastModifiedTime(source)
-							.toMillis();
-					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp,
-							sourceSize);
-					boolean isTargetDirty = info.isTargetDirty(target,
-							targetTimestamp, targetSize);
-					return !isSourceDirty && !isTargetDirty;
+					if (info.isFiles(source)) {
+						long sourceSize = Files.size(source);
+						long targetSize = Files.size(target);
+						long targetTimestamp = Files
+								.getLastModifiedTime(target).toMillis();
+						long sourceTimestamp = Files
+								.getLastModifiedTime(source).toMillis();
+						boolean isSourceDirty = info.isSourceDirty(
+								sourceTimestamp, sourceSize);
+						boolean isTargetDirty = info.isTargetDirty(target,
+								targetTimestamp, targetSize);
+						return !isSourceDirty && !isTargetDirty;
+					} else if (info.isDirectories(source)) {
+						//no need to check target, since it will be modified when a file changes inside.
+						long sourceTimestamp = Files
+								.getLastModifiedTime(source).toMillis();
+						boolean isSourceDirty = info.isSourceDirty(
+								sourceTimestamp);
+						return !isSourceDirty;
+					} else {
+						return false;
+					}
 				} catch (IOException e) {
+					e.printStackTrace();
 					return false;
 				}
 			}
@@ -411,7 +443,11 @@ public class Service {
 	}
 
 	public static CompileResult getCompileResult(Path path) {
-		return compileResult.get(path);
+		CompileResult compileResult1 = compileResult.get(path);
+		if(compileResult1 != null) {
+			return compileResult1.copyDocument();
+		}
+		return null;
 	}
 
 	public static void waitFor(Path path) throws InterruptedException {
@@ -422,17 +458,13 @@ public class Service {
 		}
 	}
 
-	/*
-	 * public static Map<Path, CompileResult> getCompileResults() { return
-	 * compileResult; }
-	 */
-
 	private static void invalidateCache(Site site) throws IOException {
 		Set<Path> dependencies = new HashSet<>();
 		// template cache
 		Map<String, TemplateBean> templates = site.getTemplates();
 		for (Map.Entry<String, TemplateBean> entry : templates.entrySet()) {
 			if (entry.getValue().isDirty()) {
+				System.err.println("yes, we are dirty: "+entry.getKey());
 				dependencies.addAll(entry.getValue().getFlatDependencies());
 			}
 		}
@@ -459,8 +491,11 @@ public class Service {
 							LOG.debug("cache: invalidate " + source
 									+ " with target " + target);
 						}
-						//System.err.println("cache: invalidate " + source
-						//		+ " with target " + target);
+						/*if(target.toString().contains("/ana/icons/")) {
+							System.err.println("cache: invalidate " + source
+								+ " with target " + target);
+							isCached(source, target);
+						}*/
 						dependencies.addAll(compileResult2.getValue()
 								.findDependencies(source));
 						iterater.remove();

@@ -3,6 +3,7 @@ package net.xdocc;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +32,11 @@ public class Document implements Comparable<Document>, Serializable {
 	private static final Logger LOG = LoggerFactory.getLogger(Document.class);
 	private static final long serialVersionUID = 136066054966377823L;
 	private final DocumentGenerator documentGenerator;
-	private final Map<String, String> paths = new HashMap<>();
+	private final Map<String, String> paths = new HashMap<String, String>();
 	private final XPath source;
 	private final String url;
-	private final String relativePathToRoot;
-	private final String type;
+
+	// private final String type;
 
 	/**
 	 * Set the document. The name will be set to xPath.getName() as default.
@@ -53,12 +55,10 @@ public class Document implements Comparable<Document>, Serializable {
 	 *            something like this ../../
 	 */
 	public Document(XPath xPath, DocumentGenerator documentGenerator,
-			String url, String relativePathToRoot, String type) {
+			String url, String type) {
 		this.documentGenerator = documentGenerator;
 		this.source = xPath;
 		this.url = url;
-		this.relativePathToRoot = relativePathToRoot;
-		this.type = type;
 		setName(xPath.getName());
 		setDate(xPath.getDate());
 		setFilename(xPath.getFileName());
@@ -68,7 +68,8 @@ public class Document implements Comparable<Document>, Serializable {
 		// now set the paths
 		addPath("url", url);
 		addPath("highlightUrl", url);
-		applyPath(relativePathToRoot);
+		// applyPath1(relativePathToRoot);
+		// setPath(relativePathToRoot);
 		setPreview(false);
 		setType(type);
 		setLayout(xPath.getLayoutSuffix());
@@ -129,19 +130,19 @@ public class Document implements Comparable<Document>, Serializable {
 	/**
 	 * @return relative path from the link handler.
 	 */
-	public String getRelative() {
-		return (String) documentGenerator.getModel().get("relative");
-	}
+	// public String getRelative() {
+	// return (String) documentGenerator.getModel().get("relative");
+	// }
 
 	/**
 	 * @param relative
 	 *            Set the relative path in the link handler
 	 * @return this class
 	 */
-	public Document setRelative(String relative) {
-		documentGenerator.getModel().put("relative", relative);
-		return this;
-	}
+	// public Document setRelative(String relative) {
+	// documentGenerator.getModel().put("relative", relative);
+	// return this;
+	// }
 
 	/**
 	 * @return The date of the xPath. Default is xPath.getDate()
@@ -233,6 +234,25 @@ public class Document implements Comparable<Document>, Serializable {
 	}
 
 	/**
+	 * 
+	 * @return The depth, i.e. the number of directories back to root
+	 */
+	public Integer getDepth() {
+		return (Integer) documentGenerator.getModel().get("depth");
+	}
+
+	/**
+	 * 
+	 * @param depth
+	 *            Set the number of directories back to root
+	 * @return
+	 */
+	public Document setDepth(Integer depth) {
+		documentGenerator.getModel().put("depth", depth);
+		return this;
+	}
+
+	/**
 	 * @return the file size if xPath is a file, or 0 if its a directory or
 	 *         empty file.
 	 */
@@ -267,6 +287,9 @@ public class Document implements Comparable<Document>, Serializable {
 		@SuppressWarnings("unchecked")
 		List<Document> documents = (List<Document>) documentGenerator
 				.getModel().get("documents");
+		if (documents == null) {
+			return Collections.emptyList();
+		}
 		return documents;
 	}
 
@@ -288,9 +311,19 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @param pageURLs
 	 * @param current
 	 */
-	public void setPaging(List<String> pageURLs, int current) {
+	public void setPaging(List<String> pageURLs, Integer current) {
 		documentGenerator.getModel().put("page_urls", pageURLs);
 		documentGenerator.getModel().put("current_page", current);
+
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<String> getPageURLs() {
+		return (List<String>) documentGenerator.getModel().get("page_urls");
+	}
+	
+	public Integer getCurrent() {
+		return (Integer) documentGenerator.getModel().get("current_page");
 
 	}
 
@@ -380,9 +413,9 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document copy(int level) {
+		System.err.println("copy before");
 		DocumentGenerator gen = documentGenerator.copy();
-		Document document = new Document(source, gen, url, relativePathToRoot,
-				type);
+		Document document = new Document(source, gen, url, getType());
 		document.paths.putAll(new HashMap<>(paths));
 		document.setLevel(level);
 		// document name may have changed, also other parameters
@@ -390,7 +423,14 @@ public class Document implements Comparable<Document>, Serializable {
 		document.setName(getName());
 		document.setHighlight(getHighlight());
 		document.setDate(getDate());
+		document.setType(getType());
+		document.setDepth(getDepth());
+		document.setPaging(getPageURLs(), getCurrent());
 		return document;
+	}
+
+	public Document copy() {
+		return copy(getLevel());
 	}
 
 	/**
@@ -407,7 +447,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The level of this document
 	 */
 	public int getLevel() {
-		Integer int0 = (int) documentGenerator.getModel().get("level");
+		Integer int0 = (Integer) documentGenerator.getModel().get("level");
 		return int0 == null ? 0 : int0;
 	}
 
@@ -438,8 +478,10 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @param path
 	 *            The path to apply
 	 */
-	public void applyPath(String path) {
+	public Document applyPath1(String path) {
+
 		applyPath(path, new HashSet<Document>());
+		return this;
 	}
 
 	/**
@@ -453,10 +495,14 @@ public class Document implements Comparable<Document>, Serializable {
 	 */
 	private void applyPath(String path, Set<Document> seen) {
 		if (seen.contains(this)) {
+			// we have already processed this.
 			return;
 		}
+		System.err.println("applyPath " + path + " to " + url + " to id "
+				+ System.identityHashCode(this));
 		seen.add(this);
 		setPath(path);
+		setDepth(StringUtils.countMatches(path, "../"));
 		for (Map.Entry<String, String> entry : paths.entrySet()) {
 			documentGenerator.getModel().put(entry.getKey(),
 					path + entry.getValue());
@@ -480,21 +526,12 @@ public class Document implements Comparable<Document>, Serializable {
 
 	@Override
 	public int compareTo(Document o) {
-		long diff = getNr() - o.getNr();
-		if (diff != 0) {
-			return diff > 0 ? 1 : -1;
-		} else if (getName() != null && o.getName() != null) {
-			return getName().compareTo(o.getName());
-		} else {
-			return getFilename().compareTo(o.getFilename());
-		}
+		return source.compareTo(o.source);
 	}
 
 	@Override
 	public int hashCode() {
-		int hash = new Long(getNr()).hashCode();
-		hash = hash ^ getFilename().hashCode();
-		return hash;
+		return source.hashCode();
 	}
 
 	@Override

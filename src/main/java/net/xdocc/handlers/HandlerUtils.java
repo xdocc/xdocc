@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import net.xdocc.Document;
 import net.xdocc.Link;
@@ -108,11 +107,14 @@ public class HandlerUtils {
 			final Document docCopy;
 			if(Boolean.TRUE.equals(document.getPreview())) {
 				docCopy = document.copy(level + 1);
-				docCopy.applyPath(pathToRoot);
+				System.err.println(System.identityHashCode(docCopy) + "==" + System.identityHashCode(document));
+				//docCopy.applyPath(pathToRoot);
+				//TODO:enable
 				retVal.add(docCopy);
 			} else {
 				docCopy = document.copy(level);
-				docCopy.applyPath(pathToRoot);
+				//docCopy.applyPath(pathToRoot);
+				//TODO:enable
 				retVal.add(docCopy);
 			}
 		}

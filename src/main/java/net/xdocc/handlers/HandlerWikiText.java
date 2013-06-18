@@ -10,8 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -76,9 +74,10 @@ public class HandlerWikiText implements Handler {
 		// create the document
 		DocumentGenerator documentGenerator = new WikiTextDocumentGenerator(templateText, site, xPath,
 				dirtyset);
-		Document doc = new Document(xPath, documentGenerator, xPath.getTargetURL() + ".html", path, "file");
+		Document doc = new Document(xPath, documentGenerator, xPath.getTargetURL() + ".html", "file");
 		doc.setPreview(xPath.isPreview());
 		doc.setTemplate("wikitext");
+		doc.applyPath1(path);
 		// create the site to layout ftl
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(), "page", xPath.getPath());
 		Map<String, Object> model = HandlerUtils.fillPage(site, xPath, doc);
@@ -176,13 +175,15 @@ public class HandlerWikiText implements Handler {
 					String base = getBase() == null ? null : getBase()
 							.toString();
 					if (StringUtils.isEmpty(base)) {
-						compileResult.getDocument().applyPath(path);
+						compileResult.getDocument().applyPath1(path);
+						//TODO:enable
 					} else {
 						compileResult.getDocument()
-								.applyPath(base + "/" + path);
+								.applyPath1(base + "/" + path);
+						//TODO:enable
 					}
 					super.charactersUnescaped(compileResult.getDocument()
-							.getContent());
+							.getGenerate());
 				}
 			} catch (Exception e) {
 				LOG.error("cannot create xdocc image " + e);

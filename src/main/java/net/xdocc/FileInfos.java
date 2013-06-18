@@ -12,6 +12,7 @@ public class FileInfos implements Serializable {
 	private final long targetSize;
 	private final long sourceTimestamp;
 	private final long sourceSize;
+	private final boolean isDirectory;
 
 	public FileInfos(Path target, long targetTimestamp, long targetSize,
 			long sourceTimestamp, long sourceSize) {
@@ -20,6 +21,7 @@ public class FileInfos implements Serializable {
 		this.targetSize = targetSize;
 		this.sourceTimestamp = sourceTimestamp;
 		this.sourceSize = sourceSize;
+		this.isDirectory = this.target.isDirectory();
 	}
 
 	public long getTargetSize() {
@@ -53,6 +55,18 @@ public class FileInfos implements Serializable {
 		return this.sourceTimestamp != sourceTimestamp
 				|| this.sourceSize != sourceSize;
 	}
+	
+	public boolean isSourceDirty(long sourceTimestamp) {
+		return this.sourceTimestamp != sourceTimestamp;
+	}
+	
+	public boolean isFiles(Path source) {
+		return !this.isDirectory && !source.toFile().isDirectory();
+	}
+	
+	public boolean isDirectories(Path source) {
+		return this.isDirectory && source.toFile().isDirectory();
+	}
 
 	@Override
 	public int hashCode() {
@@ -72,8 +86,11 @@ public class FileInfos implements Serializable {
 	}
 
 	public FileInfos copy(long sourceTimestamp, long sourceSize) {
-		
 		return new FileInfos(target.toPath(), targetTimestamp, targetSize, sourceTimestamp, sourceSize);
 	}
+
+	
+
+	
 
 }

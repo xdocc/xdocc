@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -104,12 +103,13 @@ public class HandlerImage implements Handler {
 		}
 		
 		Document doc = new Document(xPath, gen,
-				xPath.getTargetURL() + ".html", relativePathToRoot, "file");
+				xPath.getTargetURL() + ".html",  "file");
 		doc.addPath("image_normal",
 				xPath.getTargetURL() + "_n" + xPath.getExtensions());
 		doc.addPath("image_thumb",
 				xPath.getTargetURL() + "_t" + xPath.getExtensions());
-		doc.applyPath(relativePathToRoot);
+		doc.applyPath1(relativePathToRoot);
+		//TODO:enable
 		doc.setTemplate("image");
 		//
 		// create the site to layout ftl

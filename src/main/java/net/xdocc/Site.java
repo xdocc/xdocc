@@ -82,11 +82,6 @@ public class Site {
 		this.templatePath = this.source.resolve(".templates");
 		freemakerEngine = createTemplateEngine(templatePath);
 		templates = loadTemplates(templatePath);
-		// pre-load templates in order to get every ftl so that <#include works
-		// for(String name:templates.keySet())
-		// {
-		// getTemplate( "", name );
-		// }
 	}
 
 	public Path getTemplatePath() {
@@ -146,7 +141,9 @@ public class Site {
 			templateBean.setFilesize(filesize);
 
 		}
-		templateBean.addDependency(dependency);
+		if(dependency!=null) {
+			templateBean.addDependency(dependency);
+		}
 		return templateBean;
 	}
 
@@ -186,7 +183,13 @@ public class Site {
 					String name = file.getFileName().toString();
 					TemplateBean templateBean = new TemplateBean();
 					templateBean.setFile(file);
+					/*FileTime fileTime = Files.getLastModifiedTime(templateBean
+							.getFile());
+					long filesize = Files.size(templateBean.getFile());
+					templateBean.setTimestamp(fileTime.toMillis());
+					templateBean.setFilesize(filesize);*/
 					templates.put(name, templateBean);
+					System.err.println("add "+name);
 				}
 				return FileVisitResult.CONTINUE;
 			}
@@ -226,10 +229,12 @@ public class Site {
 			try {
 				FileTime fileTime = Files.getLastModifiedTime(getFile());
 				long filesize = Files.size(getFile());
-				return getTimestamp() == null
+				boolean dirty = getTimestamp() == null
 						|| getTimestamp().longValue() != fileTime.toMillis()
 						|| getFilesize() != filesize;
+				return dirty;
 			} catch (IOException e) {
+				e.printStackTrace();
 				return true;
 			}
 		}
