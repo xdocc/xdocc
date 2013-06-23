@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.xdocc.handlers.Handler;
+import net.xdocc.handlers.HandlerBean;
+
 /**
  * The result of a compilation can be a document or a collection of documents.
  * 
@@ -20,33 +23,47 @@ import java.util.Set;
 public class CompileResult implements Serializable {
 
 	private static final long serialVersionUID = -673796597290628935L;
-	public final static CompileResult DONE = new CompileResult(null, null);
-	public final static CompileResult ERROR = new CompileResult(null, null);
+	public final static CompileResult DONE = new CompileResult(null, null,
+			null, null);
+	public final static CompileResult ERROR = new CompileResult(null, null,
+			null, null);
 	private final Document document;
 	private final Set<FileInfos> fileInfos;
+	private final HandlerBean handlerBean;
+	private final Handler handler;
 
-	public CompileResult(Document document, Set<FileInfos> fileInfos) {
+	public CompileResult(Document document, Set<FileInfos> fileInfos,
+			HandlerBean handlerBean, Handler handler) {
 		this.document = document;
 		this.fileInfos = fileInfos;
+		this.handlerBean = handlerBean;
+		this.handler = handler;
 	}
 
-	public CompileResult(Document document, Path source, Path... targets) {
+	public CompileResult(Document document, Path source,
+			HandlerBean handlerBean, Handler handler, Path... targets) {
 		this.document = document;
+		this.handlerBean = handlerBean;
+		this.handler = handler;
 		this.fileInfos = new HashSet<>();
-		for (int i = 0; i < targets.length; i++) {
-			try {
-				long sourceSize = Files.size(source);
-				long targetSize = Files.size(targets[i]);
-				long targetTimestamp = Files.getLastModifiedTime(targets[i])
-						.toMillis();
-				long sourceTimestamp = Files.getLastModifiedTime(source)
-						.toMillis();
-				fileInfos.add(new FileInfos(targets[i], targetTimestamp,
-						targetSize, sourceTimestamp, sourceSize));
-			} catch (IOException e) {
-				e.printStackTrace();
+		if (targets != null) {
+			for (int i = 0; i < targets.length; i++) {
+				if (targets[i] != null) {
+					try {
+						long sourceSize = Files.size(source);
+						long targetSize = Files.size(targets[i]);
+						long targetTimestamp = Files.getLastModifiedTime(
+								targets[i]).toMillis();
+						long sourceTimestamp = Files
+								.getLastModifiedTime(source).toMillis();
+						fileInfos.add(new FileInfos(targets[i],
+								targetTimestamp, targetSize, sourceTimestamp,
+								sourceSize));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
 			}
-
 		}
 	}
 
@@ -139,27 +156,37 @@ public class CompileResult implements Serializable {
 	}
 
 	public CompileResult copyDocument() {
-		if(document!=null) {
+		if (document != null) {
 			copy(document, document.getDocuments());
-			return new CompileResult(document.copy(), fileInfos);
-		}
-		else return this;
+			return new CompileResult(document.copy(), fileInfos, handlerBean,
+					handler);
+		} else
+			return this;
 	}
-	
+
 	private void copy(Document documentOrig, List<Document> documents) {
-		if(documentOrig.getCompleteDocument()!=null) {
-			documentOrig.setCompleteDocument(documentOrig.getCompleteDocument().copy());
+		if (documentOrig.getCompleteDocument() != null) {
+			documentOrig.setCompleteDocument(documentOrig.getCompleteDocument()
+					.copy());
 		}
-		if(documents == null) {
+		if (documents == null) {
 			return;
 		}
 		List<Document> copies = new ArrayList<>();
-		for(Document document:documentOrig.getDocuments()) {
-			if(document.getDocuments()!=null) {
+		for (Document document : documentOrig.getDocuments()) {
+			if (document.getDocuments() != null) {
 				copy(document, document.getDocuments());
 			}
 			copies.add(document.copy());
 		}
 		documentOrig.setDocuments(copies);
+	}
+
+	public HandlerBean getHandlerBean() {
+		return handlerBean;
+	}
+
+	public Handler getHandler() {
+		return handler;
 	}
 }

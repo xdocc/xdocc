@@ -1,4 +1,4 @@
 
  <#list documents as document>
-     ${document.content}
+     ${document.generate}
  </#list>

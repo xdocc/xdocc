@@ -247,7 +247,7 @@ public class Service {
 	 * @param path
 	 * @throws IOException
 	 */
-	static void compile(Site site, Path path, Map<String, Object> model)
+	public static void compile(Site site, Path path, Map<String, Object> model)
 			throws IOException {
 		LOG.info("compiling: " + site + "/" + path);
 		Link link = readNavigation(site);
@@ -278,12 +278,6 @@ public class Service {
 			}
 		}		
 		if(compilerCounter == 1) {
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			//some templates may be used within a template -> find those and get the file size and date
 			Map<String, TemplateBean> templates = site.getTemplates();
 			for (Map.Entry<String, TemplateBean> entry : templates.entrySet()) {
@@ -292,8 +286,6 @@ public class Service {
 					site.getTemplate("", baseName, null);
 				}
 			}
-			//go again, because now we have the dependencies and some files may have changed
-			compile(site);
 		}
 		if (!fileChangeListener) {
 			// wait until everything is compiled and exit;

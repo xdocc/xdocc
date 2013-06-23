@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import net.xdocc.CompileResult;
 import net.xdocc.Document;
@@ -47,28 +46,27 @@ public class HandlerDirectory implements Handler {
 	}
 
 	@Override
-	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset,
-			Map<String, Object> previousModel, String relativePathToRoot)
+	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
 		//
-		List<Document> documents = recursiveHandler(site, xPath);
+		List<Document> documents = recursiveHandler(handlerBean.getSite(), handlerBean.getxPath());
 		// Utils.adjustUrls(xPath, documents, path);
 
 		
 		
-		String url = xPath.getTargetURL();
+		String url = handlerBean.getxPath().getTargetURL();
 		
 		if (documents.size() == 0) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("The directory [" + xPath + "] has no elements");
+				LOG.debug("The directory [" + handlerBean.getxPath() + "] has no elements");
 			}
 
-			Path p = xPath.getTargetPath(url);
+			Path p = handlerBean.getxPath().getTargetPath(url);
 			Path generatedDir = Files.createDirectories(p);
-			dirtyset.add(generatedDir);
+			handlerBean.getDirtyset().add(generatedDir);
 			return CompileResult.DONE;
 		}
-		int pageSize = xPath.getPageSize();
+		int pageSize = handlerBean.getxPath().getPageSize();
 		if(pageSize == 5) {
 			System.err.println("wtf");
 		}
@@ -78,7 +76,7 @@ public class HandlerDirectory implements Handler {
 		
 		// model.put("preview", xPath.isPreview());
 
-		String target = xPath.resolveTargetURL("index.html");
+		String target = handlerBean.getxPath().resolveTargetURL("index.html");
 
 		
 
@@ -86,7 +84,7 @@ public class HandlerDirectory implements Handler {
 		
 		int pages = pageSize == 0 ? 0 : documents.size() / (pageSize + 1);
 		List<List<Document>> tmp = Utils.split(documents, pages, pageSize);
-		String[] pageURLs = Utils.paging(xPath, pages);
+		String[] pageURLs = Utils.paging(handlerBean.getxPath(), pages);
 		int counter = 0;
 		
 		// create the site
@@ -96,16 +94,16 @@ public class HandlerDirectory implements Handler {
 		
 		for(List<Document> list:tmp) {
 
-			Document doc = HandlerDirectory.createDocumentCollection(site, xPath, xPath, relativePathToRoot, list, previousModel, "collection", "directory",pageURLs, counter);
-			doc.applyPath1(relativePathToRoot);
+			Document doc = HandlerDirectory.createDocumentCollection(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getxPath(), handlerBean.getRelativePathToRoot(), list, handlerBean.getModel(), "collection", "directory",pageURLs, counter);
+			doc.applyPath1(handlerBean.getRelativePathToRoot());
 			//doc.applyPath1("BBB"+relativePathToRoot);
 			final Path generatedFile;
 			if(counter==0) {
-				generatedFile = xPath.getTargetPath(xPath.resolveTargetURL("index.html"));
+				generatedFile = handlerBean.getxPath().getTargetPath(handlerBean.getxPath().resolveTargetURL("index.html"));
 				generatedFile0 = generatedFile;
 				doc0 = doc;
 			} else {
-				generatedFile = xPath.getTargetPath(xPath.resolveTargetURL("index_"+counter+".html"));
+				generatedFile = handlerBean.getxPath().getTargetPath(handlerBean.getxPath().resolveTargetURL("index_"+counter+".html"));
 			}
 			Map<String, Object> model = new HashMap<>();
 			model.put("page_nr", list.size());
@@ -113,16 +111,18 @@ public class HandlerDirectory implements Handler {
 			model.put("current_page", counter);
 			model.put("document_size", documents.size());
 			model.put("url", url);
-			if (!xPath.isRoot()) {
-				Link current = Service.readNavigation(site, xPath);
+			if (!handlerBean.getxPath().isRoot()) {
+				Link current = Service.readNavigation(handlerBean.getSite(), handlerBean.getxPath());
 				model.put("local_navigation", current);
 			}
-			Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "directory", model);
+			if(writeToDisk) {
+				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getDirtyset(), handlerBean.getRelativePathToRoot(), doc, generatedFile, "directory", model);
+			}
 			counter++;
 		}
 
 		final CompileResult compileResult;
-		if (xPath.isPreview()) {
+		if (handlerBean.getxPath().isPreview()) {
 			Document documentPreview = Utils.searchHighlight(doc0.getDocuments());
 			//documentPreview = documentPreview.copy(documentPreview.getLevel());
 			documentPreview.setHighlightUrl(target);
@@ -130,11 +130,11 @@ public class HandlerDirectory implements Handler {
 			documentPreview.setPreview(true);
 			//Document dd = documentFull.copy().applyPath1(relativePathToRoot);
 			documentPreview.setCompleteDocument(doc0);
-			documentPreview.setDate(xPath.getDate());
-			compileResult = new CompileResult(documentPreview, xPath.getPath(),
+			documentPreview.setDate(handlerBean.getxPath().getDate());
+			compileResult = new CompileResult(documentPreview, handlerBean.getxPath().getPath(), handlerBean, this,
 					generatedFile0);
 		} else {
-			compileResult = new CompileResult(doc0, xPath.getPath(),
+			compileResult = new CompileResult(doc0, handlerBean.getxPath().getPath(), handlerBean, this,
 					generatedFile0);
 		}
 		return compileResult;

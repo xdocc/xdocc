@@ -360,6 +360,18 @@ public class XPath implements Comparable<XPath> {
 		return url;
 
 	}
+	
+	public String getTargetURLPath() {
+		String[] paths = Utils.createURLSplit(site.getSource(), this);
+		
+		String[] tmp= new String[paths.length-1];
+		for(int i=0;i<tmp.length;i++) {
+			tmp[i]=paths[i];
+		}
+		String url = Utils.createURL(tmp);
+		return url;
+
+	}
 
 	/**
 	 * @return The path of the file in the web folder for files that have been

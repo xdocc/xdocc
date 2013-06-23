@@ -39,7 +39,7 @@ public class HandlerImage implements Handler {
 	}
 
 	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset,
-			ImageAttributes attributes, String relativePathToRoot) throws TemplateException, IOException,
+			ImageAttributes attributes, String relativePathToRoot, HandlerBean handlerBean, boolean writeToDisk) throws TemplateException, IOException,
 			InterruptedException {
 		// copy the original image
 		Path generatedFile = xPath.getTargetPath(xPath.getTargetURL()
@@ -126,16 +126,18 @@ public class HandlerImage implements Handler {
 		Path generatedDir2 = Files
 				.createDirectories(generatedFile2.getParent());
 		dirtyset.add(generatedDir2);
+		if (writeToDisk) {
 		if (!Service.isCached(xPath.getPath(), generatedFile2)) {
 			Utils.write(htmlSite, xPath, generatedFile2);
 		}
-		return new CompileResult(doc, xPath.getPath(), generatedFile, generatedFileThumb, generatedFileNorm, generatedFile2);
+		}
+		return new CompileResult(doc, xPath.getPath(), handlerBean, this, generatedFile, generatedFileThumb, generatedFileNorm, generatedFile2);
 	}
 
 	@Override
-	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset, Map<String, Object> model, String relativePathToRoot)
+	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
-		return compile(site, xPath, dirtyset, (ImageAttributes)null, relativePathToRoot);
+		return compile(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getDirtyset(), (ImageAttributes)null, handlerBean.getRelativePathToRoot(), handlerBean, writeToDisk);
 	}
 
 	@Override

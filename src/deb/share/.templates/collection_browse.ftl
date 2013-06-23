@@ -14,6 +14,6 @@
      <td>-</a></td>
     </tr>
     <#list documents as document>
-     <tr>${document.content}</tr>
+     <tr>${document.generate}</tr>
     </#list>
    </table>

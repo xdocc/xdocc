@@ -1,9 +1,6 @@
 package net.xdocc.handlers;
 
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import net.xdocc.CompileResult;
 import net.xdocc.Site;
@@ -21,7 +18,6 @@ public interface Handler {
 	 * @return
 	 * @throws Exception
 	 */
-	public abstract CompileResult compile(Site site, XPath xPath,
-			Set<Path> dirtyset, Map<String, Object> model, String relativePathToRoot) throws Exception;
+	public abstract CompileResult compile(HandlerBean handlerBean, boolean writeToDisk) throws Exception;
 
 }

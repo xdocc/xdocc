@@ -1,3 +1,3 @@
 <#include "header.ftl">
-  ${document.content}
+  ${document.generate}
 <#include "footer.ftl">

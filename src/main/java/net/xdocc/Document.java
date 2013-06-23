@@ -130,19 +130,19 @@ public class Document implements Comparable<Document>, Serializable {
 	/**
 	 * @return relative path from the link handler.
 	 */
-	// public String getRelative() {
-	// return (String) documentGenerator.getModel().get("relative");
-	// }
+	public String getRelative() {
+		return (String) documentGenerator.getModel().get("relative");
+	}
 
 	/**
 	 * @param relative
 	 *            Set the relative path in the link handler
 	 * @return this class
 	 */
-	// public Document setRelative(String relative) {
-	// documentGenerator.getModel().put("relative", relative);
-	// return this;
-	// }
+	 public Document setRelative(String relative) {
+		 documentGenerator.getModel().put("relative", relative);
+		 return this;
+	 }
 
 	/**
 	 * @return The date of the xPath. Default is xPath.getDate()
@@ -413,7 +413,6 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document copy(int level) {
-		System.err.println("copy before");
 		DocumentGenerator gen = documentGenerator.copy();
 		Document document = new Document(source, gen, url, getType());
 		document.paths.putAll(new HashMap<>(paths));
@@ -426,6 +425,7 @@ public class Document implements Comparable<Document>, Serializable {
 		document.setType(getType());
 		document.setDepth(getDepth());
 		document.setPaging(getPageURLs(), getCurrent());
+		document.setRelative(getRelative());
 		return document;
 	}
 
@@ -498,8 +498,6 @@ public class Document implements Comparable<Document>, Serializable {
 			// we have already processed this.
 			return;
 		}
-		System.err.println("applyPath " + path + " to " + url + " to id "
-				+ System.identityHashCode(this));
 		seen.add(this);
 		setPath(path);
 		setDepth(StringUtils.countMatches(path, "../"));

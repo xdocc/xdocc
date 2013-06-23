@@ -54,7 +54,7 @@ public class DocumentGenerator implements Serializable {
 		return documentGenerator;
 	}
 
-	private void setModel(Map<String, Object> model) {
+	public void setModel(Map<String, Object> model) {
 		this.model.putAll(model);
 	}
 }

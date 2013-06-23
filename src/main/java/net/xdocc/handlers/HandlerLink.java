@@ -34,89 +34,98 @@ public class HandlerLink implements Handler {
 	}
 
 	@Override
-	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset, Map<String, Object> previousModel, String relativePathToRoot)
+	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
-	
-		Configuration config = new PropertiesConfiguration(xPath.getPath().toFile());
-		
+
+		Configuration config = new PropertiesConfiguration(handlerBean
+				.getxPath().getPath().toFile());
+
 		List<Object> urls = config.getList("url", new ArrayList<>());
 		int limit = config.getInt("limit", -1);
-		
+
 		List<XPath> founds = new ArrayList<>();
-		
-		for(Object url:urls) {
-			founds.addAll(Utils.findURL(site, xPath, (String)url));
+
+		for (Object url : urls) {
+			founds.addAll(Utils.findURL(handlerBean.getSite(),
+					handlerBean.getxPath(), (String) url));
 		}
 		if (founds.size() == 0
 				|| (founds.size() > 0 && !founds.get(0).isVisible())) {
 			return CompileResult.DONE;
 		} else {
 			List<Document> documents = new ArrayList<>();
-			
+
 			final boolean ascending;
-			if (xPath.isAutoSort()) {
+			if (handlerBean.getxPath().isAutoSort()) {
 				ascending = Utils.guessAutoSort(founds);
 			} else {
-				ascending = xPath.isAscending();
+				ascending = handlerBean.getxPath().isAscending();
 			}
 			Utils.sort2(founds, ascending);
-			
-			for(XPath found:founds) {
+
+			for (XPath found : founds) {
 				Service.waitFor(found.getPath());
-				CompileResult compileResult = Service.getCompileResult(
-						found.getPath());
-				
-				compileResult.addDependencies(found.getPath(), xPath.getPath());
-				Map<Path, Set<Path>> dependenciesUp = compileResult.getDependenciesUp();
-				Map<Path, Set<Path>> dependenciesDown = compileResult.getDependenciesDown();
-				
-				//documents.add(compileResult.getDocument());
-				
+				CompileResult compileResult = Service.getCompileResult(found
+						.getPath());
+
+				compileResult.addDependencies(found.getPath(), handlerBean
+						.getxPath().getPath());
+				Map<Path, Set<Path>> dependenciesUp = compileResult
+						.getDependenciesUp();
+				Map<Path, Set<Path>> dependenciesDown = compileResult
+						.getDependenciesDown();
+
+				if (compileResult.getDocument() != null
+						&& compileResult.getHandler() != this) {
+					compileResult.getHandlerBean().getModel()
+							.put("relative", found.getTargetURLPath());
+					CompileResult compileResult2 = compileResult.getHandler()
+							.compile(compileResult.getHandlerBean(), false);
+					// this may happen is a file is not hidden, but also not
+					// visible
+					documents.add(compileResult2.getDocument());
+				}
+
 				Set<FileInfos> result = new HashSet<>();
-				if(compileResult.getFileInfos() != null) {
-					for(FileInfos fileInfos:compileResult.getFileInfos()) {
-						long sourceSize = Files.size(xPath.getPath());
-						long sourceTimestamp = Files.getLastModifiedTime(xPath.getPath())
-								.toMillis();
+				if (compileResult.getFileInfos() != null) {
+					for (FileInfos fileInfos : compileResult.getFileInfos()) {
+						long sourceSize = Files.size(handlerBean.getxPath()
+								.getPath());
+						long sourceTimestamp = Files.getLastModifiedTime(
+								handlerBean.getxPath().getPath()).toMillis();
 						result.add(fileInfos.copy(sourceTimestamp, sourceSize));
 					}
-					compileResult = new CompileResult(compileResult.getDocument(), result);
-					
-				}
-				compileResult.addAllDependencies(dependenciesUp, dependenciesDown);
+					compileResult = new CompileResult(
+							compileResult.getDocument(), result, handlerBean,
+							this);
 
-				if (compileResult.getDocument() != null) {
-					compileResult.getDocument().applyPath1(relativePathToRoot);
-					//setRelavtive(compileResult.getDocument(), relativePathToRoot);
 				}
-				//this may happen is a file is not hidden, but also not visible  
-				if(compileResult.getDocument()!=null) {
-					documents.add(compileResult.getDocument());
-				}
+				compileResult.addAllDependencies(dependenciesUp,
+						dependenciesDown);
+
 			}
-			
-			if(limit >= 0) {
-				documents = documents.subList(0, documents.size() < limit? documents.size():limit );
+
+			if (limit >= 0) {
+				documents = documents.subList(0,
+						documents.size() < limit ? documents.size() : limit);
 			}
-			
-			Document doc = HandlerDirectory.createDocumentCollection(site, xPath, xPath, relativePathToRoot, documents, previousModel, "link", "link", new String[0], 0);
-			Path generatedFile = xPath
-					.getTargetPath(xPath.getTargetURL() + ".html");
-			Utils.writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, "link");
-			System.err.println("got id="+System.identityHashCode(doc));
-			return new CompileResult(doc, xPath.getPath(), generatedFile);
+
+			Document doc = HandlerDirectory.createDocumentCollection(
+					handlerBean.getSite(), handlerBean.getxPath(),
+					handlerBean.getxPath(),
+					handlerBean.getRelativePathToRoot(), documents,
+					handlerBean.getModel(), "link", "link", new String[0], 0);
+			Path generatedFile = null;
+			if (writeToDisk) {
+				generatedFile = handlerBean.getxPath().getTargetPath(
+						handlerBean.getxPath().getTargetURL() + ".html");
+				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(),
+						handlerBean.getDirtyset(),
+						handlerBean.getRelativePathToRoot(), doc,
+						generatedFile, "link");
+			}
+			return new CompileResult(doc, handlerBean.getxPath().getPath(),
+					handlerBean, this, generatedFile);
 		}
 	}
-
-	//TODO: is this method really necessary? 
-	/*private void setRelavtive(Document document, String url) {
-		document.setRelative(url);
-		@SuppressWarnings("unchecked")
-		List<Document> documents = document.getDocuments();
-		if (documents != null) {
-			for (Document document2 : documents) {
-				setRelavtive(document2, url);
-			}
-		}
-	}*/
 }

@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import net.xdocc.handlers.Handler;
+import net.xdocc.handlers.HandlerBean;
 import net.xdocc.handlers.HandlerCopy;
 
 import org.slf4j.Logger;
@@ -115,7 +116,13 @@ public class Compiler implements Runnable {
 		try {
 			String relativePathToRoot = Utils.relativePathToRoot(site.getSource(),
 					xPath.getPath());
-			result = handler.compile(site, xPath, dirtyset, model, relativePathToRoot);
+			HandlerBean handlerBean = new HandlerBean();
+			handlerBean.setSite(site);
+			handlerBean.setxPath(xPath);
+			handlerBean.setDirtyset(dirtyset);
+			handlerBean.setModel(model);
+			handlerBean.setRelativePathToRoot(relativePathToRoot);
+			result = handler.compile(handlerBean, true);
 			Service.addCompileResult(siteToCompile, result);
 			Service.notifyFor();
 			return true;
