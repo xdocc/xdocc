@@ -53,13 +53,14 @@ public class Service {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Service.class);
 
-	private static final ExecutorService executorServiceCompiler = Executors
+	
+	private final ExecutorService executorServiceCompiler = Executors
 			.newCachedThreadPool();
 
-	private static final Set<Path> dirtySet = Collections
+	private final Set<Path> dirtySet = Collections
 			.synchronizedSet(new HashSet<Path>());
 
-	private static final Map<Path, CompileResult> compileResult = Collections
+	private final Map<Path, CompileResult> compileResult = Collections
 			.synchronizedMap(new HashMap<Path, CompileResult>());
 	private static Map<File, Set<FileInfos>> cache;
 
@@ -99,12 +100,13 @@ public class Service {
 	}
 
 	public static void main(String[] args) {
-		addShutdownHook();
+		Service service = new Service();
+		service.addShutdownHook();
 		try {
-			List<Site> sites = init(args);
+			List<Site> sites = service.init(args);
 			if (sites != null && fileChangeListener) {
 				WatchService.startWatch(sites);
-				compileIfFileChanged();
+				service.compileIfFileChanged();
 			}
 		} catch (IOException e) {
 			LOG.error("cannot compile sites " + e);
@@ -112,7 +114,7 @@ public class Service {
 		}
 	}
 
-	private static void addShutdownHook() {
+	private void addShutdownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				shutdown();
@@ -120,7 +122,7 @@ public class Service {
 		});
 	}
 
-	private static void compileIfFileChanged() {
+	private void compileIfFileChanged() {
 		WatchService.getFileNotifier().addListener(new FileListener() {
 			@Override
 			public void filesChanged(List<XPath> changedSet,
@@ -131,7 +133,7 @@ public class Service {
 				collectSites(sites, deletedSet);
 				for (Site site : sites) {
 					try {
-						Service.compile(site);
+						compile(site);
 					} catch (IOException e) {
 						LOG.error("compiler exception: " + e);
 					}
@@ -148,7 +150,7 @@ public class Service {
 		});
 	}
 
-	private static List<Site> init(String[] args) throws FileNotFoundException,
+	private List<Site> init(String[] args) throws FileNotFoundException,
 			IOException {
 		LOG.info("Starting XDocC");
 
@@ -167,7 +169,7 @@ public class Service {
 		}
 	}
 
-	static void setupCache(File cacheDir) {	
+	void setupCache(File cacheDir) {	
 		db = DBMaker.newFileDB(cacheDir).closeOnJvmShutdown().make();
 		cache = db.getHashMap("results");
 		if(clearCache) {
@@ -175,7 +177,7 @@ public class Service {
 		}
 	}
 
-	private static List<Site> initCompile() throws FileNotFoundException,
+	private List<Site> initCompile() throws FileNotFoundException,
 			IOException {
 		// now we read the config files for each site
 		List<Handler> handlers = findHandlers();
@@ -193,7 +195,7 @@ public class Service {
 		return sites;
 	}
 
-	private static void initConfig(String[] args) throws ParseException,
+	private void initConfig(String[] args) throws ParseException,
 			IOException {
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse(options, args);
@@ -211,7 +213,7 @@ public class Service {
 		cacheDir = new File(tmpCacheDir);
 	}
 
-	private static List<Site> createSites(List<Handler> handlers)
+	private List<Site> createSites(List<Handler> handlers)
 			throws FileNotFoundException, IOException {
 		File[] configFiles = configDir.listFiles();
 		List<Site> sites = new ArrayList<Site>();
@@ -234,7 +236,7 @@ public class Service {
 	 * @param site
 	 * @throws IOException
 	 */
-	public static void compile(Site site) throws IOException {
+	public void compile(Site site) throws IOException {
 		invalidateCache(site);
 		compile(site, site.getSource(), new HashMap<String, Object>());
 		compilerCounter++;
@@ -247,7 +249,7 @@ public class Service {
 	 * @param path
 	 * @throws IOException
 	 */
-	public static void compile(Site site, Path path, Map<String, Object> model)
+	public void compile(Site site, Path path, Map<String, Object> model)
 			throws IOException {
 		LOG.info("compiling: " + site + "/" + path);
 		Link link = readNavigation(site);
@@ -256,7 +258,7 @@ public class Service {
 				model));
 	}
 
-	public static void compileDone(Site site) throws IOException {
+	public void compileDone(Site site) throws IOException {
 		LOG.info("compiling done: " + site);
 		// compileResult.clear();
 		List<Path> children = Utils.getChildren(site, site.getGenerated());
@@ -293,11 +295,11 @@ public class Service {
 		}
 	}
 
-	static Link readNavigation(Site site) throws IOException {
+	Link readNavigation(Site site) throws IOException {
 		return readNavigation(site, new XPath(site, site.getSource()));
 	}
 
-	public static Link readNavigation(Site site, XPath source)
+	public Link readNavigation(Site site, XPath source)
 			throws IOException {
 		Link root = new Link(source, null);
 		List<XPath> children = Utils.getNonHiddenChildren(site,
@@ -319,7 +321,7 @@ public class Service {
 		return root;
 	}
 
-	static void readNavigationRec(Site site, Link parent, Path parentPath)
+	void readNavigationRec(Site site, Link parent, Path parentPath)
 			throws IOException {
 		List<XPath> children = Utils.getNonHiddenChildren(site, parentPath);
 
@@ -339,7 +341,7 @@ public class Service {
 		}
 	}
 
-	static List<Handler> findHandlers() {
+	List<Handler> findHandlers() {
 		Reflections reflections = new Reflections("net.xdocc");
 		Set<Class<? extends Handler>> subTypes = reflections
 				.getSubTypesOf(Handler.class);
@@ -357,18 +359,18 @@ public class Service {
 		return handlers;
 	}
 
-	private static Site readSite(File configFile, List<Handler> handlers)
+	private Site readSite(File configFile, List<Handler> handlers)
 			throws FileNotFoundException, IOException {
 		Properties properties = new Properties();
 		try (FileReader fr = new FileReader(configFile)) {
 			properties.load(fr);
-			return new Site(properties.getProperty(PROPERTY_SOURCE),
+			return new Site(this, properties.getProperty(PROPERTY_SOURCE),
 					properties.getProperty(PROPERTY_GENERATED), handlers,
 					properties);
 		}
 	}
 
-	public static void addCompileResult(Path path, CompileResult result) {
+	public void addCompileResult(Path path, CompileResult result) {
 		if(compileResult.containsKey(path)) {
 			System.err.println("Path "+path+ " already there. Overwriting");
 		}
@@ -384,7 +386,7 @@ public class Service {
 		}
 	}
 
-	public static boolean isCached(Path source, Path target) {
+	public boolean isCached(Path source, Path target) {
 		if(cache == null) {
 			return false;
 		}
@@ -428,13 +430,13 @@ public class Service {
 		return false;
 	}
 
-	public static void notifyFor() {
+	public void notifyFor() {
 		synchronized (compileResult) {
 			compileResult.notifyAll();
 		}
 	}
 
-	public static CompileResult getCompileResult(Path path) {
+	public CompileResult getCompileResult(Path path) {
 		CompileResult compileResult1 = compileResult.get(path);
 		if(compileResult1 != null) {
 			return compileResult1.copyDocument();
@@ -442,7 +444,7 @@ public class Service {
 		return null;
 	}
 
-	public static void waitFor(Path path) throws InterruptedException {
+	public void waitFor(Path path) throws InterruptedException {
 		while (getCompileResult(path) == null) {
 			synchronized (compileResult) {
 				compileResult.wait();
@@ -450,7 +452,7 @@ public class Service {
 		}
 	}
 
-	private static void invalidateCache(Site site) throws IOException {
+	private void invalidateCache(Site site) throws IOException {
 		Set<Path> dependencies = new HashSet<>();
 		// template cache
 		Map<String, TemplateBean> templates = site.getTemplates();
@@ -479,10 +481,8 @@ public class Service {
 					// if the cache is not valid OR if the template changed
 					if (!isCached(source, target)
 							|| dependencies.contains(source)) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("cache: invalidate " + source
-									+ " with target " + target);
-						}
+						isCached(source, target);
+						LOG.debug("cache: invalidate {} with target {} ({}) ",source, target, isCached(source, target));
 						/*if(target.toString().contains("/ana/icons/")) {
 							System.err.println("cache: invalidate " + source
 								+ " with target " + target);
@@ -508,7 +508,7 @@ public class Service {
 		}
 	}
 
-	static void shutdown() {
+	void shutdown() {
 		WatchService.shutdown();
 		executorServiceCompiler.shutdown();
 	}

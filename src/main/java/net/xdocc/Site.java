@@ -39,6 +39,8 @@ public class Site {
 	final private List<Handler> handlers;
 
 	final private Properties properties;
+	
+	final private Service service;
 
 	private Configuration freemakerEngine;
 
@@ -46,9 +48,9 @@ public class Site {
 
 	private Path templatePath;
 
-	public Site(String source, String generated, List<Handler> handlers,
+	public Site(Service service, String source, String generated, List<Handler> handlers,
 			Properties properties) throws IOException {
-		this(Paths.get(filterXPath(source)), Paths.get(filterXPath(generated)),
+		this(service, Paths.get(filterXPath(source)), Paths.get(filterXPath(generated)),
 				handlers, properties);
 	}
 
@@ -73,8 +75,9 @@ public class Site {
 		return path;
 	}
 
-	public Site(Path source, Path generated, List<Handler> handlers,
+	public Site(Service service, Path source, Path generated, List<Handler> handlers,
 			Properties properties) throws IOException {
+		this.service = service;
 		this.source = source;
 		this.generated = generated;
 		this.handlers = handlers;
@@ -331,5 +334,9 @@ public class Site {
 
 	public Map<String, TemplateBean> getTemplates() {
 		return templates;
+	}
+	
+	public Service service() {
+		return service;
 	}
 }

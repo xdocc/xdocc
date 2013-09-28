@@ -64,8 +64,8 @@ public class HandlerLink implements Handler {
 			Utils.sort2(founds, ascending);
 
 			for (XPath found : founds) {
-				Service.waitFor(found.getPath());
-				CompileResult compileResult = Service.getCompileResult(found
+				handlerBean.getSite().service().waitFor(found.getPath());
+				CompileResult compileResult = handlerBean.getSite().service().getCompileResult(found
 						.getPath());
 
 				compileResult.addDependencies(found.getPath(), handlerBean

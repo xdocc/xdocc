@@ -56,7 +56,7 @@ public class TestPath {
 	public void testLinkToRoot() throws IOException {
 		Path source = Paths.get("/tmp");
 		Path generated = Files.createTempDirectory("tmp");
-		Site site = new Site(source, generated, null, null);
+		Site site = new Site(new Service(), source, generated, null, null);
 		Path path1 = Paths.get("/tmp/");
 		XPath xPath1 = new XPath(site, path1);
 		Path path2 = Paths.get("/tmp/1");

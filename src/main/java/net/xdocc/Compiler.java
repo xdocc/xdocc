@@ -50,7 +50,7 @@ public class Compiler implements Runnable {
 		}
 		if (COMPILER_COUNTER.decrementAndGet() == 0) {
 			try {
-				Service.compileDone(site);
+				site.service().compileDone(site);
 			} catch (IOException e) {
 				LOG.error("cannot execute compile done: " + e);
 				e.printStackTrace();
@@ -91,7 +91,7 @@ public class Compiler implements Runnable {
 	}
 
 	private boolean compile(Handler handler, XPath xPath) {
-		CompileResult result = Service.getCompileResult(xPath.getPath());
+		CompileResult result = site.service().getCompileResult(xPath.getPath());
 		if(result != null) {
 			boolean cached = true;
 			//for notification only
@@ -99,7 +99,7 @@ public class Compiler implements Runnable {
 			if(result.getFileInfos()!=null) {
 				for(FileInfos fileInfos:result.getFileInfos()) {
 					
-					if( Service.isCached(xPath.getPath(), fileInfos.getTarget().toPath())) {
+					if( site.service().isCached(xPath.getPath(), fileInfos.getTarget().toPath())) {
 						//System.err.println("yes. cached " + fileInfos.getTarget().toPath());
 						dirtyset.add(fileInfos.getTarget().toPath());
 					} else {
@@ -109,7 +109,7 @@ public class Compiler implements Runnable {
 				}
 			}
 			if(cached) {
-				Service.notifyFor();
+				site.service().notifyFor();
 				return true;
 			}
 		}
@@ -123,13 +123,13 @@ public class Compiler implements Runnable {
 			handlerBean.setModel(model);
 			handlerBean.setRelativePathToRoot(relativePathToRoot);
 			result = handler.compile(handlerBean, true);
-			Service.addCompileResult(siteToCompile, result);
-			Service.notifyFor();
+			site.service().addCompileResult(siteToCompile, result);
+			site.service().notifyFor();
 			return true;
 		} catch (Throwable t) {
 			LOG.error("could not compile " + siteToCompile + " - " + t);
 			t.printStackTrace();
-			Service.addCompileResult(siteToCompile, CompileResult.ERROR);
+			site.service().addCompileResult(siteToCompile, CompileResult.ERROR);
 		}
 		return false;
 	}
@@ -142,7 +142,7 @@ public class Compiler implements Runnable {
 			Map<String, Object> model = new HashMap<>();
 			model.put("document_size", sizeDocuments);
 			for (XPath child : children) {
-				Service.compile(site, child.getPath(), model);
+				site.service().compile(site, child.getPath(), model);
 			}
 		} catch (IOException e) {
 			LOG.error("could not fetch children - " + e);

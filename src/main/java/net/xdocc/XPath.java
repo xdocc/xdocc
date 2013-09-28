@@ -1,5 +1,9 @@
 package net.xdocc;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,9 +21,11 @@ import java.util.zip.Checksum;
 
 import net.xdocc.handlers.Handler;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 public class XPath implements Comparable<XPath> {
 	private static final Logger LOG = LoggerFactory.getLogger(XPath.class);
@@ -90,10 +96,71 @@ public class XPath implements Comparable<XPath> {
 		String extensionFilteredFileName = findKnownExtensions(site, filename);
 		this.visible = parse(extensionFilteredFileName, site.getSource()
 				.equals(path));
+		if(Files.isRegularFile(path)) {
+			parseFrontmatter();
+		} else if(Files.isDirectory(path)) {
+			readFrontmatter();
+		} else {
+			throw new RuntimeException("there is something eles? " + path);
+		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("The path [" + path + "] was parsed to: nr=" + nr
 					+ ",name=" + name + ",url=" + url);
 		}
+	}
+
+	private void readFrontmatter() {
+		Path frontmatter = path.resolve(".xdocc");
+		if(Files.exists(frontmatter)) {
+			try {
+				String content = FileUtils.readFileToString(frontmatter.toFile());
+				Yaml yaml = new Yaml();
+			    Map<String, Object> map = (Map<String, Object>) yaml.load(content);
+			    for(Map.Entry<String, Object> entry:map.entrySet()) {
+			    	properties.put(entry.getKey(), entry.getValue().toString());
+			    }
+			} catch (IOException e) {
+				LOG.error("cannot parse frontmatter", e);
+			}
+		}
+	}
+
+	/**
+	 * As seen in http://stackoverflow.com/questions/11770077/parsing-yaml-front-matter-in-java
+	 */
+	private void parseFrontmatter() {
+		try (
+			BufferedReader br = new BufferedReader(new FileReader(path.toFile()))) {
+			String line = br.readLine();
+		    while (line != null && line.isEmpty()) line = br.readLine();
+		    if(line == null) {
+		    	return;
+		    }
+		    if (!line.matches("[-]{3,}")) { // use at least three dashes
+		        LOG.debug("No YAML Front Matter");
+		        return;
+		    }
+		    final String delimiter = line;
+		    StringBuilder sb = new StringBuilder();
+		    line = br.readLine();
+		    while (line != null && !line.equals(delimiter)) {
+		        sb.append(line);
+		        sb.append("\n");
+		        line = br.readLine();
+		    }
+		    if(line == null) {
+		    	return;
+		    }
+		    Yaml yaml = new Yaml();
+		    Map<String, Object> map = (Map<String, Object>) yaml.load(sb.toString());
+		    for(Map.Entry<String, Object> entry:map.entrySet()) {
+		    	properties.put(entry.getKey(), entry.getValue().toString());
+		    }
+		    
+		} catch (IOException e) {
+			LOG.error("cannot parse frontmatter",e);
+		}
+		
 	}
 
 	private String findKnownExtensions(Site site, String tmpFilename) {
@@ -174,7 +241,7 @@ public class XPath implements Comparable<XPath> {
 				return false;
 			}
 		}
-		// now, we have the number, date or date time, lets go for the name
+		// now, we have the number, date or date time, lets go for the url
 		if (name.length() > offset) {
 			if (name.charAt(offset) == '.') {
 				// leading dot, we got an extension
@@ -182,27 +249,29 @@ public class XPath implements Comparable<XPath> {
 				extensionList = Utils.splitExtensions(extensions);
 				return true;
 			}
-			Matcher matcher4 = PATTERN_NAME.matcher(name);
+			
+			int dotPos = name.indexOf(".", offset);
+			int pipePos = name.indexOf("|", offset);
+			
+			//if we have a pipe after a dot, that means that the dot belongs to the url
+			Matcher matcher4 = pipePos > dotPos ? PATTERN_NAME.matcher(name) : PATTERN_URL.matcher(name);
 			if (matcher4.find(offset)) {
-				this.name = matcher4.group(1);
+				this.url = matcher4.group(1);
 				offset = matcher4.end(1) + 1;
 			}
 		}
-		// lets go for the url
+		// lets go for the name
 		if (name.length() > offset) {
-			if (name.charAt(offset) == '.') {
+			if (name.charAt(offset - 1) == '.') {
 				// leading dot, we got an extension
-				extensions = name.substring(offset);
+				extensions = name.substring(offset - 1);
 				extensionList = Utils.splitExtensions(extensions);
 				return true;
 			}
-			int dotPos = name.indexOf(".", offset);
-			int pipePos = name.indexOf("|", offset);
-
-			Matcher matcher5 = pipePos > dotPos && pipePos > 0 ? PATTERN_NAME
-					.matcher(name) : PATTERN_URL.matcher(name);
+			
+			Matcher matcher5 = PATTERN_NAME.matcher(name);
 			if (matcher5.find(offset)) {
-				this.url = matcher5.group(1);
+				this.name = matcher5.group(1);
 				offset = matcher5.end(1) + 1;
 			}
 		}

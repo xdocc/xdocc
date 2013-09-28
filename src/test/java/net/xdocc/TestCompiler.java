@@ -25,10 +25,11 @@ import org.junit.Test;
 public class TestCompiler {
 
 	private File mapCache;
+	private Service service;
 
-	private Site setup(boolean inverse, List<Handler> handlers)
+	private Site setup(boolean inverse)
 			throws Exception {
-		Path source = Paths.get("/tmp/Test Page||" + (inverse ? "i" : "")
+		Path source = Paths.get("/tmp/test|Test Page|" + (inverse ? "i" : "")
 				+ "|.full");
 		Files.createDirectories(source);
 		Utils.deleteDirectory(source);
@@ -36,20 +37,20 @@ public class TestCompiler {
 		Files.createDirectories(generated);
 		Utils.deleteDirectory(generated);
 
-		Utils.createFile(source, ".templates/documents.ftl", "|collection|"
+		Utils.createFile(source, ".templates/collection.ftl", "|collection|"
 				+ "|${path}|" + "<#list documents as document>"
 				+ "|${document.content}|[${document.url}]" + "</#list>"
 				+ "|end collection|");
-		Utils.createFile(source, ".templates/document.ftl",
-				"|single|[${document.url}]|[n:${navigation.name}]" + "${path}"
-						+ "|${document.content}|" + "|end single|");
+		Utils.createFile(source, ".templates/page.ftl",
+				"|single|[${document.generate}]|[n:${navigation.name}]|end single|${debug}");
 
 		Utils.createFile(source, ".templates/text.ftl", "content:|${content}|");
 
 		mapCache = File.createTempFile("mapdb", "xdocc");
-		Service.setupCache(mapCache);
+		service = new Service();
+		service.setupCache(mapCache);
 
-		return new Site(source, generated, handlers, null);
+		return new Site(service, source, generated, service.findHandlers(), null);
 
 	}
 
@@ -67,18 +68,18 @@ public class TestCompiler {
 	}
 
 	private void setupNav(Site site) throws IOException {
-		Link navigation = Service.readNavigation(site);
+		Link navigation = site.service().readNavigation(site);
 		site.setNavigation(navigation);
 	}
 
 	@Test
 	public void testCompilerSingle() throws Exception {
-		Site site = setup(false, Service.findHandlers());
+		Site site = setup(false);
 		try {
 			Utils.createFile(site.getSource(), "1|index|.txt", "hello");
 			List<Site> sites = new ArrayList<>();
 			sites.add(site);
-			Service.compile(site);
+			service.compile(site);
 			// wait a bit...
 			Thread.sleep(1000);
 			// check for completion
@@ -91,11 +92,11 @@ public class TestCompiler {
 
 	@Test
 	public void testCompilerCollection() throws Exception {
-		Site site = setup(false, Service.findHandlers());
+		Site site = setup(false);
 		try {
-			Utils.createFile(site.getSource(), "1|index|.txt", "1111");
-			Utils.createFile(site.getSource(), "2|index|.txt", "2222");
-			Service.compile(site);
+			Utils.createFile(site.getSource(), "1|index1|.txt", "1111");
+			Utils.createFile(site.getSource(), "2|index2|.txt", "2222");
+			service.compile(site);
 			// wait a bit...
 			Thread.sleep(1000);
 			// check for completion
@@ -111,11 +112,11 @@ public class TestCompiler {
 
 	@Test
 	public void testCompilerCollectionReverse() throws Exception {
-		Site site = setup(true, Service.findHandlers());
+		Site site = setup(true);
 		try {
-			Utils.createFile(site.getSource(), "1|index|.txt", "1111");
-			Utils.createFile(site.getSource(), "2|index|.txt", "2222");
-			Service.compile(site);
+			Utils.createFile(site.getSource(), "1|index1|.txt", "1111");
+			Utils.createFile(site.getSource(), "2|index2|.txt", "2222");
+			service.compile(site);
 			// wait a bit...
 			Thread.sleep(1000);
 			// check for completion
@@ -131,17 +132,17 @@ public class TestCompiler {
 
 	@Test
 	public void testCompilerNavigation() throws Exception {
-		Site site = setup(true, Service.findHandlers());
+		Site site = setup(true);
 		try {
-			Utils.createFile(site.getSource(), "1|index|.txt", "1111");
-			Utils.createFile(site.getSource(), "1|Dir1|dir1|.nav/1|index|.txt",
+			Utils.createFile(site.getSource(), "1|index1|.txt", "1111");
+			Utils.createFile(site.getSource(), "1|dir1|Dir1|.nav/1|index|.txt",
 					"222");
 			Utils.createFile(site.getSource(),
-					"1|Dir1|dir1|.nav/1|dirx|dirx|.nav/1|index|.txt", "xxx");
-			Utils.createFile(site.getSource(), "2|dir2|dir2|.nav/2|index|.txt",
+					"1|dir1|Dir1|.nav/1|dirx|dirx|.nav/1|index2|.txt", "xxx");
+			Utils.createFile(site.getSource(), "2|dir2|dir2|.nav/2|index2|.txt",
 					"333");
 			setupNav(site);
-			Service.compile(site);
+			service.compile(site);
 			// wait a bit...
 			Thread.sleep(1000);
 			// check for completion
@@ -161,21 +162,21 @@ public class TestCompiler {
 
 	@Test
 	public void testCache() throws Exception {
-		Site site = setup(true, Service.findHandlers());
+		Site site = setup(true);
 		try {
-			Utils.createFile(site.getSource(), "1|index|.txt", "1111");
-			Utils.createFile(site.getSource(), "2|index|.txt", "2222");
-			Service.compile(site);
+			Utils.createFile(site.getSource(), "1|index1|.txt", "1111");
+			Utils.createFile(site.getSource(), "2|index2|.txt", "2222");
+			service.compile(site);
 			// wait a bit..
 			Thread.sleep(1000);
 			Path index = site.getGenerated().resolve("index.html");
 			long timestap = Files.getLastModifiedTime(index).toMillis();
-			Service.compile(site);
+			service.compile(site);
 			Thread.sleep(1500);
 			long timestap2 = Files.getLastModifiedTime(index).toMillis();
 			Assert.assertEquals(timestap, timestap2);
 			Files.write(index, "3333".getBytes());
-			Service.compile(site);
+			service.compile(site);
 			Thread.sleep(1500);
 			timestap2 = Files.getLastModifiedTime(index).toMillis();
 			Assert.assertNotSame(timestap, timestap2);

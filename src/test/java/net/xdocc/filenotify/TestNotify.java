@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.Assert;
+import net.xdocc.Service;
 import net.xdocc.Site;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -27,7 +28,8 @@ public class TestNotify {
 		Path source = Files.createTempDirectory(dir, "source");
 		Files.createDirectories(source.resolve(".templates"));
 		Path generated = Files.createTempDirectory(dir, "generated");
-		site = new Site(source, generated, null, null);
+		Service service = new Service();
+		site = new Site(service, source, generated, null, null);
 		sites.add(site);
 		WatchService.startWatch(sites);
 		fileNotifier = WatchService.getFileNotifier();

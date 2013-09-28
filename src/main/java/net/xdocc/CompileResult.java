@@ -111,7 +111,7 @@ public class CompileResult implements Serializable {
 	}
 
 	private void findDependenciesUpRec(Path up, Set<Path> result) {
-		CompileResult cr = Service.getCompileResult(up);
+		CompileResult cr = handlerBean.getSite().service().getCompileResult(up);
 		if (cr == null) {
 			return;
 		}
@@ -126,7 +126,7 @@ public class CompileResult implements Serializable {
 	}
 
 	private void findDependenciesDownRec(Path down, Set<Path> result) {
-		CompileResult cr = Service.getCompileResult(down);
+		CompileResult cr = handlerBean.getSite().service().getCompileResult(down);
 		if (cr == null) {
 			return;
 		}

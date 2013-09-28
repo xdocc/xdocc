@@ -824,7 +824,7 @@ public class Utils {
 		dirtyset.add(generatedFile);
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
 		dirtyset.add(generatedDir);
-		if (!Service.isCached(xPath.getPath(), generatedFile)) {
+		if (!site.service().isCached(xPath.getPath(), generatedFile)) {
 			Utils.write(htmlSite, xPath, generatedFile);
 		}
 	}

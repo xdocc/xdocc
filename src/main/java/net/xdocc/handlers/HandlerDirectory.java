@@ -112,7 +112,7 @@ public class HandlerDirectory implements Handler {
 			model.put("document_size", documents.size());
 			model.put("url", url);
 			if (!handlerBean.getxPath().isRoot()) {
-				Link current = Service.readNavigation(handlerBean.getSite(), handlerBean.getxPath());
+				Link current = handlerBean.getSite().service().readNavigation(handlerBean.getSite(), handlerBean.getxPath());
 				model.put("local_navigation", current);
 			}
 			if(writeToDisk) {
@@ -199,8 +199,8 @@ public class HandlerDirectory implements Handler {
 		Utils.sort2(children, ascending);
 		for (XPath xPathChild : children) {
 
-			Service.waitFor(xPathChild.getPath());
-			CompileResult result = Service.getCompileResult(xPathChild
+			site.service().waitFor(xPathChild.getPath());
+			CompileResult result = site.service().getCompileResult(xPathChild
 					.getPath());
 			result.addDependencies(xPathChild.getPath(), xPath.getPath());
 			boolean pre = xPathChild.isPreview();

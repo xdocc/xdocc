@@ -65,7 +65,8 @@ public class FileInfos implements Serializable {
 	}
 	
 	public boolean isDirectories(Path source) {
-		return this.isDirectory && source.toFile().isDirectory();
+		//target may be a file, source can be a directory
+		return source.toFile().isDirectory();
 	}
 
 	@Override
