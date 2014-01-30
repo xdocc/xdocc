@@ -30,6 +30,24 @@ import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
 
 public class Utils {
+
+	public static enum OS_TYPE {
+		LINUX, WIN, MAC, OTHER
+	};
+
+	public static OS_TYPE getOSType() {
+		String osName = System.getProperty("os.name");
+		if (osName.startsWith("Windows")) {
+			return OS_TYPE.WIN;
+		} else if (osName.startsWith("Mac")) {
+			return OS_TYPE.MAC;
+		} else if (osName.startsWith("Linux")) {
+			return OS_TYPE.LINUX;
+		} else {
+			return OS_TYPE.OTHER;
+		}
+	}
+
 	public static XPath find(Path resolved, List<Site> sites) {
 		for (Site site : sites) {
 			if (isChild(resolved, site.getSource())) {
@@ -320,7 +338,7 @@ public class Utils {
 		final StringBuilder sb = new StringBuilder(
 				"<table border=1><th colspan=2>this document contains</th>\n");
 		for (Map.Entry<String, Object> entry : model.entrySet()) {
-			if("debug".equals(entry.getKey())) {
+			if ("debug".equals(entry.getKey())) {
 				continue;
 			}
 			sb.append("<tr><td>");
@@ -439,8 +457,8 @@ public class Utils {
 	}
 
 	public static Link find(XPath xPath, Link navigation) {
-		//we pass xPath as null if it is root
-		if(xPath == null) {
+		// we pass xPath as null if it is root
+		if (xPath == null) {
 			return navigation;
 		}
 		if (navigation.getTarget().getPath().equals(xPath.getPath())) {
@@ -680,8 +698,8 @@ public class Utils {
 	 * @return the list of links
 	 */
 	public static List<Link> linkToRoot(Path root, XPath xPath) {
-		//if we are root, return an empty list
-		if(xPath == null) {
+		// if we are root, return an empty list
+		if (xPath == null) {
 			return Collections.emptyList();
 		}
 		List<XPath> xPaths = new ArrayList<>();
@@ -795,16 +813,18 @@ public class Utils {
 		doc.applyPath1(relativePathToRoot);
 		return doc;
 	}
-	
+
 	public static void writeHTML(Site site, XPath xPath, Set<Path> dirtyset,
 			String relativePathToRoot, Document doc, Path generatedFile,
 			String type) throws IOException, TemplateException {
-		writeHTML(site, xPath, dirtyset, relativePathToRoot, doc, generatedFile, type, new HashMap<String, Object>());
+		writeHTML(site, xPath, dirtyset, relativePathToRoot, doc,
+				generatedFile, type, new HashMap<String, Object>());
 	}
 
 	public static void writeHTML(Site site, XPath xPath, Set<Path> dirtyset,
 			String relativePathToRoot, Document doc, Path generatedFile,
-			String type, Map<String, Object> modelSite) throws IOException, TemplateException {
+			String type, Map<String, Object> modelSite) throws IOException,
+			TemplateException {
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
 				"page", xPath.getPath());
 		modelSite.put("path", relativePathToRoot);
@@ -817,9 +837,9 @@ public class Utils {
 		modelSite.put("navigation",
 				Utils.setSelected(pathToRoot, site.getNavigation()));
 		modelSite.put("breadcrumb", pathToRoot);
-		
+
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
-		
+
 		htmlSite = Utils.postApplyTemplate(htmlSite, modelSite, "path");
 		dirtyset.add(generatedFile);
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
@@ -836,7 +856,7 @@ public class Utils {
 			if (i == 0) {
 				pagesURLs[i] = xPath.resolveTargetURL("index.html");
 			} else {
-				pagesURLs[i] = xPath.resolveTargetURL("index_"+i+".html");
+				pagesURLs[i] = xPath.resolveTargetURL("index_" + i + ".html");
 			}
 		}
 		return pagesURLs;
