@@ -101,7 +101,9 @@ public class XPath implements Comparable<XPath> {
 		} else if(Files.isDirectory(path)) {
 			readFrontmatter();
 		} else {
-			throw new RuntimeException("there is something eles? " + path);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("The path [" + path + "] is not considered!");
+			}
 		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("The path [" + path + "] was parsed to: nr=" + nr
@@ -561,8 +563,11 @@ public class XPath implements Comparable<XPath> {
 					}
 				}
 			}
+			XPath old = parent;
 			parent = parent.getParent();
-			level++;
+			if(old.isDirectory()) {
+				level++;
+			}
 		}
 		return "";
 	}
