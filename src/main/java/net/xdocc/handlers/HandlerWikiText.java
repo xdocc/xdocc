@@ -139,7 +139,8 @@ public class HandlerWikiText implements Handler {
 		final private boolean writeToDisk;
 
 		public XdoccHtmlDocumentBuilder(Writer out, Site site,
-				Set<Path> dirtyset, XPath current, HandlerBean handlerBean, boolean writeToDisk) {
+				Set<Path> dirtyset, XPath current, HandlerBean handlerBean,
+				boolean writeToDisk) {
 			super(out);
 			this.site = site;
 			this.dirtyset = dirtyset;
@@ -209,18 +210,12 @@ public class HandlerWikiText implements Handler {
 		}
 
 		@Override
-		public void imageLink(Attributes linkAttributes,
-				Attributes imageAttributes, String href, String imageUrl) {
-			// TODO Auto-generated method stub
-			super.imageLink(linkAttributes, imageAttributes, href, imageUrl);
+		public void link(Attributes attributes, String hrefOrHashName,
+				String text) {
+			String relativePathToRoot = Utils.relativePathToRoot(
+					site.getSource(), current.getPath());
+			super.link(attributes, relativePathToRoot + hrefOrHashName, text);
 		}
-
-		/*
-		 * @Override public void link(Attributes attributes, String
-		 * hrefOrHashName, String text) { String relativePathToRoot =
-		 * Utils.relativePathToRoot(site.getSource(), current.getPath());
-		 * super.link(attributes, relativePathToRoot+hrefOrHashName, text); }
-		 */
 
 		private String parseExtension(String pURL, HandlerImage handlerImage) {
 			for (String extension : handlerImage.knownExtensions()) {
@@ -253,7 +248,8 @@ public class HandlerWikiText implements Handler {
 		final private boolean writeToDisk;
 
 		public WikiTextDocumentGenerator(TemplateBean templateText, Site site,
-				XPath xPath, Set<Path> dirtyset, HandlerBean handlerBean, boolean writeToDisk) {
+				XPath xPath, Set<Path> dirtyset, HandlerBean handlerBean,
+				boolean writeToDisk) {
 			super(site, templateText);
 			this.site = site;
 			this.xPath = xPath;
@@ -265,7 +261,8 @@ public class HandlerWikiText implements Handler {
 
 		public String generate() {
 			try {
-				fillHTML(site, xPath, dirtyset, "BLABAL", handlerBean, writeToDisk);
+				fillHTML(site, xPath, dirtyset, "BLABAL", handlerBean,
+						writeToDisk);
 				return Utils.applyTemplate(site, getTemplateText(), getModel());
 			} catch (IOException | TemplateException e) {
 				if (LOG.isWarnEnabled()) {
@@ -279,7 +276,8 @@ public class HandlerWikiText implements Handler {
 		}
 
 		private void fillHTML(Site site, XPath xPath, Set<Path> dirtyset,
-				String linkRel, HandlerBean handlerBean, boolean writeToDisk) throws IOException {
+				String linkRel, HandlerBean handlerBean, boolean writeToDisk)
+				throws IOException {
 			StringWriter writer = new StringWriter();
 			HtmlDocumentBuilder builder = new XdoccHtmlDocumentBuilder(writer,
 					site, dirtyset, xPath, handlerBean, writeToDisk);

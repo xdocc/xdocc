@@ -7,15 +7,7 @@
     </encoder>
   </appender>
   
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>/var/log/xdocc/xdocc.log</file>
-    <append>false</append>
-    <encoder>
-      <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
-    </encoder>
-  </appender>
-
-  <logger name="net.xdocc" level="WARN"/>
+  <logger name="net.xdocc" level="INFO"/>
   
   <!-- default is OFF, options are: TRACE, DEBUG, INFO, WARN, ERROR, OFF. 
        See http://logback.qos.ch/manual/architecture.html for more information-->
