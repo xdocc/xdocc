@@ -16,6 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This test case aims to validate the tags which can be specified on directory and file level.
+ * So far these tags are under test:
+ * 
+ * - layout (l)
+ * 
+ * 
  * hierarchy:
  * 
  * 1|folder0|Folder 0|l=x 			<-- layout x set
@@ -38,9 +44,9 @@ import org.slf4j.LoggerFactory;
  * --wikitext_z.ftl
  * 
  */
-public class TestLayout {
+public class TestTags {
 	
-	private static final Logger log = LoggerFactory.getLogger(TestLayout.class);
+	private static final Logger log = LoggerFactory.getLogger(TestTags.class);
 
 	private static final String sourceString = "/tmp/example|example site";
 	private static final String genString = "/tmp/gen";
@@ -101,6 +107,7 @@ public class TestLayout {
 		Utils.createFile(h011, "1|test7|.textile",  "*test7*");
 		// h0010
 		Utils.createFile(h0010, "1|test8|.textile",  "*test8*");
+		Utils.createFile(h0010, "2|test9|Test 9|l=x|.textile",  "*test9*");
 
 
 		// setup cache
@@ -129,6 +136,11 @@ public class TestLayout {
 				);
 		Utils.createFile(source, ".templates/wikitext.ftl", ""
 				+ "${content}"
+				);
+		Utils.createFile(source, ".templates/wikitext_x.ftl", ""
+				+ "<div class=\"layout_x\">"
+				+ "${content}"
+				+ "</div>"
 				);
 		Utils.createFile(source, ".templates/wikitext_z.ftl", ""
 				+ "<div class=\"layout_z\">"
@@ -163,7 +175,6 @@ public class TestLayout {
 		String root = new String(Files.readAllBytes(index));
 		Assert.assertTrue(Files.exists(index));
 		Assert.assertFalse(root.contains("<div class=\"layout_x\">"));
-		
 		// h0
 		Path h0 = site.getGenerated().resolve("folder0/index.html");
 		String file0 = new String(Files.readAllBytes(h0));
@@ -174,6 +185,11 @@ public class TestLayout {
 		String file01 = new String(Files.readAllBytes(h01));
 		Assert.assertTrue(Files.exists(h01));
 		Assert.assertTrue(file01.contains("<div class=\"layout_x\">"));
+		// h0010
+		Path h0010 = site.getGenerated().resolve("folder0/folder00/folder001/folder0010/index.html");
+		String file0010 = new String(Files.readAllBytes(h0010));
+		Assert.assertTrue(Files.exists(h0010));
+		Assert.assertTrue(file0010.contains("<div class=\"layout_x\">"));
 	}
 	
 	@Test
@@ -182,25 +198,25 @@ public class TestLayout {
 		Path h00 = site.getGenerated().resolve("folder0/folder00/index.html");
 		String file00 = new String(Files.readAllBytes(h00));
 		Assert.assertTrue(Files.exists(h00));
-		Assert.assertFalse(file00.contains("<div class=\"layout_x\">"));
 		Assert.assertTrue(file00.contains("<div class=\"layout_z\">"));
 		Path h011 = site.getGenerated().resolve("folder0/folder01/folder011/index.html");
 		String file011 = new String(Files.readAllBytes(h011));
 		Assert.assertTrue(Files.exists(h011));
-		Assert.assertFalse(file011.contains("<div class=\"layout_x\">"));
 		Assert.assertTrue(file011.contains("<div class=\"layout_z\">"));
 		// h000
 		Path h000 = site.getGenerated().resolve("folder0/folder00/folder000/index.html");
 		String file000 = new String(Files.readAllBytes(h000));
 		Assert.assertTrue(Files.exists(h000));
-		Assert.assertFalse(file000.contains("<div class=\"layout_x\">"));
 		Assert.assertTrue(file000.contains("<div class=\"layout_z\">"));
 		// h0010
 		Path h0010 = site.getGenerated().resolve("folder0/folder00/folder001/folder0010/index.html");
 		String file0010 = new String(Files.readAllBytes(h0010));
 		Assert.assertTrue(Files.exists(h0010));
-		Assert.assertFalse(file0010.contains("<div class=\"layout_x\">"));
 		Assert.assertTrue(file0010.contains("<div class=\"layout_z\">"));
 	}
 
+//	@Test
+	public void debugloop(){
+		while(true) {}
+	}
 }
