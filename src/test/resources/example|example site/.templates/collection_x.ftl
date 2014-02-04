@@ -1,0 +1,1 @@
+<#list documents as document><div class="layout_x"> ${document.generate}</div></#list>

@@ -1,0 +1,1 @@
+<div class="layout_x">${document.generate}</div>
