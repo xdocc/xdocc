@@ -387,7 +387,7 @@ public class Service {
 		if (cache == null) {
 			return false;
 		}
-		Set<FileInfos> infos = cache.get(source.getFileName());
+		Set<FileInfos> infos = cache.get(source.getFileName().toString());
 		if (infos == null) {
 			LOG.debug("not found in cache " + source.toFile());
 			return false;
@@ -398,14 +398,14 @@ public class Service {
 					// now we have all the files found
 					if (info.isFiles(source)) {
 					
-//						long sourceSize = Files.size(source);
+						long sourceSize = Files.size(source);
 						long targetSize = Files.size(target);
 						long targetTimestamp = Files
 								.getLastModifiedTime(target).toMillis();
 						long sourceTimestamp = Files
 								.getLastModifiedTime(source).toMillis();
 						boolean isSourceDirty = info.isSourceDirty(
-								sourceTimestamp);
+								sourceTimestamp, sourceSize);
 						boolean isTargetDirty = info.isTargetDirty(target,
 								targetTimestamp, targetSize);
 						return !isSourceDirty && !isTargetDirty;
@@ -421,7 +421,7 @@ public class Service {
 						return false;
 					}
 				} catch (IOException e) {
-					e.printStackTrace();
+					LOG.info("exception in isCached - probably due to file removed event: "+source.toString());
 					return false;
 				}
 			}
@@ -496,7 +496,7 @@ public class Service {
 		for (Path dependency : dependencies) {
 			LOG.debug("removing dependency " + dependency);
 			if (cache != null) {
-				cache.remove(dependency.getFileName());
+				cache.remove(dependency.getFileName().toString());
 			}
 			compileResult.remove(dependency);
 		}

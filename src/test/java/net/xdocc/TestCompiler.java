@@ -168,11 +168,11 @@ public class TestCompiler {
 			Utils.createFile(site.getSource(), "2|index2|.txt", "2222");
 			service.compile(site);
 			// wait a bit..
-			Thread.sleep(1000);
+			Thread.sleep(5000);
 			Path index = site.getGenerated().resolve("index.html");
 			long timestap = Files.getLastModifiedTime(index).toMillis();
 			service.compile(site);
-			Thread.sleep(1500);
+			Thread.sleep(5000);
 			long timestap2 = Files.getLastModifiedTime(index).toMillis();
 			Assert.assertEquals(timestap, timestap2);
 			Files.write(index, "3333".getBytes());

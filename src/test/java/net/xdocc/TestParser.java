@@ -97,7 +97,7 @@ public class TestParser {
 	@Test
 	public void testParserTags() throws Exception {
 		Site site = new Site(new Service(), "/tmp", "/tmp", null, null);
-		Path path = Paths.get("/tmp/2011|test|url|test=hallo,me=2|.done");
+		Path path = Paths.get("/tmp/2011|url|test|test=hallo,me=2|.done");
 		XPath xPath = new XPath(site, path);
 		Assert.assertEquals("hallo", xPath.getProperties().get("test"));
 		Assert.assertEquals("2", xPath.getProperties().get("me"));
@@ -108,7 +108,7 @@ public class TestParser {
 	public void testParserTags2() throws Exception {
 		Site site = new Site(new Service(), "/tmp", "/tmp", null, null);
 		Path path = Paths
-				.get("/tmp/2011|test|url|test=hallo,key,no2=yes|.done");
+				.get("/tmp/2011|url|test|test=hallo,key,no2=yes|.done");
 		XPath xPath = new XPath(site, path);
 		Assert.assertEquals("hallo", xPath.getProperties().get("test"));
 		Assert.assertEquals(true, xPath.getProperties().containsKey("key"));
@@ -120,7 +120,7 @@ public class TestParser {
 	public void testParserTags3() throws Exception {
 		Site site = new Site(new Service(), "/tmp", "/tmp", null, null);
 		Path path = Paths
-				.get("/tmp/2011|test|url|test=hallo,key,no2=yes|.done");
+				.get("/tmp/2011|url|test|test=hallo,key,no2=yes|.done");
 		XPath xPath = new XPath(site, path);
 		Assert.assertEquals("hallo", xPath.getProperties().get("test"));
 		Assert.assertEquals(true, xPath.getProperties().containsKey("key"));
@@ -156,7 +156,7 @@ public class TestParser {
 	@Test
 	public void testRegexpLevel2() throws IOException {
 		Site site = new Site(new Service(), "/tmp", "/tmp", null, null);
-		Path path = Paths.get("/tmp/1|name|url|l=m/2|test.me");
+		Path path = Paths.get("/tmp/1|url|name|l=m/2|test.me");
 		try {
 			Files.createDirectories(path.getParent());
 			Files.createFile(path);
@@ -171,13 +171,13 @@ public class TestParser {
 	@Test
 	public void testRegexpLevel3() throws IOException {
 		Site site = new Site(new Service(), "/tmp", "/tmp", null, null);
-		Path path = Paths.get("/tmp/1|name|url|l0=m/2|test.me");
+		Path path = Paths.get("/tmp/1|url|name|l0=m/2|test.me");
 		try {
 			Files.createDirectories(path.getParent());
 			Files.createFile(path);
 			XPath xPath = new XPath(site, path);
 			String prefix = xPath.getLayoutSuffix();
-			Assert.assertEquals("", prefix);
+			Assert.assertEquals("_m", prefix);
 		} finally {
 			Files.delete(path);
 		}
@@ -216,13 +216,13 @@ public class TestParser {
 	@Test
 	public void testRegexpLevel6() throws IOException {
 		Site site = new Site(new Service(), "/tmp", "/tmp", null, null);
-		Path path = Paths.get("/tmp/1|name|url|l=m/2|name2|url2|/3|test.me");
+		Path path = Paths.get("/tmp/1|url|name|l=m/2|name2|url2|/3|test.me");
 		try {
 			Files.createDirectories(path.getParent());
 			Files.createFile(path);
 			XPath xPath = new XPath(site, path);
 			String prefix = xPath.getLayoutSuffix();
-			Assert.assertEquals("", prefix);
+			Assert.assertEquals("_m", prefix);
 		} finally {
 			Files.delete(path);
 		}
