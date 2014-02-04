@@ -24,12 +24,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.xdocc.Site.TemplateBean;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
 
 public class Utils {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
 	public static enum OS_TYPE {
 		LINUX, WIN, MAC, OTHER
@@ -382,12 +387,12 @@ public class Utils {
 				templateText.getTemplate().process(model, sw);
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.err.println("available data:");
+				LOG.debug("available data:");
 				for (Map.Entry<String, Object> entry : model.entrySet()) {
-					System.err.println("key:[" + entry.getKey() + "]=["
+					LOG.debug("key:[" + entry.getKey() + "]=["
 							+ entry.getValue() + "]");
 				}
-				System.err.println("Template is: " + templateText.getFile());
+				LOG.debug("Template is: " + templateText.getFile());
 			}
 
 			sw.flush();

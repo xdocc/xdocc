@@ -31,7 +31,7 @@ public class FileNotifier implements Runnable {
 						|| !deletedSet.isEmpty()) {
 					// we got some changes, check if its time to notify
 					if (eventTriggered + WAIT <= now) {
-						System.err.println("trigger " + (eventTriggered + WAIT)
+						LOG.debug("trigger " + (eventTriggered + WAIT)
 								+ " <= " + now);
 						// trigger
 						for (FileListener listener : listeners) {
@@ -78,7 +78,7 @@ public class FileNotifier implements Runnable {
 
 	public void notifyChanged(XPath changed) {
 		synchronized (this) {
-			System.err.println("changed " + changed);
+			LOG.debug("changed " + changed);
 			eventTriggered = System.currentTimeMillis();
 			changedSet.add(changed);
 			notifyAll();
@@ -87,7 +87,7 @@ public class FileNotifier implements Runnable {
 
 	public void notifyDeleted(XPath changed) {
 		synchronized (this) {
-			System.err.println("deleted " + changed);
+			LOG.debug("deleted " + changed);
 			eventTriggered = System.currentTimeMillis();
 			deletedSet.add(changed);
 			notifyAll();
@@ -96,7 +96,7 @@ public class FileNotifier implements Runnable {
 
 	public void notifyCreated(XPath changed) {
 		synchronized (this) {
-			System.err.println("created " + changed);
+			LOG.debug("created " + changed);
 			eventTriggered = System.currentTimeMillis();
 			createdSet.add(changed);
 			notifyAll();

@@ -13,7 +13,6 @@ import net.xdocc.CompileResult;
 import net.xdocc.Document;
 import net.xdocc.DocumentGenerator;
 import net.xdocc.Link;
-import net.xdocc.Service;
 import net.xdocc.Site;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
@@ -49,16 +48,16 @@ public class HandlerDirectory implements Handler {
 	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
 		//
-		List<Document> documents = recursiveHandler(handlerBean.getSite(), handlerBean.getxPath());
+		List<Document> documents = recursiveHandler(handlerBean.getSite(),
+				handlerBean.getxPath());
 		// Utils.adjustUrls(xPath, documents, path);
 
-		
-		
 		String url = handlerBean.getxPath().getTargetURL();
-		
+
 		if (documents.size() == 0) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("The directory [" + handlerBean.getxPath() + "] has no elements");
+				LOG.debug("The directory [" + handlerBean.getxPath()
+						+ "] has no elements");
 			}
 
 			Path p = handlerBean.getxPath().getTargetPath(url);
@@ -67,43 +66,41 @@ public class HandlerDirectory implements Handler {
 			return CompileResult.DONE;
 		}
 		int pageSize = handlerBean.getxPath().getPageSize();
-		if(pageSize == 5) {
-			System.err.println("wtf");
-		}
-		
+
 		documents = promoteLinks(documents);
-
-		
 		// model.put("preview", xPath.isPreview());
-
 		String target = handlerBean.getxPath().resolveTargetURL("index.html");
 
-		
-
-		
-		
 		int pages = pageSize == 0 ? 0 : documents.size() / (pageSize + 1);
 		List<List<Document>> tmp = Utils.split(documents, pages, pageSize);
 		String[] pageURLs = Utils.paging(handlerBean.getxPath(), pages);
 		int counter = 0;
-		
+
 		// create the site
-		
+
 		Document doc0 = null;
 		Path generatedFile0 = null;
-		
-		for(List<Document> list:tmp) {
 
-			Document doc = HandlerDirectory.createDocumentCollection(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getxPath(), handlerBean.getRelativePathToRoot(), list, handlerBean.getModel(), "collection", "directory",pageURLs, counter);
+		for (List<Document> list : tmp) {
+
+			Document doc = HandlerDirectory.createDocumentCollection(
+					handlerBean.getSite(), handlerBean.getxPath(),
+					handlerBean.getxPath(),
+					handlerBean.getRelativePathToRoot(), list,
+					handlerBean.getModel(), "collection", "directory",
+					pageURLs, counter);
 			doc.applyPath1(handlerBean.getRelativePathToRoot());
-			//doc.applyPath1("BBB"+relativePathToRoot);
+			// doc.applyPath1("BBB"+relativePathToRoot);
 			final Path generatedFile;
-			if(counter==0) {
-				generatedFile = handlerBean.getxPath().getTargetPath(handlerBean.getxPath().resolveTargetURL("index.html"));
+			if (counter == 0) {
+				generatedFile = handlerBean.getxPath().getTargetPath(
+						handlerBean.getxPath().resolveTargetURL("index.html"));
 				generatedFile0 = generatedFile;
 				doc0 = doc;
 			} else {
-				generatedFile = handlerBean.getxPath().getTargetPath(handlerBean.getxPath().resolveTargetURL("index_"+counter+".html"));
+				generatedFile = handlerBean.getxPath().getTargetPath(
+						handlerBean.getxPath().resolveTargetURL(
+								"index_" + counter + ".html"));
 			}
 			Map<String, Object> model = new HashMap<>();
 			model.put("page_nr", list.size());
@@ -112,41 +109,50 @@ public class HandlerDirectory implements Handler {
 			model.put("document_size", documents.size());
 			model.put("url", url);
 			if (!handlerBean.getxPath().isRoot()) {
-				Link current = handlerBean.getSite().service().readNavigation(handlerBean.getSite(), handlerBean.getxPath());
+				Link current = handlerBean
+						.getSite()
+						.service()
+						.readNavigation(handlerBean.getSite(),
+								handlerBean.getxPath());
 				model.put("local_navigation", current);
 			}
-			if(writeToDisk) {
-				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getDirtyset(), handlerBean.getRelativePathToRoot(), doc, generatedFile, "directory", model);
+			if (writeToDisk) {
+				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(),
+						handlerBean.getDirtyset(),
+						handlerBean.getRelativePathToRoot(), doc,
+						generatedFile, "directory", model);
 			}
 			counter++;
 		}
 
 		final CompileResult compileResult;
 		if (handlerBean.getxPath().isPreview()) {
-			Document documentPreview = Utils.searchHighlight(doc0.getDocuments());
-			//documentPreview = documentPreview.copy(documentPreview.getLevel());
+			Document documentPreview = Utils.searchHighlight(doc0
+					.getDocuments());
+			// documentPreview =
+			// documentPreview.copy(documentPreview.getLevel());
 			documentPreview.setHighlightUrl(target);
 			documentPreview.setHighlight(true);
 			documentPreview.setPreview(true);
-			//Document dd = documentFull.copy().applyPath1(relativePathToRoot);
+			// Document dd = documentFull.copy().applyPath1(relativePathToRoot);
 			documentPreview.setCompleteDocument(doc0);
 			documentPreview.setDate(handlerBean.getxPath().getDate());
-			compileResult = new CompileResult(documentPreview, handlerBean.getxPath().getPath(), handlerBean, this,
-					generatedFile0);
+			compileResult = new CompileResult(documentPreview, handlerBean
+					.getxPath().getPath(), handlerBean, this, generatedFile0);
 		} else {
-			compileResult = new CompileResult(doc0, handlerBean.getxPath().getPath(), handlerBean, this,
-					generatedFile0);
+			compileResult = new CompileResult(doc0, handlerBean.getxPath()
+					.getPath(), handlerBean, this, generatedFile0);
 		}
 		return compileResult;
 	}
 
 	private List<Document> promoteLinks(List<Document> documents) {
 		List<Document> retVal = new ArrayList<>();
-		for(Document document:documents) {
-			if("link".equals(document.getType()) && document.getDocuments()!=null) {
+		for (Document document : documents) {
+			if ("link".equals(document.getType())
+					&& document.getDocuments() != null) {
 				retVal.addAll(document.getDocuments());
-			}
-			else {
+			} else {
 				retVal.add(document);
 			}
 		}
@@ -170,19 +176,17 @@ public class HandlerDirectory implements Handler {
 	 * }
 	 */
 
-	//private void applyPath(List<Document> documents, String path) {
-		/*for (Document document : documents) {
-
-			if (document.getHighlight()) {
-				document.setOriginalUrl(document.getHighlightUrl());
-			}
-			document.applyPath(path);
-			List<Document> documents2 = document.getDocuments();
-			if (documents2 != null) {
-				applyPath(documents2, path);
-			}
-		}*/
-	//}
+	// private void applyPath(List<Document> documents, String path) {
+	/*
+	 * for (Document document : documents) {
+	 * 
+	 * if (document.getHighlight()) {
+	 * document.setOriginalUrl(document.getHighlightUrl()); }
+	 * document.applyPath(path); List<Document> documents2 =
+	 * document.getDocuments(); if (documents2 != null) { applyPath(documents2,
+	 * path); } }
+	 */
+	// }
 
 	private List<Document> recursiveHandler(Site site, XPath xPath)
 			throws IOException, InterruptedException {
@@ -200,8 +204,8 @@ public class HandlerDirectory implements Handler {
 		for (XPath xPathChild : children) {
 
 			site.service().waitFor(xPathChild.getPath());
-			CompileResult result = site.service().getCompileResult(xPathChild
-					.getPath());
+			CompileResult result = site.service().getCompileResult(
+					xPathChild.getPath());
 			result.addDependencies(xPathChild.getPath(), xPath.getPath());
 			boolean pre = xPathChild.isPreview();
 			boolean full = xPathChild.isFull() && !pre;
@@ -229,17 +233,20 @@ public class HandlerDirectory implements Handler {
 	}
 
 	public static Document createDocumentCollection(Site site, XPath xPath,
-			XPath original, String relativePathToRoot, List<Document> documentsA,
-			Map<String, Object> previousModel, String templateName, String type,
-			String[] pageURLs, int current) throws IOException {
-		//since we set the level, we need to work on a copy of this
-		List<Document> documents = HandlerUtils.copy(documentsA, relativePathToRoot);
+			XPath original, String relativePathToRoot,
+			List<Document> documentsA, Map<String, Object> previousModel,
+			String templateName, String type, String[] pageURLs, int current)
+			throws IOException {
+		// since we set the level, we need to work on a copy of this
+		List<Document> documents = HandlerUtils.copy(documentsA,
+				relativePathToRoot);
 		String prefix = original.getLayoutSuffix();
 		if (prefix.equals("")) {
 			prefix = xPath.getLayoutSuffix();
 		}
 
-		TemplateBean templateText = site.getTemplate(prefix, templateName, xPath.getPath());
+		TemplateBean templateText = site.getTemplate(prefix, templateName,
+				xPath.getPath());
 
 		DocumentGenerator gen = new DocumentGenerator(site, templateText);
 

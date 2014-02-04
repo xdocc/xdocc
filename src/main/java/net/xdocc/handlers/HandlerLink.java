@@ -102,7 +102,6 @@ public class HandlerLink implements Handler {
 				}
 				compileResult.addAllDependencies(dependenciesUp,
 						dependenciesDown);
-
 			}
 
 			if (limit >= 0) {
@@ -115,6 +114,7 @@ public class HandlerLink implements Handler {
 					handlerBean.getxPath(),
 					handlerBean.getRelativePathToRoot(), documents,
 					handlerBean.getModel(), "link", "link", new String[0], 0);
+			
 			Path generatedFile = null;
 			if (writeToDisk) {
 				generatedFile = handlerBean.getxPath().getTargetPath(

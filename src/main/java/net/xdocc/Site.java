@@ -192,7 +192,7 @@ public class Site {
 					templateBean.setTimestamp(fileTime.toMillis());
 					templateBean.setFilesize(filesize);*/
 					templates.put(name, templateBean);
-					System.err.println("add "+name);
+					LOG.debug("add "+name);
 				}
 				return FileVisitResult.CONTINUE;
 			}

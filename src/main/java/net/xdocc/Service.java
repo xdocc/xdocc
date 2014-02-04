@@ -53,7 +53,6 @@ public class Service {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Service.class);
 
-	
 	private final ExecutorService executorServiceCompiler = Executors
 			.newCachedThreadPool();
 
@@ -71,9 +70,9 @@ public class Service {
 	private static File cacheDir;
 
 	private static boolean fileChangeListener = true;
-	
+
 	private static boolean clearCache = false;
-	
+
 	private static int compilerCounter = 0;
 
 	static {
@@ -85,8 +84,7 @@ public class Service {
 				"run the file-change-listener to recompile if files changed");
 		options.addOption("s", "cache", true,
 				"set the path to persist the cached data");
-		options.addOption("x", "clear-cache", false,
-				"clear cache at startup");
+		options.addOption("x", "clear-cache", false, "clear cache at startup");
 		// read config file from project if run in eclipse, otherwise use
 		// directory
 		try {
@@ -169,16 +167,15 @@ public class Service {
 		}
 	}
 
-	void setupCache(File cacheDir) {	
+	void setupCache(File cacheDir) {
 		db = DBMaker.newFileDB(cacheDir).closeOnJvmShutdown().make();
 		cache = db.getHashMap("results");
-		if(clearCache) {
+		if (clearCache) {
 			cache.clear();
 		}
 	}
 
-	private List<Site> initCompile() throws FileNotFoundException,
-			IOException {
+	private List<Site> initCompile() throws FileNotFoundException, IOException {
 		// now we read the config files for each site
 		List<Handler> handlers = findHandlers();
 		List<Site> sites = createSites(handlers);
@@ -195,8 +192,7 @@ public class Service {
 		return sites;
 	}
 
-	private void initConfig(String[] args) throws ParseException,
-			IOException {
+	private void initConfig(String[] args) throws ParseException, IOException {
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse(options, args);
 		String file = cmd.getOptionValue("c");
@@ -251,7 +247,7 @@ public class Service {
 	 */
 	public void compile(Site site, Path path, Map<String, Object> model)
 			throws IOException {
-		LOG.info("compiling: " + site + "/" + path);
+		LOG.debug("compiling: " + site + "/" + path);
 		Link link = readNavigation(site);
 		site.setNavigation(link);
 		executorServiceCompiler.execute(new Compiler(site, path, dirtySet,
@@ -275,12 +271,13 @@ public class Service {
 			if (!Files.isDirectory(pathToDelete)) {
 				if (Utils.isChild(pathToDelete, site.getGenerated())) {
 					Files.delete(pathToDelete);
-					System.err.println("delete " + pathToDelete);
+					LOG.debug("delete " + pathToDelete);
 				}
 			}
-		}		
-		if(compilerCounter == 1) {
-			//some templates may be used within a template -> find those and get the file size and date
+		}
+		if (compilerCounter == 1) {
+			// some templates may be used within a template -> find those and
+			// get the file size and date
 			Map<String, TemplateBean> templates = site.getTemplates();
 			for (Map.Entry<String, TemplateBean> entry : templates.entrySet()) {
 				if (entry.getValue().isDirty()) {
@@ -299,8 +296,7 @@ public class Service {
 		return readNavigation(site, new XPath(site, site.getSource()));
 	}
 
-	public Link readNavigation(Site site, XPath source)
-			throws IOException {
+	public Link readNavigation(Site site, XPath source) throws IOException {
 		Link root = new Link(source, null);
 		List<XPath> children = Utils.getNonHiddenChildren(site,
 				source.getPath());
@@ -371,13 +367,14 @@ public class Service {
 	}
 
 	public void addCompileResult(Path path, CompileResult result) {
-		if(compileResult.containsKey(path)) {
-			System.err.println("Path "+path+ " already there. Overwriting");
+		if (compileResult.containsKey(path)) {
+			LOG.debug("Path " + path + " already there. Overwriting");
 		}
 		compileResult.put(path, result);
 		if (cache != null && result.getFileInfos() != null) {
 			cache.put(path.toFile(), result.getFileInfos());
-			//System.err.println("add to cache "+path.toFile()+" / "+(result.getFileInfos()==null));
+			LOG.debug("add to cache " + path.toFile() + " / "
+					+ (result.getFileInfos() == null));
 			db.commit();
 		}
 
@@ -387,12 +384,12 @@ public class Service {
 	}
 
 	public boolean isCached(Path source, Path target) {
-		if(cache == null) {
+		if (cache == null) {
 			return false;
 		}
 		Set<FileInfos> infos = cache.get(source.toFile());
 		if (infos == null) {
-			//System.err.println("not found in cache "+source.toFile());
+			LOG.debug("not found in cache " + source.toFile());
 			return false;
 		}
 		for (FileInfos info : infos) {
@@ -412,11 +409,12 @@ public class Service {
 								targetTimestamp, targetSize);
 						return !isSourceDirty && !isTargetDirty;
 					} else if (info.isDirectories(source)) {
-						//no need to check target, since it will be modified when a file changes inside.
+						// no need to check target, since it will be modified
+						// when a file changes inside.
 						long sourceTimestamp = Files
 								.getLastModifiedTime(source).toMillis();
-						boolean isSourceDirty = info.isSourceDirty(
-								sourceTimestamp);
+						boolean isSourceDirty = info
+								.isSourceDirty(sourceTimestamp);
 						return !isSourceDirty;
 					} else {
 						return false;
@@ -438,7 +436,7 @@ public class Service {
 
 	public CompileResult getCompileResult(Path path) {
 		CompileResult compileResult1 = compileResult.get(path);
-		if(compileResult1 != null) {
+		if (compileResult1 != null) {
 			return compileResult1.copyDocument();
 		}
 		return null;
@@ -458,7 +456,7 @@ public class Service {
 		Map<String, TemplateBean> templates = site.getTemplates();
 		for (Map.Entry<String, TemplateBean> entry : templates.entrySet()) {
 			if (entry.getValue().isDirty()) {
-				System.err.println("yes, we are dirty: "+entry.getKey());
+				LOG.debug("yes, we are dirty: " + entry.getKey());
 				dependencies.addAll(entry.getValue().getFlatDependencies());
 			}
 		}
@@ -482,16 +480,12 @@ public class Service {
 					if (!isCached(source, target)
 							|| dependencies.contains(source)) {
 						isCached(source, target);
-						LOG.debug("cache: invalidate {} with target {} ({}) ",source, target, isCached(source, target));
-						/*if(target.toString().contains("/ana/icons/")) {
-							System.err.println("cache: invalidate " + source
-								+ " with target " + target);
-							isCached(source, target);
-						}*/
+						LOG.debug("cache: invalidate {} with target {} ({}) ",
+								source, target, isCached(source, target));
 						dependencies.addAll(compileResult2.getValue()
 								.findDependencies(source));
 						iterater.remove();
-						if(cache!=null) {
+						if (cache != null) {
 							cache.remove(source.toFile());
 						}
 						break;
@@ -500,8 +494,8 @@ public class Service {
 			}
 		}
 		for (Path dependency : dependencies) {
-			//System.err.println("removing dependency " + dependency);
-			if(cache!=null) {
+			LOG.debug("removing dependency " + dependency);
+			if (cache != null) {
 				cache.remove(dependency.toFile());
 			}
 			compileResult.remove(dependency);
