@@ -61,7 +61,7 @@ public class Service {
 
 	private final Map<Path, CompileResult> compileResult = Collections
 			.synchronizedMap(new HashMap<Path, CompileResult>());
-	private static Map<String, Set<FileInfos>> cache;
+	private static Map<File, Set<FileInfos>> cache;
 
 	private static DB db;
 
@@ -371,9 +371,9 @@ public class Service {
 			LOG.debug("Path " + path + " already there. Overwriting");
 		}
 		compileResult.put(path, result);
-		if (cache != null && result.getFileInfos() != null && result.getDocument() != null) {
-			cache.put(result.getDocument().getFilename(), result.getFileInfos());
-			LOG.debug("add to cache " + result.getDocument().getFilename() + " / "
+		if (cache != null && result.getFileInfos() != null) {
+			cache.put(path.toFile(), result.getFileInfos());
+			LOG.debug("add to cache " + path.toFile() + " / "
 					+ (result.getFileInfos() == null));
 			db.commit();
 		}
@@ -387,7 +387,7 @@ public class Service {
 		if (cache == null) {
 			return false;
 		}
-		Set<FileInfos> infos = cache.get(source.getFileName());
+		Set<FileInfos> infos = cache.get(source.toFile());
 		if (infos == null) {
 			LOG.debug("not found in cache " + source.toFile());
 			return false;
@@ -397,15 +397,14 @@ public class Service {
 				try {
 					// now we have all the files found
 					if (info.isFiles(source)) {
-					
-//						long sourceSize = Files.size(source);
+						long sourceSize = Files.size(source);
 						long targetSize = Files.size(target);
 						long targetTimestamp = Files
 								.getLastModifiedTime(target).toMillis();
 						long sourceTimestamp = Files
 								.getLastModifiedTime(source).toMillis();
 						boolean isSourceDirty = info.isSourceDirty(
-								sourceTimestamp);
+								sourceTimestamp, sourceSize);
 						boolean isTargetDirty = info.isTargetDirty(target,
 								targetTimestamp, targetSize);
 						return !isSourceDirty && !isTargetDirty;
@@ -480,13 +479,14 @@ public class Service {
 					// if the cache is not valid OR if the template changed
 					if (!isCached(source, target)
 							|| dependencies.contains(source)) {
-						LOG.debug("cache: invalidate {} with target {}",
-								source, target);
+						isCached(source, target);
+						LOG.debug("cache: invalidate {} with target {} ({}) ",
+								source, target, isCached(source, target));
 						dependencies.addAll(compileResult2.getValue()
 								.findDependencies(source));
 						iterater.remove();
 						if (cache != null) {
-							cache.remove(source.getFileName());
+							cache.remove(source.toFile());
 						}
 						break;
 					}
@@ -496,7 +496,7 @@ public class Service {
 		for (Path dependency : dependencies) {
 			LOG.debug("removing dependency " + dependency);
 			if (cache != null) {
-				cache.remove(dependency.getFileName());
+				cache.remove(dependency.toFile());
 			}
 			compileResult.remove(dependency);
 		}
