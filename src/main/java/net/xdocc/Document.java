@@ -85,7 +85,11 @@ public class Document implements Comparable<Document>, Serializable {
 				setFilesize(Files.size(xPath.getPath()));
 			} catch (IOException e) {
 				setFilesize(-1);
-				LOG.debug("cannot get the file size (probably file renamed): "+xPath.getPath());
+				if (LOG.isWarnEnabled()) {
+					LOG.warn(
+							"cannot get the file size, see syserr for more info",
+							e);
+				}
 			}
 		}
 	}
