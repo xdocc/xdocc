@@ -1,5 +1,6 @@
 package net.xdocc;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -7,10 +8,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import junit.framework.Assert;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -22,21 +25,11 @@ import org.slf4j.LoggerFactory;
  * and file level. So far these tags are under test:
  * 
  * - layout (l)
+ * - size_icon (si)
+ * - size_normal (sn)
+ * - paging (p)
+ * - all (a)
  * 
- * 
- * hierarchy:
- * 
- * 1|folder0|Folder 0|l=x <-- layout x set
- * 
- * --1|folder00|Folder 00|l2=z <-- layout z set ----1|folder000|Folder 000 <--
- * layout z inherited ----2|folder001|Folder 001 <-- layout z inherited
- * ------1|folder0010|Folder 0010 <-- layout z inherited
- * 
- * --2|folder01|Folder 01 <-- layout x inherited ----1|folder010|Folder 010 <--
- * layout default ----2|folder011|Folder 011|l=z <-- layout z set
- * 
- * .templates: --collection.ftl --collection_x.ftl --page.ftl --page_x.ftl
- * --wikitext.ftl --wikitext_z.ftl
  * 
  */
 public class TestTags {
@@ -44,24 +37,8 @@ public class TestTags {
 	private static final Logger log = LoggerFactory.getLogger(TestTags.class);
 
 	private static final String genString = "/tmp/gen";
-	private static final String sourceString = "/example|example site";
+	private static final String sourceString = "/example|example site|si=50x50, sn=500x500, all";
 	
-//	private static final String hierarchy0 = "/1|folder0|Folder 0|l=x|.nav";
-//	private static final String hierarchy00 = hierarchy0
-//			+ "/1|folder00|Folder 00|l2=z";
-//	private static final String hierarchy01 = hierarchy0
-//			+ "/2|folder01|Folder 01";
-//	private static final String hierarchy000 = hierarchy00
-//			+ "/1|folder000|Folder 000";
-//	private static final String hierarchy001 = hierarchy00
-//			+ "/2|folder001|Folder 001";
-//	private static final String hierarchy010 = hierarchy01
-//			+ "/1|folder010|Folder 010";
-//	private static final String hierarchy011 = hierarchy01
-//			+ "/2|folder011|Folder 011|l=z";
-//	private static final String hierarchy0010 = hierarchy001
-//			+ "/1|folder0010|Folder 0010";
-
 	private static Site site;
 	private static File mapCache;
 
@@ -83,15 +60,13 @@ public class TestTags {
 		site = new Site(service, source, generated, service.findHandlers(),
 				null);
 		service.compile(site);
-		// wait a bit...
-		Thread.sleep(5000);
-		// check for completion
+		service.waitFor(site.getSource());
 	}
 
 	@AfterClass
 	public static void cleanup() throws IOException {
 		Path generated = Paths.get(genString);
-		FileUtils.deleteDirectory(generated.toFile());
+//		FileUtils.deleteDirectory(generated.toFile());
 		site.service().shutdown();
 		mapCache.delete();
 	}
@@ -147,6 +122,36 @@ public class TestTags {
 		Assert.assertTrue(file0010.contains("<div class=\"layout_z\">"));
 	}
 
+	@Test
+	public void testImageTags() throws IOException {
+		// testpng assert width or height of resized images
+		Path sn = site.getGenerated().resolve("folder0/folder01/folder010/testpng_n.png");
+		Path si = site.getGenerated().resolve("folder0/folder01/folder010/testpng_t.png");
+		BufferedImage img_sn = ImageIO.read(sn.toFile());
+		BufferedImage img_si = ImageIO.read(si.toFile());
+		int sn_height = img_sn.getHeight();
+		int si_height = img_si.getHeight();
+		int sn_width = img_sn.getWidth();
+		int si_width = img_si.getWidth();
+		Assert.assertTrue(sn_height == 500 || sn_width==500);		
+		Assert.assertTrue(si_height==50 || si_width==50);
+	}
+	
+	@Test
+	public void testPaging() throws IOException {
+		CompileResult cr = service.getCompileResult(site.getSource().resolve("1|folder0|Folder 0|l=x|.nav/1|folder00|Folder 00|l2=z/1|folder000|Folder 000|p=3"));
+		List<Document> docs = cr.getDocument().getDocuments();
+		Assert.assertEquals(3, docs.size());
+		Path h000 = site.getGenerated().resolve("folder0/folder00/folder000/index_1.html");
+		String file000 = new String(Files.readAllBytes(h000));
+		Assert.assertTrue(Files.exists(h000));
+	}
+	
+	@Test
+	public void testAllVisible() {
+		
+	}
+	
 	// @Test
 	public void debugloop() {
 		while (true) {

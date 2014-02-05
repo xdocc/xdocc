@@ -208,6 +208,13 @@ public class HandlerWikiText implements Handler {
 				e.printStackTrace();
 			}
 		}
+		
+		@Override
+		public void imageLink(Attributes linkAttributes,
+				Attributes imageAttributes, String href, String imageUrl) {
+			// TODO Auto-generated method stub
+			super.imageLink(linkAttributes, imageAttributes, href, imageUrl);
+		}
 
 		@Override
 		public void link(Attributes attributes, String hrefOrHashName,

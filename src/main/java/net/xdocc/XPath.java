@@ -239,8 +239,14 @@ public class XPath implements Comparable<XPath> {
 					return false;
 				}
 
-			} else {
-				return false;
+			}else {
+				if(getParent()!=null) {
+					if(!getParent().isAll()) {
+						return false;
+					}
+				}else {
+					return false;
+				}
 			}
 		}
 		// now, we have the number, date or date time, lets go for the url
@@ -302,9 +308,9 @@ public class XPath implements Comparable<XPath> {
 								offset = matcher7.end(1) + 1;
 							}
 						} else {
-							// tag [b] is the same as [l9=browse,a]
+							// tag [b] is the same as [l99=browse,c]
 							if (key.equals("b") || key.equals("browse")) {
-								properties.put("l9", "browse");
+								properties.put("l99", "browse");
 								properties.put("c", null);
 							} else {
 								properties.put(key, null);
@@ -642,6 +648,10 @@ public class XPath implements Comparable<XPath> {
 
 	public boolean isHighlight() {
 		return hasProperty("highlight") || hasProperty("h");
+	}
+	
+	public boolean isAll() {
+		return hasProperty("all") || hasProperty("a");
 	}
 
 	public Date getDate() {
