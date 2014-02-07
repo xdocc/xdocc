@@ -106,6 +106,7 @@ public class Service {
 				WatchService.startWatch(sites);
 				service.compileIfFileChanged();
 			}
+			LOG.info("service ready!");
 		} catch (IOException e) {
 			LOG.error("cannot compile sites " + e);
 			e.printStackTrace();
@@ -157,7 +158,7 @@ public class Service {
 			setupCache(cacheDir);
 			LOG.info("configuration directory set to " + configDir);
 			return initCompile();
-		} catch (ParseException | IOException e) {
+		} catch (ParseException | IOException | InterruptedException e) {
 			LOG.error("cannot start xdocc ", e);
 			if (LOG.isDebugEnabled()) {
 				e.printStackTrace();
@@ -175,7 +176,7 @@ public class Service {
 		}
 	}
 
-	private List<Site> initCompile() throws FileNotFoundException, IOException {
+	private List<Site> initCompile() throws FileNotFoundException, IOException, InterruptedException {
 		// now we read the config files for each site
 		List<Handler> handlers = findHandlers();
 		List<Site> sites = createSites(handlers);
@@ -188,7 +189,9 @@ public class Service {
 		for (Site site : sites) {
 			Utils.createDirectory(site);
 			compile(site);
+			waitFor(site.getSource());
 		}
+		
 		return sites;
 	}
 
@@ -372,7 +375,7 @@ public class Service {
 		}
 		compileResult.put(path, result);
 		if (cache != null && result.getFileInfos() != null && result.getDocument() != null) {
-			cache.put(result.getDocument().getFilename(), result.getFileInfos());
+			cache.put(path.toString(), result.getFileInfos());
 			LOG.debug("add to cache " + result.getDocument().getFilename() + " / "
 					+ (result.getFileInfos() == null));
 			db.commit();
@@ -387,7 +390,7 @@ public class Service {
 		if (cache == null) {
 			return false;
 		}
-		Set<FileInfos> infos = cache.get(source.getFileName().toString());
+		Set<FileInfos> infos = cache.get(source.toString());
 		if (infos == null) {
 			LOG.debug("not found in cache " + source.toFile());
 			return false;
@@ -486,7 +489,7 @@ public class Service {
 								.findDependencies(source));
 						iterater.remove();
 						if (cache != null) {
-							cache.remove(source.getFileName());
+							cache.remove(source.toString());
 						}
 						break;
 					}

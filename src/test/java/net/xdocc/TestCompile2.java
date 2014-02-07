@@ -26,7 +26,7 @@ public class TestCompile2 {
 		Utils.deleteDirectory(generated);
 		// src and dst directories set
 		Utils.createFile(source, ".templates/page.ftl", "!header!<br>[${document.generate}/${document.debug}]<br>!footer!");
-		Utils.createFile(source, ".templates/collection.ftl", "!col-beg!<br><#list documents as document>${document.generate}[${document.name}]/${document.debug}</#list><br>!col-end!");
+		Utils.createFile(source, ".templates/collection.ftl", "!col-beg!<br><#list documents as document>${document.generate}/${document.debug}</#list><br>!col-end!");
 		
 		Utils.createFile(source, ".templates/text.ftl", "text:[${content}]");
 		
