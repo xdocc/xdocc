@@ -645,6 +645,10 @@ public class XPath implements Comparable<XPath> {
 	public boolean isNavigation() {
 		return containsExtension("nav") || containsExtension("n");
 	}
+	
+	public boolean isNone() {
+		return containsExtension("none") || containsExtension("x");
+	}
 
 	public boolean isHighlight() {
 		return hasProperty("highlight") || hasProperty("h");
