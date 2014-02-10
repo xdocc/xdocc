@@ -35,13 +35,6 @@ public class TestPath {
 		Assert.assertEquals("", result);
 	}
 
-	@Test
-	public void testPath4() {
-		Path source = Paths.get("/tmp/");
-		Path path = Paths.get("/tmp");
-		String result = Utils.relativePathToRoot(source, path);
-		Assert.assertEquals("", result);
-	}
 
 	@Test
 	public void testPath5() throws IOException {

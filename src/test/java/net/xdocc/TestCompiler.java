@@ -2,6 +2,7 @@ package net.xdocc;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.Assert;
-
 import net.xdocc.handlers.Handler;
 
 import org.apache.commons.io.FileUtils;
@@ -39,7 +39,7 @@ public class TestCompiler {
 
 		Utils.createFile(source, ".templates/collection.ftl", "|collection|"
 				+ "|${path}|" + "<#list documents as document>"
-				+ "|${document.content}|[${document.url}]" + "</#list>"
+				+ "|${document.generate}|[${document.url}]" + "</#list>"
 				+ "|end collection|");
 		Utils.createFile(source, ".templates/page.ftl",
 				"|single|[${document.generate}]|[n:${navigation.name}]|end single|${debug}");
@@ -130,57 +130,60 @@ public class TestCompiler {
 		}
 	}
 
-	@Test
-	public void testCompilerNavigation() throws Exception {
-		Site site = setup(true);
-		try {
-			Utils.createFile(site.getSource(), "1|index1|.txt", "1111");
-			Utils.createFile(site.getSource(), "1|dir1|Dir1|.nav/1|index|.txt",
-					"222");
-			Utils.createFile(site.getSource(),
-					"1|dir1|Dir1|.nav/1|dirx|dirx|.nav/1|index2|.txt", "xxx");
-			Utils.createFile(site.getSource(), "2|dir2|dir2|.nav/2|index2|.txt",
-					"333");
-			setupNav(site);
-			service.compile(site);
-			// wait a bit...
-			Thread.sleep(1000);
-			// check for completion
-			Path index = site.getGenerated().resolve("index.html");
-			Assert.assertEquals(true, Files.exists(index));
-			String content = new String(Files.readAllBytes(index));
-			Assert.assertEquals(true, content.contains("n:Test Page"));
-			//
-			index = site.getGenerated().resolve("dir1/index.html");
-			Assert.assertEquals(true, Files.exists(index));
-			content = new String(Files.readAllBytes(index));
-			Assert.assertEquals(true, content.contains("n:Test Page"));
-		} finally {
-			cleanup(true);
-		}
-	}
+//	@Test
+//	public void testCompilerNavigation() throws Exception {
+//		Site site = setup(true);
+//		try {
+//			Utils.createFile(site.getSource(), "1|index1|.textile", "1111");
+//			Utils.createFile(site.getSource(), "1|dir1|Dir1|.nav/1|index|.txt",
+//					"222");
+//			Utils.createFile(site.getSource(),
+//					"1|dir1|Dir1|.nav/1|dirx|dirx|.nav/1|index2|.txt", "xxx");
+//			Utils.createFile(site.getSource(), "2|dir2|dir2|.nav/2|index2|.txt",
+//					"333");
+//			setupNav(site);
+//			service.compile(site);
+//			// check for completion
+//			Path index = site.getGenerated().resolve("index.html");
+//			Assert.assertEquals(true, Files.exists(index));
+//			String content = new String(Files.readAllBytes(index));
+//			Assert.assertEquals(true, content.contains("1111"));
+//			index = site.getGenerated().resolve("dir1/index.html");
+//			Assert.assertEquals(true, Files.exists(index));
+//			content = new String(Files.readAllBytes(index));
+//			System.out.println(content);
+//			Assert.assertEquals(true, content.contains("xxx"));
+//		} finally {
+////			cleanup(true);
+//		}
+//	}
 
 	@Test
 	public void testCache() throws Exception {
-		Site site = setup(true);
 		try {
-			Utils.createFile(site.getSource(), "1|index1|.txt", "1111");
-			Utils.createFile(site.getSource(), "2|index2|.txt", "2222");
+			String genString = "/tmp/gen";
+			String sourceString = "/example|si=50x50, sn=500x500, all";
+			URL resourceUrl = TestCompiler.class.getResource(sourceString);
+			Path source = Paths.get(resourceUrl.toURI());
+			Path generated = Paths.get(genString);
+			Files.createDirectories(generated);
+			// setup cache
+			mapCache = File.createTempFile("mapdb", "xdocc");
+			service = new Service();
+			service.setupCache(mapCache);
+			Site site = new Site(service, source, generated, service.findHandlers(),
+					null);
 			service.compile(site);
-			// wait a bit..
-			Thread.sleep(5000);
+			
 			Path index = site.getGenerated().resolve("index.html");
 			long timestap = Files.getLastModifiedTime(index).toMillis();
 			service.compile(site);
-			Thread.sleep(5000);
 			long timestap2 = Files.getLastModifiedTime(index).toMillis();
 			Assert.assertEquals(timestap, timestap2);
 			Files.write(index, "3333".getBytes());
 			service.compile(site);
-			Thread.sleep(1500);
 			timestap2 = Files.getLastModifiedTime(index).toMillis();
 			Assert.assertNotSame(timestap, timestap2);
-			
 		} finally {
 			cleanup(true);
 		}

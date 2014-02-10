@@ -30,7 +30,7 @@ import org.yaml.snakeyaml.Yaml;
 public class XPath implements Comparable<XPath> {
 	private static final Logger LOG = LoggerFactory.getLogger(XPath.class);
 
-	private static final int MAX_PROPERTIES = 7;
+	private static final int MAX_PROPERTIES = 8;
 
 	private final static Pattern PATTERN_NUMBER = Pattern
 			.compile("^([0-9]+)\\|");
@@ -67,7 +67,7 @@ public class XPath implements Comparable<XPath> {
 
 	private List<String> extensionList;
 
-	private String name;
+	private String name = "";
 
 	private String url;
 
@@ -101,14 +101,10 @@ public class XPath implements Comparable<XPath> {
 		} else if(Files.isDirectory(path)) {
 			readFrontmatter();
 		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("The path [" + path + "] is not considered!");
-			}
+			LOG.debug("The path [" + path + "] is not considered!");
 		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("The path [" + path + "] was parsed to: nr=" + nr
+		LOG.debug("The path [" + path + "] was parsed to: nr=" + nr
 					+ ",name=" + name + ",url=" + url);
-		}
 	}
 
 	private void readFrontmatter() {
@@ -262,27 +258,29 @@ public class XPath implements Comparable<XPath> {
 			int pipePos = name.indexOf("|", offset);
 			
 			//if we have a pipe after a dot, that means that the dot belongs to the url
-			Matcher matcher4 = pipePos > dotPos ? PATTERN_NAME.matcher(name) : PATTERN_URL.matcher(name);
+//			Matcher matcher4 = pipePos > dotPos ? PATTERN_NAME.matcher(name) : PATTERN_URL.matcher(name);
+			Matcher matcher4 = PATTERN_URL.matcher(name);
+
 			if (matcher4.find(offset)) {
 				this.url = matcher4.group(1);
-				offset = matcher4.end(1) + 1;
+				offset = matcher4.end(1)+1;
 			}
 		}
 		// lets go for the name
-		if (name.length() > offset) {
-			if (name.charAt(offset - 1) == '.') {
-				// leading dot, we got an extension
-				extensions = name.substring(offset - 1);
-				extensionList = Utils.splitExtensions(extensions);
-				return true;
-			}
-			
-			Matcher matcher5 = PATTERN_NAME.matcher(name);
-			if (matcher5.find(offset)) {
-				this.name = matcher5.group(1);
-				offset = matcher5.end(1) + 1;
-			}
-		}
+//		if (name.length() > offset) {
+//			if (name.charAt(offset - 1) == '.') {
+//				// leading dot, we got an extension
+//				extensions = name.substring(offset - 1);
+//				extensionList = Utils.splitExtensions(extensions);
+//				return true;
+//			}
+//			
+//			Matcher matcher5 = PATTERN_NAME.matcher(name);
+//			if (matcher5.find(offset)) {
+//				this.name = matcher5.group(1);
+//				offset = matcher5.end(1) + 1;
+//			}
+//		}
 		// lets go for the tags
 		if (name.length() > offset) {
 			if (name.charAt(offset) == '.') {
@@ -304,8 +302,14 @@ public class XPath implements Comparable<XPath> {
 							if (matcher7.find(offset)) {
 								String value = matcher7.group(1);
 								value = parseValue(key, value);
-								properties.put(key, value);
 								offset = matcher7.end(1) + 1;
+								if(key.equalsIgnoreCase("name") || key.equalsIgnoreCase("n")) {
+									if(value != null && !value.equalsIgnoreCase("")) {
+										this.name = value;
+									}
+								}else {
+									properties.put(key, value);
+								}
 							}
 						} else {
 							// tag [b] is the same as [l99=browse,c]
@@ -644,6 +648,10 @@ public class XPath implements Comparable<XPath> {
 
 	public boolean isNavigation() {
 		return containsExtension("nav") || containsExtension("n");
+	}
+	
+	public boolean isNone() {
+		return containsExtension("none") || containsExtension("x");
 	}
 
 	public boolean isHighlight() {

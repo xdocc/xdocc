@@ -208,10 +208,12 @@ public class HandlerDirectory implements Handler {
 					xPathChild.getPath());
 			result.addDependencies(xPathChild.getPath(), xPath.getPath());
 			boolean pre = xPathChild.isPreview();
+			//TODO: full is default, no need for isFull
 			boolean full = xPathChild.isFull() && !pre;
-			boolean none = xPathChild.isNavigation() && !pre && !full;
+			boolean nav = xPathChild.isNavigation() && !pre && !full ;
+			boolean none = xPathChild.isNone() && !pre && !full && !nav;
 
-			if (!none) {
+			if (!nav && !none) {
 				aggregate.add(result);
 			}
 		}

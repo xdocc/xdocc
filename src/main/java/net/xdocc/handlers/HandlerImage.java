@@ -49,7 +49,7 @@ public class HandlerImage implements Handler {
 		dirtyset.add(generatedFile);
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
 		dirtyset.add(generatedDir);
-		if (!site.service().isCached(xPath.getPath(), generatedFile)) {
+		if (!site.service().isCached(xPath.getSite(), xPath.getPath(), generatedFile)) {
 			Files.copy(xPath.getPath(), generatedFile,
 					StandardCopyOption.COPY_ATTRIBUTES,
 					StandardCopyOption.REPLACE_EXISTING,
@@ -61,7 +61,7 @@ public class HandlerImage implements Handler {
 		String sizeIcon = Utils.searchPropertySizeIcon(xPath, site);
 		Path generatedFileThumb = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_t" + xPath.getExtensions());
-		if (!site.service().isCached(xPath.getPath(), generatedFileThumb)) {
+		if (!site.service().isCached(xPath.getSite(), xPath.getPath(), generatedFileThumb)) {
 			if (sizeIcon.endsWith("c")) {
 				cropResize(xPath, generatedFileThumb, stripMod(sizeIcon, "c"));
 			} else {
@@ -74,7 +74,7 @@ public class HandlerImage implements Handler {
 
 		Path generatedFileNorm = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_n" + xPath.getExtensions());
-		if (!site.service().isCached(xPath.getPath(), generatedFileNorm)) {
+		if (!site.service().isCached(xPath.getSite(), xPath.getPath(), generatedFileNorm)) {
 			if (sizeNorm.endsWith("c")) {
 				cropResize(xPath, generatedFileNorm, stripMod(sizeNorm, "c"));
 			} else {
@@ -128,7 +128,7 @@ public class HandlerImage implements Handler {
 				.createDirectories(generatedFile2.getParent());
 		dirtyset.add(generatedDir2);
 		if (writeToDisk) {
-			if (!site.service().isCached(xPath.getPath(), generatedFile2)) {
+			if (!site.service().isCached(xPath.getSite(), xPath.getPath(), generatedFile2)) {
 				Utils.write(htmlSite, xPath, generatedFile2);
 			}
 		}

@@ -37,7 +37,7 @@ public class TestTags {
 	private static final Logger log = LoggerFactory.getLogger(TestTags.class);
 
 	private static final String genString = "/tmp/gen";
-	private static final String sourceString = "/example|example site|si=50x50, sn=500x500, all";
+	private static final String sourceString = "/example|si=50x50, sn=500x500, all";
 	
 	private static Site site;
 	private static File mapCache;
@@ -103,8 +103,8 @@ public class TestTags {
 		String file00 = new String(Files.readAllBytes(h00));
 		Assert.assertTrue(Files.exists(h00));
 		Assert.assertTrue(file00.contains("<div class=\"layout_z\">"));
-		Path h011 = site.getGenerated().resolve(
-				"folder0/folder01/folder011/index.html");
+		// h011
+		Path h011 = site.getGenerated().resolve("folder0/folder01/folder011/index.html");
 		String file011 = new String(Files.readAllBytes(h011));
 		Assert.assertTrue(Files.exists(h011));
 		Assert.assertTrue(file011.contains("<div class=\"layout_z\">"));
@@ -139,7 +139,7 @@ public class TestTags {
 	
 	@Test
 	public void testPaging() throws IOException {
-		CompileResult cr = service.getCompileResult(site.getSource().resolve("1|folder0|Folder 0|l=x|.nav/1|folder00|Folder 00|l2=z/1|folder000|Folder 000|p=3"));
+		CompileResult cr = service.getCompileResult(site.getSource().resolve("1|folder0|l=x|.nav/1|folder00|l2=z/1|folder000|p=3"));
 		List<Document> docs = cr.getDocument().getDocuments();
 		Assert.assertEquals(3, docs.size());
 		Path h000 = site.getGenerated().resolve("folder0/folder00/folder000/index_1.html");

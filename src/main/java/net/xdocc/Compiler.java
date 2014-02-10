@@ -99,7 +99,7 @@ public class Compiler implements Runnable {
 			if(result.getFileInfos()!=null) {
 				for(FileInfos fileInfos:result.getFileInfos()) {
 					
-					if( site.service().isCached(xPath.getPath(), fileInfos.getTarget().toPath())) {
+					if( site.service().isCached(site, xPath.getPath(), fileInfos.getTarget().toPath())) {
 						//System.err.println("yes. cached " + fileInfos.getTarget().toPath());
 						dirtyset.add(fileInfos.getTarget().toPath());
 					} else {

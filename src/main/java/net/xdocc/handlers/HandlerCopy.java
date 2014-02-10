@@ -61,7 +61,7 @@ public class HandlerCopy implements Handler {
 					Path generatedDir2 = Files.createDirectories(generatedFile
 							.getParent());
 					handlerBean.getDirtyset().add(generatedDir2);
-					if (!handlerBean.getSite().service().isCached(handlerBean.getxPath().getPath(),
+					if (!handlerBean.getSite().service().isCached(handlerBean.getSite(), handlerBean.getxPath().getPath(),
 							generatedFile)) {
 						Files.copy(handlerBean.getxPath().getPath(),
 								generatedFile,

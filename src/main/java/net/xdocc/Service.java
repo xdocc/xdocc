@@ -386,7 +386,7 @@ public class Service {
 		}
 	}
 
-	public boolean isCached(Path source, Path target) {
+	public boolean isCached(Site site, Path source, Path target) {
 		if (cache == null) {
 			return false;
 		}
@@ -398,9 +398,8 @@ public class Service {
 		for (FileInfos info : infos) {
 			if (info.getTarget().equals(target.toFile())) {
 				try {
-					// now we have all the files found
 					if (info.isFiles(source)) {
-					
+					// now we have all the files found
 						long sourceSize = Files.size(source);
 						long targetSize = Files.size(target);
 						long targetTimestamp = Files
@@ -413,13 +412,27 @@ public class Service {
 								targetTimestamp, targetSize);
 						return !isSourceDirty && !isTargetDirty;
 					} else if (info.isDirectories(source)) {
+						
+						// we need to check recursively for all children if they are dirty!
+						List<Path> childrens = Utils.getChildren(site, source);
+						for(Path child : childrens) {
+							Path tmpSource = child;
+							if(compileResult.containsKey(child)) {
+								CompileResult tmp = compileResult.get(child);
+								if(tmp.getDocument() != null) {
+									Path tmpTarget = compileResult.get(child).getDocument().getXPath().getTargetPath();
+									isCached(site, tmpSource, tmpTarget);
+								}
+							}
+						}
 						// no need to check target, since it will be modified
-						// when a file changes inside.
-						long sourceTimestamp = Files
-								.getLastModifiedTime(source).toMillis();
-						boolean isSourceDirty = info
-								.isSourceDirty(sourceTimestamp);
-						return !isSourceDirty;
+						// when a file changes inside
+												
+//						long sourceTimestamp = Files
+//								.getLastModifiedTime(source).toMillis();
+//						boolean isSourceDirty = info
+//								.isSourceDirty(sourceTimestamp);
+//						return !isSourceDirty;
 					} else {
 						return false;
 					}
@@ -481,7 +494,7 @@ public class Service {
 					Path target = fileInfos.getTarget().toPath();
 
 					// if the cache is not valid OR if the template changed
-					if (!isCached(source, target)
+					if (!isCached(site, source, target)
 							|| dependencies.contains(source)) {
 						LOG.debug("cache: invalidate {} with target {}",
 								source, target);
