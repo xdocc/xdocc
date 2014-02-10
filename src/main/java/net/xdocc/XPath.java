@@ -31,7 +31,7 @@ import org.yaml.snakeyaml.Yaml;
 public class XPath implements Comparable<XPath> {
 	private static final Logger LOG = LoggerFactory.getLogger(XPath.class);
 
-	private static final int MAX_PROPERTIES = 8;
+//	private static final int MAX_PROPERTIES = 8;
 
 	private final static Pattern PATTERN_NUMBER = Pattern
 			.compile("^([0-9]+)");
@@ -291,7 +291,7 @@ public class XPath implements Comparable<XPath> {
 			}
 			while(name.length()>offset && offset >= 0) {
 				// check if already at end (extension)
-				if (name.charAt(offset+1) == '.') {
+				if (name.length() > offset+1 && name.charAt(offset+1) == '.') {
 					// leading dot, we got an extension
 					extensions = name.substring(offset+1);
 					extensionList = Utils.splitExtensions(extensions);
@@ -304,25 +304,31 @@ public class XPath implements Comparable<XPath> {
 				}else {
 					tagString = name.substring(offset+1, name.length());
 				}
+				String key = "";
+				String value = "";
 				StringTokenizer tokenizer = new StringTokenizer(tagString, "=");
-				String key = tokenizer.nextToken();
 				if(tokenizer.hasMoreTokens()) {
-					String value = tokenizer.nextToken("=");
+					key = tokenizer.nextToken();
+				}
+				if(tokenizer.hasMoreTokens()) {
+					value = tokenizer.nextToken();
 					value = parseValue(key, value);
+					if(!key.equalsIgnoreCase("") && !value.equalsIgnoreCase("")) {
 						if(key.equalsIgnoreCase("name") || key.equalsIgnoreCase("n")) {
-							if(value != null && !value.equalsIgnoreCase("")) {
-								this.name = value;
-							}
+							this.name = value;
 						}else {
 							properties.put(key, value);
 						}
+					}
 				} else {
-					// tag [b] is the same as [l99=browse,c]
-					if (key.equals("b") || key.equals("browse")) {
-						properties.put("l99", "browse");
-						properties.put("c", null);
-					} else {
-						properties.put(key, null);
+					if(!key.equalsIgnoreCase("")) {
+						// tag [b] is the same as [l99=browse,c]
+						if (key.equals("b") || key.equals("browse")) {
+							properties.put("l99", "browse");
+							properties.put("c", null);
+						} else {
+							properties.put(key, null);
+						}
 					}
 				}
 				if(nextPipeIndex>=0) {

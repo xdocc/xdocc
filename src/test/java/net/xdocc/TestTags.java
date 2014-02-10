@@ -30,14 +30,13 @@ import org.slf4j.LoggerFactory;
  * - paging (p)
  * - all (a)
  * 
- * 
  */
 public class TestTags {
 
 	private static final Logger log = LoggerFactory.getLogger(TestTags.class);
 
 	private static final String genString = "/tmp/gen";
-	private static final String sourceString = "/example|si=50x50, sn=500x500, all";
+	private static final String sourceString = "/example|si=50x50|sn=500x500|all";
 	
 	private static Site site;
 	private static File mapCache;
@@ -53,8 +52,7 @@ public class TestTags {
 		Files.createDirectories(generated);
 
 		// setup cache
-		mapCache = File.createTempFile("mapdb", "xdocc");
-
+		mapCache = new File("/tmp/testcache.mapdb");
 		service = new Service();
 		service.setupCache(mapCache);
 		site = new Site(service, source, generated, service.findHandlers(),
@@ -62,13 +60,12 @@ public class TestTags {
 		service.compile(site);
 		service.waitFor(site.getSource());
 	}
-
+	
 	@AfterClass
-	public static void cleanup() throws IOException {
-		Path generated = Paths.get(genString);
-//		FileUtils.deleteDirectory(generated.toFile());
-		site.service().shutdown();
+	public static void cleanup() {
+		service.shutdown();
 		mapCache.delete();
+		new File("/tmp/testcache.mapdb.p");
 	}
 
 	@Test
@@ -139,7 +136,7 @@ public class TestTags {
 	
 	@Test
 	public void testPaging() throws IOException {
-		CompileResult cr = service.getCompileResult(site.getSource().resolve("1|folder0|l=x|.nav/1|folder00|l2=z/1|folder000|p=3"));
+		CompileResult cr = service.getCompileResult(site.getSource().resolve("1-folder0|l=x|n=Folder 0|.nav/1-folder00|l2=z|n=Folder 00|/1-folder000|p=3|n=Folder 000|"));
 		List<Document> docs = cr.getDocument().getDocuments();
 		Assert.assertEquals(3, docs.size());
 		Path h000 = site.getGenerated().resolve("folder0/folder00/folder000/index_1.html");
@@ -152,9 +149,4 @@ public class TestTags {
 		
 	}
 	
-	// @Test
-	public void debugloop() {
-		while (true) {
-		}
-	}
 }

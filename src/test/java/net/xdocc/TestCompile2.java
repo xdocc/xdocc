@@ -34,9 +34,9 @@ public class TestCompile2 {
 		List<Handler> handlers = service.findHandlers();
 		Site site = new Site(service, source, generated, handlers, null);
 		// create content
-		Utils.createFile(site.getSource(), "1|index|.txt", "AAhelloAA");
-		Utils.createFile(site.getSource(), "1|more|more/2|more|.txt", "AAmoreAA");
-		Utils.createFile(site.getSource(), "2|evenmore|evenmore/3|next|next.pre/4|even1|.txt", "AAevenAA");
+		Utils.createFile(site.getSource(), "1-index|.txt", "AAhelloAA");
+		Utils.createFile(site.getSource(), "1-more/2-more|.txt", "AAmoreAA");
+		Utils.createFile(site.getSource(), "2-evenmore/3-next|.pre/4-even1|.txt", "AAevenAA");
 		
 		
 		service.compile(site);
