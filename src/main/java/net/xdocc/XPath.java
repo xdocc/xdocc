@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
@@ -33,16 +34,16 @@ public class XPath implements Comparable<XPath> {
 	private static final int MAX_PROPERTIES = 8;
 
 	private final static Pattern PATTERN_NUMBER = Pattern
-			.compile("^([0-9]+)\\|");
+			.compile("^([0-9]+)");
 
 	private final static Pattern PATTERN_DATE = Pattern
-			.compile("^([0-9]{4}-[0-9]{2}-[0-9]{2})\\|");
+			.compile("^([0-9]{4}-[0-9]{2}-[0-9]{2})");
 
 	private final static Pattern PATTERN_DATETIME = Pattern
-			.compile("^([0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2})\\|");
+			.compile("^([0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2})");
 
-	private final static Pattern PATTERN_NAME = Pattern
-			.compile("([^/|]*)([|]|$)");
+//	private final static Pattern PATTERN_NAME = Pattern
+//			.compile("([^/|]*)([|]|$)");
 
 	private final static Pattern PATTERN_URL = Pattern
 			.compile("([^/|.]*)([.]|[|]|$)");
@@ -198,157 +199,162 @@ public class XPath implements Comparable<XPath> {
 		if (isHidden()) {
 			return false;
 		}
-		Matcher matcher1 = PATTERN_DATETIME.matcher(name);
-		Matcher matcher2 = PATTERN_DATE.matcher(name);
-		Matcher matcher3 = PATTERN_NUMBER.matcher(name);
-		int offset = 0;
-		if (root) {
-			nr = 1;
-		} else {
-			if (matcher1.find()) {
-				SimpleDateFormat parserSDF = new SimpleDateFormat(
-						"yyyy-MM-dd_HH:mm:ss");
-				try {
-					date = parserSDF.parse(matcher1.group(1));
-					nr = date.getTime();
-					offset = matcher1.end(1) + 1;
-				} catch (ParseException e) {
-					LOG.error("Cannot parse date time: ", e);
-					return false;
+		
+		try {
+			int firstPipeIndex = name.indexOf('|');
+			String url = "";
+			String order = "";
+			String mandatory = "";
+			int lastDelimiterIndex = 0;
+			int nextPipeIndex = 0;
+			int offset = 0;
+			// first mandatory patterns: order, url
+			if(firstPipeIndex == -1) {
+				mandatory = name;
+				lastDelimiterIndex = mandatory.lastIndexOf('-');
+				if(lastDelimiterIndex != -1) {
+					url = mandatory.substring(lastDelimiterIndex+1);
+					order = mandatory.substring(0, lastDelimiterIndex);
+				}else {
+					order = mandatory;
 				}
-			} else if (matcher2.find()) {
-				SimpleDateFormat parserSDF = new SimpleDateFormat("yyyy-MM-dd");
-				try {
-					date = parserSDF.parse(matcher2.group(1));
-					nr = date.getTime();
-					offset = matcher2.end(1) + 1;
-				} catch (ParseException e) {
-					LOG.error("Cannot parse date: ", e);
-					return false;
-				}
-			} else if (matcher3.find()) {
-				try {
-					nr = Long.parseLong(matcher3.group(1));
-					offset = matcher3.end(1) + 1;
-				} catch (NumberFormatException e) {
-					LOG.error("Cannot parse number: ", e);
-					return false;
-				}
-
 			}else {
-				if(getParent()!=null) {
-					if(!getParent().isAll()) {
+				mandatory = name.substring(0, firstPipeIndex);
+				if(!isRoot()) {
+					lastDelimiterIndex = mandatory.lastIndexOf('-');
+					if(lastDelimiterIndex != -1) {
+						order = mandatory.substring(0, lastDelimiterIndex);
+						url = mandatory.substring(lastDelimiterIndex+1);
+					}else {
+						order = mandatory;
+					}
+				}else {
+					url = mandatory;
+				}
+			}
+			Matcher matcher1 = PATTERN_DATETIME.matcher(order);
+			Matcher matcher2 = PATTERN_DATE.matcher(order);
+			Matcher matcher3 = PATTERN_NUMBER.matcher(order);
+			
+			// order
+			if (root) {
+				nr = 1;
+			} else {
+				if (matcher1.find()) {
+					SimpleDateFormat parserSDF = new SimpleDateFormat(
+							"yyyy-MM-dd_HH:mm:ss");
+					try {
+						date = parserSDF.parse(matcher1.group(1));
+						nr = date.getTime();
+					} catch (ParseException e) {
+						LOG.error("Cannot parse date time: ", e);
+						return false;
+					}
+				} else if (matcher2.find()) {
+					SimpleDateFormat parserSDF = new SimpleDateFormat("yyyy-MM-dd");
+					try {
+						date = parserSDF.parse(matcher2.group(1));
+						nr = date.getTime();
+					} catch (ParseException e) {
+						LOG.error("Cannot parse date: ", e);
+						return false;
+					}
+				} else if (matcher3.find()) {
+					try {
+						nr = Long.parseLong(matcher3.group(1));
+					} catch (NumberFormatException e) {
+						LOG.error("Cannot parse number: ", e);
 						return false;
 					}
 				}else {
-					return false;
-				}
-			}
-		}
-		// now, we have the number, date or date time, lets go for the url
-		if (name.length() > offset) {
-			if (name.charAt(offset) == '.') {
-				// leading dot, we got an extension
-				extensions = name.substring(offset);
-				extensionList = Utils.splitExtensions(extensions);
-				return true;
-			}
-			
-			int dotPos = name.indexOf(".", offset);
-			int pipePos = name.indexOf("|", offset);
-			
-			//if we have a pipe after a dot, that means that the dot belongs to the url
-//			Matcher matcher4 = pipePos > dotPos ? PATTERN_NAME.matcher(name) : PATTERN_URL.matcher(name);
-			Matcher matcher4 = PATTERN_URL.matcher(name);
-
-			if (matcher4.find(offset)) {
-				this.url = matcher4.group(1);
-				offset = matcher4.end(1)+1;
-			}
-		}
-		// lets go for the name
-//		if (name.length() > offset) {
-//			if (name.charAt(offset - 1) == '.') {
-//				// leading dot, we got an extension
-//				extensions = name.substring(offset - 1);
-//				extensionList = Utils.splitExtensions(extensions);
-//				return true;
-//			}
-//			
-//			Matcher matcher5 = PATTERN_NAME.matcher(name);
-//			if (matcher5.find(offset)) {
-//				this.name = matcher5.group(1);
-//				offset = matcher5.end(1) + 1;
-//			}
-//		}
-		// lets go for the tags
-		if (name.length() > offset) {
-			if (name.charAt(offset) == '.') {
-				// leading dot, we got an extension
-				extensions = name.substring(offset);
-				extensionList = Utils.splitExtensions(extensions);
-				return true;
-			}
-			for (int i = 0; i < MAX_PROPERTIES; i++) {
-				Matcher matcher6 = PATTERN_KEY.matcher(name);
-				if (matcher6.find(offset)) {
-					String key = matcher6.group(1);
-					offset = matcher6.end(1) + 1;
-					// if last character is =, we have a value
-					try {
-						if (name.length() > offset
-								&& name.charAt(offset - 1) == '=') {
-							Matcher matcher7 = PATTERN_VALUE.matcher(name);
-							if (matcher7.find(offset)) {
-								String value = matcher7.group(1);
-								value = parseValue(key, value);
-								offset = matcher7.end(1) + 1;
-								if(key.equalsIgnoreCase("name") || key.equalsIgnoreCase("n")) {
-									if(value != null && !value.equalsIgnoreCase("")) {
-										this.name = value;
-									}
-								}else {
-									properties.put(key, value);
-								}
-							}
-						} else {
-							// tag [b] is the same as [l99=browse,c]
-							if (key.equals("b") || key.equals("browse")) {
-								properties.put("l99", "browse");
-								properties.put("c", null);
-							} else {
-								properties.put(key, null);
-							}
+					if(getParent()!=null) {
+						if(!getParent().isAll()) {
+							return false;
 						}
-					} catch (StringIndexOutOfBoundsException a) {
-						a.printStackTrace();
+					}else {
+						return false;
 					}
+				}
+			}
+			// url
+			Matcher matcher4 = PATTERN_URL.matcher(url);
+			if (matcher4.find()) {
+				this.url = matcher4.group(1);
+			}
+			
+			// tags
+			if(firstPipeIndex != -1) {
+				offset = firstPipeIndex;
+				nextPipeIndex = name.indexOf('|', offset+1);
+			}else {
+				offset = name.length();
+			}
+			while(name.length()>offset && offset >= 0) {
+				// check if already at end (extension)
+				if (name.charAt(offset+1) == '.') {
+					// leading dot, we got an extension
+					extensions = name.substring(offset+1);
+					extensionList = Utils.splitExtensions(extensions);
+					return true;
+				}
+				// scan tag key & value
+				String tagString = "";
+				if(nextPipeIndex>=0) {
+					tagString = name.substring(offset+1, nextPipeIndex);
+				}else {
+					tagString = name.substring(offset+1, name.length());
+				}
+				StringTokenizer tokenizer = new StringTokenizer(tagString, "=");
+				String key = tokenizer.nextToken();
+				if(tokenizer.hasMoreTokens()) {
+					String value = tokenizer.nextToken("=");
+					value = parseValue(key, value);
+						if(key.equalsIgnoreCase("name") || key.equalsIgnoreCase("n")) {
+							if(value != null && !value.equalsIgnoreCase("")) {
+								this.name = value;
+							}
+						}else {
+							properties.put(key, value);
+						}
+				} else {
+					// tag [b] is the same as [l99=browse,c]
+					if (key.equals("b") || key.equals("browse")) {
+						properties.put("l99", "browse");
+						properties.put("c", null);
+					} else {
+						properties.put(key, null);
+					}
+				}
+				if(nextPipeIndex>=0) {
+					offset = nextPipeIndex;
+					nextPipeIndex = name.indexOf('|', offset+1);
+				}else {
+					offset = name.length();
+				}
+			}
 
+			// lets go for the extension
+			if (name.length() > offset && offset >= 0) {
+				if (name.charAt(offset) == '.') {
+					// leading dot, we got an extension
+					extensions = name.substring(offset);
+					extensionList = Utils.splitExtensions(extensions);
+					return true;
 				}
-				// if next character is comma, continue, otherwise quit
-				if (name.length() <= offset || name.charAt(offset - 1) != ',') {
-					break;
+				int index = name.indexOf(".", offset);
+				if (index > 0) {
+					LOG.warn("There seems to be an extension, but it was not found properly: "
+							+ name);
+					extensions = name.substring(index);
+					extensionList = Utils.splitExtensions(extensions);
+					return true;
 				}
 			}
+			return true;
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
+			return false;
 		}
-		// lets go for the extension
-		if (name.length() > offset) {
-			if (name.charAt(offset) == '.') {
-				// leading dot, we got an extension
-				extensions = name.substring(offset);
-				extensionList = Utils.splitExtensions(extensions);
-				return true;
-			}
-			int index = name.indexOf(".", offset);
-			if (index > 0) {
-				LOG.warn("There seems to be an extension, but it was not found properly: "
-						+ name);
-				extensions = name.substring(index);
-				extensionList = Utils.splitExtensions(extensions);
-				return true;
-			}
-		}
-		return true;
 	}
 
 	private String parseValue(String key, String value) {
@@ -522,8 +528,8 @@ public class XPath implements Comparable<XPath> {
 			 * Get the generated checksum using getValue method of CRC32 class.
 			 */
 			long lngChecksum = checksum.getValue();
-			return new BigInteger(String.valueOf(lngChecksum))
-					.toString(Character.MAX_RADIX);
+			String tmp = new BigInteger(String.valueOf(lngChecksum)).toString(Character.MAX_RADIX);
+			return tmp;
 		} else {
 			return url;
 		}
