@@ -1,12 +1,12 @@
 package net.xdocc;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
 import junit.framework.Assert;
-
 import net.xdocc.handlers.Handler;
 
 import org.junit.Test;
@@ -17,7 +17,17 @@ public class TestCompile2 {
 	 * 
 	 * @throws IOException .
 	 * @throws InterruptedException .
+	 * 
 	 */
+	
+	private static final String genString = "/tmp/gen";
+	private static final String sourceString = "/example|si=50x50|sn=500x500|all";
+
+	private static Site site;
+	private static File mapCache;
+	private static Service service;
+
+	
 	@Test
 	public void testCompile() throws IOException, InterruptedException {
 		Path source = Paths.get("/tmp/src.xdocc");

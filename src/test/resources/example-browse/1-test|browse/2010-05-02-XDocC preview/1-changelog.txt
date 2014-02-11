@@ -1,0 +1,4 @@
+Changelog for 1.0.24-preview
+
+* Fixed bug for slow uploads where change is called multiple times
+* Added ordering tag "asc"

@@ -127,8 +127,7 @@ public class Compiler implements Runnable {
 			site.service().notifyFor();
 			return true;
 		} catch (Throwable t) {
-			LOG.error("could not compile " + siteToCompile + " - " + t);
-			t.printStackTrace();
+			LOG.error("could not compile " + siteToCompile, t);
 			site.service().addCompileResult(siteToCompile, CompileResult.ERROR);
 		}
 		return false;

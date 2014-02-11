@@ -414,25 +414,27 @@ public class Service {
 					} else if (info.isDirectories(source)) {
 						
 						// we need to check recursively for all children if they are dirty!
-						List<Path> childrens = Utils.getChildren(site, source);
-						for(Path child : childrens) {
+						Map<Path, Set<Path>> childrens = compileResult.get(source).getDependenciesDown();
+						boolean dirty = true;
+						for(Path child : childrens.get(source)) {
 							Path tmpSource = child;
 							if(compileResult.containsKey(child)) {
 								CompileResult tmp = compileResult.get(child);
 								if(tmp.getDocument() != null) {
 									Path tmpTarget = compileResult.get(child).getDocument().getXPath().getTargetPath();
-									isCached(site, tmpSource, tmpTarget);
+									dirty = isCached(site, tmpSource, tmpTarget);
 								}
 							}
 						}
+						
 						// no need to check target, since it will be modified
 						// when a file changes inside
 												
-//						long sourceTimestamp = Files
-//								.getLastModifiedTime(source).toMillis();
-//						boolean isSourceDirty = info
-//								.isSourceDirty(sourceTimestamp);
-//						return !isSourceDirty;
+						long sourceTimestamp = Files
+								.getLastModifiedTime(source).toMillis();
+						boolean isSourceDirty = info
+								.isSourceDirty(sourceTimestamp);
+						return !isSourceDirty && !dirty;
 					} else {
 						return false;
 					}

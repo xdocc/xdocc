@@ -1,0 +1,13 @@
+
+h1. This is a Preview Version!
+
+This is a work-in-progress version. The code works more or less, but there are many bugs, no proper log files, and only very few testcases in place. Do not use this version unless you know what you are doing!
+
+h1. Known Issues
+
+* A file modification is triggered many times if an upload is slow
+* Removed items are not properly removed
+* No site protection. Not protected content is not accessible at all
+* No log files, so you are basically blind
+* No support for RSS
+* No support for ODT, and other formats

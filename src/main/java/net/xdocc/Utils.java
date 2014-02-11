@@ -515,46 +515,6 @@ public class Utils {
 		return null;
 	}
 
-	public static String searchPropertySizeIcon(XPath xPath, Site site) {
-		XPath current = xPath;
-		do {
-			String size = current.getSizeIcon();
-			if (size != null) {
-				return size;
-			}
-		} while ((current = current.getParent()) != null);
-
-		String size = site.getProperty("size_icon");
-		if (size != null) {
-			return size;
-		}
-		size = site.getProperty("si");
-		if (size != null) {
-			return size;
-		}
-		return "250x250^c";
-	}
-
-	public static String searchPropertySizeNormal(XPath xPath, Site site) {
-		XPath current = xPath;
-		do {
-			String size = current.getSizeNormal();
-			if (size != null) {
-				return size;
-			}
-		} while ((current = current.getParent()) != null);
-
-		String size = site.getProperty("size_normal");
-		if (size != null) {
-			return size;
-		}
-		size = site.getProperty("sn");
-		if (size != null) {
-			return size;
-		}
-		return "800x600^";
-	}
-
 	/**
 	 * Performs a wildcard matching for the text and pattern provided.
 	 * 

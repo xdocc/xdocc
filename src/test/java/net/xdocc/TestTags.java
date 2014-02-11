@@ -35,7 +35,7 @@ public class TestTags {
 
 	private static final Logger log = LoggerFactory.getLogger(TestTags.class);
 
-	private static final String genString = "/tmp/gen";
+	private static final String genString = "/tmp/gen/example";
 	private static final String sourceString = "/example|si=50x50|sn=500x500|all";
 	
 	private static Site site;
