@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -398,55 +399,54 @@ public class Service {
 			return false;
 		}
 		for (FileInfos info : infos) {
-			if (info.getTarget().equals(target.toFile())) {
-				try {
-					if (info.isFiles(source)) {
-						// now we have all the files found
-						long sourceSize = Files.size(source);
-						long targetSize = Files.size(target);
-						long targetTimestamp = Files
-								.getLastModifiedTime(target).toMillis();
-						long sourceTimestamp = Files
-								.getLastModifiedTime(source).toMillis();
-						boolean isSourceDirty = info.isSourceDirty(
-								sourceTimestamp, sourceSize);
-						boolean isTargetDirty = info.isTargetDirty(target,
-								targetTimestamp, targetSize);
-						return !isSourceDirty && !isTargetDirty;
-					} else if (info.isDirectories(source)) {
+			try {
+				if (info.isFiles(source)) {
+					// now we have all the files found
+					long sourceSize = Files.size(source);
+					long targetSize = Files.size(target);
+					long targetTimestamp = Files.getLastModifiedTime(target)
+							.toMillis();
+					long sourceTimestamp = Files.getLastModifiedTime(source)
+							.toMillis();
+					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp,
+							sourceSize);
+					boolean isTargetDirty = info.isTargetDirty(target,
+							targetTimestamp, targetSize);
+					return !isSourceDirty && !isTargetDirty;
+				} else if (info.isDirectories(source)) {
 
-						// we need to check recursively for all children if they
-						// are dirty!
-						List<XPath> childrens = Utils.getNonHiddenAndVisibleChildren(site, source);
-						boolean dirty = true;
-						for (XPath child : childrens) {
-							if (compileResult.containsKey(child.getPath())) {
-								CompileResult tmp = compileResult.get(child.getPath());
-								if (tmp.getDocument() != null) {
-									Path tmpTarget = compileResult.get(child.getPath())
-											.getDocument().getXPath()
-											.getTargetPath();
-									dirty = isCached(site, child.getPath(), tmpTarget);
-								}
+					// we need to check recursively for all children if they
+					// are dirty!
+					List<XPath> childrens = Utils
+							.getNonHiddenAndVisibleChildren(site, source);
+					boolean isDirDirty = false;
+					for (XPath child : childrens) {
+						if (compileResult.containsKey(child.getPath())) {
+							CompileResult tmp = compileResult.get(child
+									.getPath());
+							for(FileInfos i : tmp.getFileInfos()) {
+								isDirDirty = isCached(site, child.getPath(), i.getTarget().toPath());
+							}
+							if (isDirDirty) {
+								break;
 							}
 						}
-
-						// no need to check target, since it will be modified
-						// when a file changes inside
-
-						long sourceTimestamp = Files
-								.getLastModifiedTime(source).toMillis();
-						boolean isSourceDirty = info
-								.isSourceDirty(sourceTimestamp);
-						return !isSourceDirty && !dirty;
-					} else {
-						return false;
 					}
-				} catch (IOException e) {
-					LOG.info("exception in isCached - probably due to file removed event: "
-							+ source.toString());
+
+					// no need to check target, since it will be modified
+					// when a file changes inside
+
+					long sourceTimestamp = Files.getLastModifiedTime(source)
+							.toMillis();
+					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp);
+					return !isSourceDirty && !isDirDirty;
+				} else {
 					return false;
 				}
+			} catch (IOException e) {
+				LOG.info("exception in isCached - probably due to file removed event: "
+						+ source.toString());
+				return false;
 			}
 		}
 		return false;

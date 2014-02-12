@@ -94,16 +94,11 @@ public class Compiler implements Runnable {
 		CompileResult result = site.service().getCompileResult(xPath.getPath());
 		if(result != null) {
 			boolean cached = true;
-			//for notification only
-			//System.err.println("probably cached in memory and on disk " + result.getFileInfos());
 			if(result.getFileInfos()!=null) {
 				for(FileInfos fileInfos:result.getFileInfos()) {
-					
 					if( site.service().isCached(site, xPath.getPath(), fileInfos.getTarget().toPath())) {
-						//System.err.println("yes. cached " + fileInfos.getTarget().toPath());
 						dirtyset.add(fileInfos.getTarget().toPath());
 					} else {
-						//System.err.println("no. not cached " + fileInfos.getTarget().toPath());
 						cached = false;
 					}
 				}
