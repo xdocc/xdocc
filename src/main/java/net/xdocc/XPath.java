@@ -499,7 +499,7 @@ public class XPath implements Comparable<XPath> {
 
 	public boolean isVisible() {
 		// first check if property "copy" is somewhere
-		if(isCopyAll()) {
+		if(isCopyAllInherited()) {
 			return false;
 		}
 		// second if no property found we return parse result
