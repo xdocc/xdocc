@@ -9,7 +9,7 @@ import junit.framework.Assert;
 import org.junit.AfterClass;
 import org.junit.Test;
 
-public class TestNewXPath {
+public class TestXPath {
 	
 	private static final String genString = "/tmp/gen";
 

@@ -202,6 +202,53 @@ public class Utils {
 				});
 		return result;
 	}
+	
+	public static List<XPath> getNonHiddenAndVisibleChildren(final Site site,
+			final Path siteToCompile) throws IOException {
+		final List<XPath> result = new ArrayList<>();
+		Files.walkFileTree(siteToCompile,
+				EnumSet.noneOf(FileVisitOption.class), 1,
+				new FileVisitor<Path>() {
+					@Override
+					public FileVisitResult preVisitDirectory(Path dir,
+							BasicFileAttributes attrs) throws IOException {
+						// do not include ourself
+						if (!siteToCompile.equals(dir)) {
+							XPath xPath = new XPath(site, dir);
+							if (!xPath.isHidden() && xPath.isVisible()) {
+								result.add(xPath);
+							}
+						}
+						return FileVisitResult.CONTINUE;
+					}
+
+					@Override
+					public FileVisitResult visitFile(Path file,
+							BasicFileAttributes attrs) throws IOException {
+						// do not include ourself
+						if (!siteToCompile.equals(file)) {
+							XPath xPath = new XPath(site, file);
+							if (!xPath.isHidden()) {
+								result.add(xPath);
+							}
+						}
+						return FileVisitResult.CONTINUE;
+					}
+
+					@Override
+					public FileVisitResult visitFileFailed(Path file,
+							IOException exc) throws IOException {
+						return FileVisitResult.CONTINUE;
+					}
+
+					@Override
+					public FileVisitResult postVisitDirectory(Path dir,
+							IOException exc) throws IOException {
+						return FileVisitResult.CONTINUE;
+					}
+				});
+		return result;
+	}
 
 	public static List<Path> getChildren(final Site site,
 			final Path siteToCompile) throws IOException {

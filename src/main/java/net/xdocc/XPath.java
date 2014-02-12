@@ -266,13 +266,7 @@ public class XPath implements Comparable<XPath> {
 						return false;
 					}
 				} else {
-					if (getParent() != null) {
-						if (!getParent().isAll()) {
-							return false;
-						}
-					} else {
-						return false;
-					}
+					return false;
 				}
 			}
 			// url
@@ -502,7 +496,11 @@ public class XPath implements Comparable<XPath> {
 		if(isCopyAllInherited()) {
 			return false;
 		}
-		// second if no property found we return parse result
+		// second check if property "all" is somewhere
+		if(isAllInherited()) {
+			return true;
+		}
+		// third if no property found we return parse result
 		return visible;
 	}
 
@@ -519,8 +517,12 @@ public class XPath implements Comparable<XPath> {
 	 *         the filename is used
 	 */
 	public String getUrl() {
-		if (!isVisible() || isCopyAllInherited()) {
+		// non-visible files -> url = filename
+		if (!isVisible()) {
 			return getFileName();
+		}
+		if(isAllInherited() && (url == null || url.equals(""))) {
+			return getFileName().replace(extensions, "");
 		}
 		if (url == null || url.equals("")) {
 			byte bytes[] = getFileName().getBytes();
@@ -673,9 +675,32 @@ public class XPath implements Comparable<XPath> {
 	public boolean isHighlight() {
 		return hasProperty("highlight") || hasProperty("h");
 	}
+	
+	public boolean isAll(XPath parent) {
+		while (parent != null) {
+			if (parent.hasProperty("a", "all")) {
+				String value = parent.getProperty("a", "all");
+				if (value == null
+						|| StringUtils.equalsIgnoreCase(value, "true")) {
+					return true;
+				}
+				if (parent.extensionList != null
+						&& extensionList.contains("raw")) {
+					return true;
+				}
+			}
+			parent = parent.getParent();
+		}
+		return false;
+	}
 
-	public boolean isAll() {
-		return hasProperty("all") || hasProperty("a");
+	public boolean isAllInherited() {
+		XPath parent = getParent();
+		if (parent != null) {
+			return isAll(parent);
+		} else {
+			return false;
+		}
 	}
 
 	public Date getDate() {
@@ -763,24 +788,28 @@ public class XPath implements Comparable<XPath> {
 		}
 	}
 	
-	public String searchProperty(String name) {
+	/**
+	 * Search a property the hierarchy up, starting at "this"
+	 * 
+	 * @param names
+	 * @return
+	 */
+	public String searchProperty(String...names) {
 		XPath current = this;
 		do {
-			String property = current.getProperty(name);
+			String property = current.getProperty(names);
 			if (property != null) {
 				return property;
 			}
 		} while ((current = current.getParent()) != null);
-
-		String property = site.getProperty(name);
-		if (property != null) {
-			return property;
-		}
-		if(name.equals("sn") || name.equals("size_normal")) {
-			return "800x600^";
-		}
-		if(name.equals("si") || name.equals("size_icon")) {
-			return "250x250^c";
+		
+		for(String name : names) {
+			if(name.equals("sn") || name.equals("size_normal")) {
+				return "800x600^";
+			}
+			if(name.equals("si") || name.equals("size_icon")) {
+				return "250x250^c";
+			}
 		}
 		return null;
 	}

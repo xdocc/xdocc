@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 
 import junit.framework.Assert;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -36,7 +37,7 @@ public class TestTags {
 	private static final Logger log = LoggerFactory.getLogger(TestTags.class);
 
 	private static final String genString = "/tmp/gen/example";
-	private static final String sourceString = "/example|si=50x50|sn=500x500|all";
+	private static final String sourceString = "/example|si=50x50|sn=500x500";
 	
 	private static Site site;
 	private static File mapCache;
@@ -62,10 +63,16 @@ public class TestTags {
 	}
 	
 	@AfterClass
-	public static void cleanup() {
+	public static void cleanup() throws IOException {
 		service.shutdown();
 		mapCache.delete();
-		new File("/tmp/testcache.mapdb.p");
+		if(Files.exists(Paths.get("/tmp/testcache.mapdb.p"))) {
+			new File("/tmp/testcache.mapdb.p").delete();
+		}
+		if(Files.exists(Paths.get("/tmp/testcache.mapdb.t"))) {
+			new File("/tmp/testcache.mapdb.t").delete();
+		}
+		FileUtils.deleteDirectory(new File(genString));
 	}
 
 	@Test
@@ -136,17 +143,23 @@ public class TestTags {
 	
 	@Test
 	public void testPaging() throws IOException {
-		CompileResult cr = service.getCompileResult(site.getSource().resolve("1-folder0|l=x|n=Folder 0|.nav/1-folder00|l2=z|n=Folder 00|/1-folder000|p=3|n=Folder 000|"));
+		CompileResult cr = service.getCompileResult(site.getSource().resolve("1-folder0|l=x|n=Folder 0|all|.nav/1-folder00|l2=z|n=Folder 00/1-folder000|p=3|n=Folder 000"));
 		List<Document> docs = cr.getDocument().getDocuments();
 		Assert.assertEquals(3, docs.size());
 		Path h000 = site.getGenerated().resolve("folder0/folder00/folder000/index_1.html");
-		String file000 = new String(Files.readAllBytes(h000));
 		Assert.assertTrue(Files.exists(h000));
 	}
 	
 	@Test
-	public void testAllVisible() {
-		
+	public void testAllVisible() throws IOException, InterruptedException {
+		Path p = site.getGenerated().resolve("folder0/folder01/testAllVisible.html");
+		Assert.assertTrue(Files.exists(p));
+		String content = new String(Files.readAllBytes(p));
+		Assert.assertTrue(content.contains("testAllVisible_n.png"));
+		p = site.getGenerated().resolve("folder0/folder01/index.html");
+		Assert.assertTrue(Files.exists(p));
+		content = new String(Files.readAllBytes(p));
+		Assert.assertTrue(content.contains("testAllVisible_t.png"));
 	}
 	
 }

@@ -1,6 +1,5 @@
 package net.xdocc;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -8,29 +7,17 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import junit.framework.Assert;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * This test case aims to validate the tags which can be specified on directory
- * and file level. So far these tags are under test:
- * 
- * - layout (l)
- * - size_icon (si)
- * - size_normal (sn)
- * - paging (p)
- * - all (a)
- * 
- */
+
 public class TestBrowse {
 
 	private static final Logger log = LoggerFactory.getLogger(TestBrowse.class);
@@ -62,15 +49,28 @@ public class TestBrowse {
 	}
 	
 	@AfterClass
-	public static void cleanup() {
+	public static void cleanup() throws IOException {
 		service.shutdown();
 		mapCache.delete();
-		new File("/tmp/testcache.mapdb.p");
+		if(Files.exists(Paths.get("/tmp/testcache.mapdb.p"))) {
+			new File("/tmp/testcache.mapdb.p").delete();
+		}
+		if(Files.exists(Paths.get("/tmp/testcache.mapdb.t"))) {
+			new File("/tmp/testcache.mapdb.t").delete();
+		}
+		FileUtils.deleteDirectory(new File(genString));
 	}
 
 	@Test
 	public void testBrowse() {
-		
+		Path p = site.getGenerated().resolve("index.html");
+		Assert.assertTrue(Files.exists(p));
+		p = site.getGenerated().resolve("test/index.html");
+		Assert.assertTrue(Files.exists(p));
+		p = site.getGenerated().resolve("test/2010-04-23-XDocC preview/index.html");
+		Assert.assertTrue(Files.exists(p));
+		p = site.getGenerated().resolve("test/2010-05-02-XDocC preview/index.html");
+		Assert.assertTrue(Files.exists(p));
 	}
 	
 }

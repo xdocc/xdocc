@@ -176,7 +176,8 @@ public class Service {
 		}
 	}
 
-	private List<Site> initCompile() throws FileNotFoundException, IOException, InterruptedException {
+	private List<Site> initCompile() throws FileNotFoundException, IOException,
+			InterruptedException {
 		// now we read the config files for each site
 		List<Handler> handlers = findHandlers();
 		List<Site> sites = createSites(handlers);
@@ -191,7 +192,7 @@ public class Service {
 			compile(site);
 			waitFor(site.getSource());
 		}
-		
+
 		return sites;
 	}
 
@@ -374,10 +375,11 @@ public class Service {
 			LOG.debug("Path " + path + " already there. Overwriting");
 		}
 		compileResult.put(path, result);
-		if (cache != null && result.getFileInfos() != null && result.getDocument() != null) {
+		if (cache != null && result.getFileInfos() != null
+				&& result.getDocument() != null) {
 			cache.put(path.toString(), result.getFileInfos());
-			LOG.debug("add to cache " + result.getDocument().getFilename() + " / "
-					+ (result.getFileInfos() == null));
+			LOG.debug("add to cache " + result.getDocument().getFilename()
+					+ " / " + (result.getFileInfos() == null));
 			db.commit();
 		}
 
@@ -399,7 +401,7 @@ public class Service {
 			if (info.getTarget().equals(target.toFile())) {
 				try {
 					if (info.isFiles(source)) {
-					// now we have all the files found
+						// now we have all the files found
 						long sourceSize = Files.size(source);
 						long targetSize = Files.size(target);
 						long targetTimestamp = Files
@@ -412,24 +414,26 @@ public class Service {
 								targetTimestamp, targetSize);
 						return !isSourceDirty && !isTargetDirty;
 					} else if (info.isDirectories(source)) {
-						
-						// we need to check recursively for all children if they are dirty!
-						Map<Path, Set<Path>> childrens = compileResult.get(source).getDependenciesDown();
+
+						// we need to check recursively for all children if they
+						// are dirty!
+						List<XPath> childrens = Utils.getNonHiddenAndVisibleChildren(site, source);
 						boolean dirty = true;
-						for(Path child : childrens.get(source)) {
-							Path tmpSource = child;
-							if(compileResult.containsKey(child)) {
-								CompileResult tmp = compileResult.get(child);
-								if(tmp.getDocument() != null) {
-									Path tmpTarget = compileResult.get(child).getDocument().getXPath().getTargetPath();
-									dirty = isCached(site, tmpSource, tmpTarget);
+						for (XPath child : childrens) {
+							if (compileResult.containsKey(child.getPath())) {
+								CompileResult tmp = compileResult.get(child.getPath());
+								if (tmp.getDocument() != null) {
+									Path tmpTarget = compileResult.get(child.getPath())
+											.getDocument().getXPath()
+											.getTargetPath();
+									dirty = isCached(site, child.getPath(), tmpTarget);
 								}
 							}
 						}
-						
+
 						// no need to check target, since it will be modified
 						// when a file changes inside
-												
+
 						long sourceTimestamp = Files
 								.getLastModifiedTime(source).toMillis();
 						boolean isSourceDirty = info
@@ -439,7 +443,8 @@ public class Service {
 						return false;
 					}
 				} catch (IOException e) {
-					LOG.info("exception in isCached - probably due to file removed event: "+source.toString());
+					LOG.info("exception in isCached - probably due to file removed event: "
+							+ source.toString());
 					return false;
 				}
 			}

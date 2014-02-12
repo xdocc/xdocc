@@ -5,8 +5,8 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ TestCompile2.class, TestCompiler.class, TestParser.class,
-		TestPath.class, TestTags.class, TestNewXPath.class })
+@SuiteClasses({ TestBrowse.class, TestCache.class, TestCompiler.class,
+		TestParser.class, TestTags.class, TestXPath.class })
 public class AllTests {
 
 }

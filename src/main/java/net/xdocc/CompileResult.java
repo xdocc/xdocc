@@ -31,6 +31,9 @@ public class CompileResult implements Serializable {
 	private final Set<FileInfos> fileInfos;
 	private final HandlerBean handlerBean;
 	private final Handler handler;
+	
+	private final Map<Path, Set<Path>> dependenciesUp = new HashMap<>();
+	private final Map<Path, Set<Path>> dependenciesDown = new HashMap<>();
 
 	public CompileResult(Document document, Set<FileInfos> fileInfos,
 			HandlerBean handlerBean, Handler handler) {
@@ -75,9 +78,6 @@ public class CompileResult implements Serializable {
 		return fileInfos;
 	}
 
-	private final Map<Path, Set<Path>> dependenciesUp = new HashMap<>();
-	private final Map<Path, Set<Path>> dependenciesDown = new HashMap<>();
-
 	public void addDependencies(Path child, Path parent) {
 		addDependencyUp(child, parent);
 		addDependencyDown(child, parent);
@@ -104,12 +104,11 @@ public class CompileResult implements Serializable {
 
 	public Set<Path> findDependencies(Path source) {
 		Set<Path> result = new HashSet<>();
-		// first all the ups
 		findDependenciesUpRec(source, result);
 		findDependenciesDownRec(source, result);
 		return result;
 	}
-
+	
 	private void findDependenciesUpRec(Path up, Set<Path> result) {
 		CompileResult cr = handlerBean.getSite().service().getCompileResult(up);
 		if (cr == null) {
@@ -136,7 +135,6 @@ public class CompileResult implements Serializable {
 		}
 		for (Path path : childSet) {
 			result.add(path);
-			findDependenciesUpRec(path, result);
 			findDependenciesDownRec(path, result);
 		}
 	}

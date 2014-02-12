@@ -58,7 +58,7 @@ public class HandlerImage implements Handler {
 		}
 		dirtyset.add(generatedFile);
 		// create a thumbnail
-		String sizeIcon = xPath.searchProperty("size_icon");
+		String sizeIcon = xPath.searchProperty("size_icon", "si");
 		Path generatedFileThumb = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_t" + xPath.getExtensions());
 		if (!site.service().isCached(xPath.getSite(), xPath.getPath(), generatedFileThumb)) {
@@ -70,7 +70,7 @@ public class HandlerImage implements Handler {
 		}
 		dirtyset.add(generatedFileThumb);
 		// create display size image
-		String sizeNorm = xPath.searchProperty("size_normal");
+		String sizeNorm = xPath.searchProperty("size_normal", "sn");
 
 		Path generatedFileNorm = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_n" + xPath.getExtensions());
