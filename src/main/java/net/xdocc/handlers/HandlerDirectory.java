@@ -80,9 +80,9 @@ public class HandlerDirectory implements Handler {
 
 		Document doc0 = null;
 		Path generatedFile0 = null;
+		final CompileResult compileResult;
 
 		for (List<Document> list : tmp) {
-
 			Document doc = HandlerDirectory.createDocumentCollection(
 					handlerBean.getSite(), handlerBean.getxPath(),
 					handlerBean.getxPath(),
@@ -116,7 +116,7 @@ public class HandlerDirectory implements Handler {
 								handlerBean.getxPath());
 				model.put("local_navigation", current);
 			}
-			if (writeToDisk) {
+			if (writeToDisk && !handlerBean.getxPath().isPreview()) {
 				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(),
 						handlerBean.getDirtyset(),
 						handlerBean.getRelativePathToRoot(), doc,
@@ -125,18 +125,20 @@ public class HandlerDirectory implements Handler {
 			counter++;
 		}
 
-		final CompileResult compileResult;
 		if (handlerBean.getxPath().isPreview()) {
 			Document documentPreview = Utils.searchHighlight(doc0
 					.getDocuments());
-			// documentPreview =
-			// documentPreview.copy(documentPreview.getLevel());
 			documentPreview.setHighlightUrl(target);
 			documentPreview.setHighlight(true);
 			documentPreview.setPreview(true);
-			// Document dd = documentFull.copy().applyPath1(relativePathToRoot);
 			documentPreview.setCompleteDocument(doc0);
 			documentPreview.setDate(handlerBean.getxPath().getDate());
+			if (writeToDisk) {
+				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(),
+						handlerBean.getDirtyset(),
+						handlerBean.getRelativePathToRoot(), documentPreview,
+						generatedFile0, "directory", handlerBean.getModel());
+			}
 			compileResult = new CompileResult(documentPreview, handlerBean
 					.getxPath().getPath(), handlerBean, this, generatedFile0);
 		} else {

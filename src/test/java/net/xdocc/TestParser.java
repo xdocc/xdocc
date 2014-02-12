@@ -1,5 +1,6 @@
 package net.xdocc;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,6 +8,7 @@ import java.nio.file.Paths;
 
 import junit.framework.Assert;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 public class TestParser {
@@ -132,7 +134,7 @@ public class TestParser {
 			String prefix = xPath.getLayoutSuffix();
 			Assert.assertEquals("_m", prefix);
 		} finally {
-			Files.delete(path);
+			FileUtils.deleteDirectory(new File(path.getParent().toString()));
 		}
 	}
 
@@ -147,7 +149,7 @@ public class TestParser {
 			String prefix = xPath.getLayoutSuffix();
 			Assert.assertEquals("_m", prefix);
 		} finally {
-			Files.delete(path);
+			FileUtils.deleteDirectory(new File(path.getParent().toString()));
 		}
 	}
 
@@ -162,7 +164,7 @@ public class TestParser {
 			String prefix = xPath.getLayoutSuffix();
 			Assert.assertEquals("_m", prefix);
 		} finally {
-			Files.delete(path);
+			FileUtils.deleteDirectory(new File(path.getParent().toString()));
 		}
 	}
 
@@ -177,7 +179,7 @@ public class TestParser {
 			String prefix = xPath.getLayoutSuffix();
 			Assert.assertEquals("", prefix);
 		} finally {
-			Files.delete(path);
+			FileUtils.deleteDirectory(new File(path.getParent().getParent().toString()));
 		}
 	}
 
@@ -192,7 +194,7 @@ public class TestParser {
 			String prefix = xPath.getLayoutSuffix();
 			Assert.assertEquals("_m", prefix);
 		} finally {
-			Files.delete(path);
+			FileUtils.deleteDirectory(new File(path.getParent().getParent().toString()));
 		}
 	}
 
@@ -207,7 +209,7 @@ public class TestParser {
 			String prefix = xPath.getLayoutSuffix();
 			Assert.assertEquals("_m", prefix);
 		} finally {
-			Files.delete(path);
+			FileUtils.deleteDirectory(new File(path.getParent().getParent().toString()));
 		}
 	}
 

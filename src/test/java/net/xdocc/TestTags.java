@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
  * - paging (p)
  * - all (a)
  * 
+ * The tag "browse" is tested in the test case TestBrowse.java
  */
 public class TestTags {
 
@@ -160,6 +161,16 @@ public class TestTags {
 		Assert.assertTrue(Files.exists(p));
 		content = new String(Files.readAllBytes(p));
 		Assert.assertTrue(content.contains("testAllVisible_t.png"));
+	}
+	
+	@Test
+	public void testPreview() {
+		CompileResult crPre = service.getCompileResult(site.getSource().resolve("1-folder0|l=x|n=Folder 0|all|.nav/2-folder01|n=Folder 01/1-folder010|n=Folder 010|.pre"));
+		Assert.assertNotNull(crPre);
+		Assert.assertEquals(0, crPre.getDocument().getDocuments().size());
+		CompileResult crNormal = service.getCompileResult(site.getSource().resolve("1-folder0|l=x|n=Folder 0|all|.nav/2-folder01|n=Folder 01"));
+		Assert.assertNotNull(crNormal);
+		Assert.assertEquals(4, crNormal.getDocument().getDocuments().size());
 	}
 	
 }
