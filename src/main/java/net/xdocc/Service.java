@@ -403,14 +403,14 @@ public class Service {
 				if (info.isFiles(source)) {
 					// now we have all the files found
 					long sourceSize = Files.size(source);
-					long targetSize = Files.size(target);
-					long targetTimestamp = Files.getLastModifiedTime(target)
+					long targetSize = Files.size(info.getTarget().toPath());
+					long targetTimestamp = Files.getLastModifiedTime(info.getTarget().toPath())
 							.toMillis();
 					long sourceTimestamp = Files.getLastModifiedTime(source)
 							.toMillis();
 					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp,
 							sourceSize);
-					boolean isTargetDirty = info.isTargetDirty(target,
+					boolean isTargetDirty = info.isTargetDirty(info.getTarget().toPath(),
 							targetTimestamp, targetSize);
 					return !isSourceDirty && !isTargetDirty;
 				} else if (info.isDirectories(source)) {
@@ -419,17 +419,11 @@ public class Service {
 					// are dirty!
 					List<XPath> childrens = Utils
 							.getNonHiddenAndVisibleChildren(site, source);
-					boolean isDirDirty = false;
+					boolean isDirCached = true;
 					for (XPath child : childrens) {
-						if (compileResult.containsKey(child.getPath())) {
-							CompileResult tmp = compileResult.get(child
-									.getPath());
-							for(FileInfos i : tmp.getFileInfos()) {
-								isDirDirty = isCached(site, child.getPath(), i.getTarget().toPath());
-							}
-							if (isDirDirty) {
-								break;
-							}
+						isDirCached = isCached(site, child.getPath(), null);
+						if(!isDirCached) {
+							break;
 						}
 					}
 
@@ -439,7 +433,7 @@ public class Service {
 					long sourceTimestamp = Files.getLastModifiedTime(source)
 							.toMillis();
 					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp);
-					return !isSourceDirty && !isDirDirty;
+					return !isSourceDirty && isDirCached;
 				} else {
 					return false;
 				}
