@@ -203,7 +203,7 @@ public class Utils {
 		return result;
 	}
 	
-	public static List<XPath> getNonHiddenAndVisibleChildren(final Site site,
+	public static List<XPath> getDownDependencies(final Site site,
 			final Path siteToCompile) throws IOException {
 		final List<XPath> result = new ArrayList<>();
 		Files.walkFileTree(siteToCompile,
@@ -215,7 +215,7 @@ public class Utils {
 						// do not include ourself
 						if (!siteToCompile.equals(dir)) {
 							XPath xPath = new XPath(site, dir);
-							if (!xPath.isHidden() && xPath.isVisible()) {
+							if (!xPath.isHidden() && xPath.isVisible() && !xPath.isNavigation()) {
 								result.add(xPath);
 							}
 						}
@@ -228,7 +228,7 @@ public class Utils {
 						// do not include ourself
 						if (!siteToCompile.equals(file)) {
 							XPath xPath = new XPath(site, file);
-							if (!xPath.isHidden()) {
+							if (!xPath.isHidden() && xPath.isVisible() && !xPath.isNavigation()) {
 								result.add(xPath);
 							}
 						}

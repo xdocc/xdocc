@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -134,7 +133,9 @@ public class Service {
 				for (Site site : sites) {
 					try {
 						compile(site);
-					} catch (IOException e) {
+						waitFor(site.getSource());
+						LOG.info("compiling done: " + site);
+					} catch (IOException | InterruptedException e) {
 						LOG.error("compiler exception: " + e);
 					}
 				}
@@ -192,6 +193,7 @@ public class Service {
 			Utils.createDirectory(site);
 			compile(site);
 			waitFor(site.getSource());
+			LOG.info("compiling done: " + site);
 		}
 
 		return sites;
@@ -260,7 +262,6 @@ public class Service {
 	}
 
 	public void compileDone(Site site) throws IOException {
-		LOG.info("compiling done: " + site);
 		// compileResult.clear();
 		List<Path> children = Utils.getChildren(site, site.getGenerated());
 		for (Iterator<Path> iterator = children.iterator(); iterator.hasNext();) {
@@ -373,7 +374,7 @@ public class Service {
 
 	public void addCompileResult(Path path, CompileResult result) {
 		if (compileResult.containsKey(path)) {
-			LOG.debug("Path " + path + " already there. Overwriting");
+			LOG.info("Path " + path + " already there. Overwriting");
 		}
 		compileResult.put(path, result);
 		if (cache != null && result.getFileInfos() != null
@@ -404,25 +405,25 @@ public class Service {
 					// now we have all the files found
 					long sourceSize = Files.size(source);
 					long targetSize = Files.size(info.getTarget().toPath());
-					long targetTimestamp = Files.getLastModifiedTime(info.getTarget().toPath())
-							.toMillis();
+					long targetTimestamp = Files.getLastModifiedTime(
+							info.getTarget().toPath()).toMillis();
 					long sourceTimestamp = Files.getLastModifiedTime(source)
 							.toMillis();
 					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp,
 							sourceSize);
-					boolean isTargetDirty = info.isTargetDirty(info.getTarget().toPath(),
-							targetTimestamp, targetSize);
+					boolean isTargetDirty = info.isTargetDirty(info.getTarget()
+							.toPath(), targetTimestamp, targetSize);
 					return !isSourceDirty && !isTargetDirty;
 				} else if (info.isDirectories(source)) {
 
 					// we need to check recursively for all children if they
 					// are dirty!
 					List<XPath> childrens = Utils
-							.getNonHiddenAndVisibleChildren(site, source);
+							.getDownDependencies(site, source);
 					boolean isDirCached = true;
 					for (XPath child : childrens) {
 						isDirCached = isCached(site, child.getPath(), null);
-						if(!isDirCached) {
+						if (!isDirCached) {
 							break;
 						}
 					}
@@ -485,11 +486,15 @@ public class Service {
 			for (Iterator<Entry<Path, CompileResult>> iterater = compileResult
 					.entrySet().iterator(); iterater.hasNext();) {
 				Entry<Path, CompileResult> compileResult2 = iterater.next();
+				if (!Utils.isChild(compileResult2.getKey(), site.getSource())) {
+					continue;
+				}
 				Collection<FileInfos> list = compileResult2.getValue()
 						.getFileInfos();
 				if (list == null) {
 					continue;
 				}
+
 				for (FileInfos fileInfos : list) {
 					Path source = compileResult2.getKey();
 					Path target = fileInfos.getTarget().toPath();
