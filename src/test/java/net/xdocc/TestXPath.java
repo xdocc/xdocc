@@ -56,7 +56,11 @@ public class TestXPath {
 		
 		p = Paths.get("/tmp/2014");
 		x = new XPath(site, p);
-		Assert.assertEquals("1faux7l", x.getUrl());
+		Assert.assertEquals("2014", x.getUrl());
+		
+		p = Paths.get("/tmp/404.html");
+		x = new XPath(site, p);
+		Assert.assertFalse(x.isVisible());
 	}
 	
 }

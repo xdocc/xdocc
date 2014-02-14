@@ -211,7 +211,8 @@ public class XPath implements Comparable<XPath> {
 						url = mandatory.substring(lastDelimiterIndex + 1);
 						order = mandatory.substring(0, lastDelimiterIndex);
 					} else {
-						order = mandatory;
+//						order = mandatory;
+						return false;
 					}
 				} else {
 					url = mandatory;
@@ -224,7 +225,8 @@ public class XPath implements Comparable<XPath> {
 						order = mandatory.substring(0, lastDelimiterIndex);
 						url = mandatory.substring(lastDelimiterIndex + 1);
 					} else {
-						order = mandatory;
+//						order = mandatory;
+						return false;
 					}
 				} else {
 					url = mandatory;
@@ -499,6 +501,10 @@ public class XPath implements Comparable<XPath> {
 		// second check if property "all" is somewhere
 		if(isAllInherited()) {
 			return true;
+		}
+		// third if the parent is "none"
+		if(getParent().isNone()) {
+			return false;
 		}
 		// third if no property found we return parse result
 		return visible;

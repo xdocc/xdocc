@@ -121,7 +121,7 @@ public class Service {
 		});
 	}
 
-	private void compileIfFileChanged() {
+	public void compileIfFileChanged() {
 		WatchService.getFileNotifier().addListener(new FileListener() {
 			@Override
 			public void filesChanged(List<XPath> changedSet,
@@ -418,8 +418,8 @@ public class Service {
 
 					// we need to check recursively for all children if they
 					// are dirty!
-					List<XPath> childrens = Utils
-							.getDownDependencies(site, source);
+					List<XPath> childrens = Utils.getDownDependencies(site,
+							source);
 					boolean isDirCached = true;
 					for (XPath child : childrens) {
 						isDirCached = isCached(site, child.getPath(), null);
@@ -516,7 +516,7 @@ public class Service {
 			}
 		}
 		for (Path dependency : dependencies) {
-			LOG.debug("removing dependency " + dependency);
+			LOG.info("removing dependency from cache&compileresult " + dependency);
 			if (cache != null) {
 				cache.remove(dependency.getFileName().toString());
 			}

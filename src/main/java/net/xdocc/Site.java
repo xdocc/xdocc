@@ -237,7 +237,7 @@ public class Site {
 						|| getFilesize() != filesize;
 				return dirty;
 			} catch (IOException e) {
-				e.printStackTrace();
+				LOG.info("file removed?: "+file.toString());
 				return true;
 			}
 		}

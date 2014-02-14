@@ -86,4 +86,17 @@ public class TestCache {
 		Assert.assertEquals(timestamp, timestamp3);
 	}
 	
+	@Test
+	public void removeAndCreateTemplate() throws IOException, InterruptedException {
+		service.compileIfFileChanged();
+		// remove template
+		Path ps = site.getSource().resolve(".templates/browse.ftl");
+		Path pt = site.getSource().resolve(".templates/copybrowse.ftl");
+		Files.copy(ps, pt);
+		Files.delete(ps);
+		Thread.sleep(2000);
+		Files.copy(pt, ps);
+		Files.delete(pt);
+	}
+	
 }

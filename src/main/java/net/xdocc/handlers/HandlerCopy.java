@@ -96,7 +96,6 @@ public class HandlerCopy implements Handler {
 						.getPath(), handlerBean, this, generatedFile);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
 			LOG.error("Copy handler faild, cannot copy from "
 					+ handlerBean.getxPath().getPath() + " to " + generatedFile
 					+ " - " + e);

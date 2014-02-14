@@ -64,9 +64,9 @@ public class TestParser {
 	@Test
 	public void testParserURLCRC() throws Exception {
 		Site site = new Site(new Service(), "/tmp", "/tmp", null, null);
-		Path path = Paths.get("/tmp/2011");
+		Path path = Paths.get("/tmp/2011-");
 		XPath xPath = new XPath(site, path);
-		Assert.assertEquals("1jnabse", xPath.getUrl());
+		Assert.assertEquals("l0rpyy", xPath.getUrl());
 	}
 
 	@Test
