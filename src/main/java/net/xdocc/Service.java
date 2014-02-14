@@ -516,7 +516,7 @@ public class Service {
 			}
 		}
 		for (Path dependency : dependencies) {
-			LOG.info("removing dependency from cache&compileresult " + dependency);
+			LOG.debug("removing dependency from cache&compileresult " + dependency);
 			if (cache != null) {
 				cache.remove(dependency.getFileName().toString());
 			}

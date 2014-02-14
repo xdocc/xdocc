@@ -503,7 +503,7 @@ public class XPath implements Comparable<XPath> {
 			return true;
 		}
 		// third if the parent is "none"
-		if(getParent().isNone()) {
+		if(getParent() != null && getParent().isNone()) {
 			return false;
 		}
 		// third if no property found we return parse result
