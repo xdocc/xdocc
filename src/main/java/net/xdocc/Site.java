@@ -186,11 +186,11 @@ public class Site {
 					String name = file.getFileName().toString();
 					TemplateBean templateBean = new TemplateBean();
 					templateBean.setFile(file);
-					/*FileTime fileTime = Files.getLastModifiedTime(templateBean
-							.getFile());
-					long filesize = Files.size(templateBean.getFile());
-					templateBean.setTimestamp(fileTime.toMillis());
-					templateBean.setFilesize(filesize);*/
+//					FileTime fileTime = Files.getLastModifiedTime(templateBean
+//							.getFile());
+//					long filesize = Files.size(templateBean.getFile());
+//					templateBean.setTimestamp(fileTime.toMillis());
+//					templateBean.setFilesize(filesize);
 					templates.put(name, templateBean);
 					LOG.debug("add "+name);
 				}

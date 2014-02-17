@@ -59,12 +59,15 @@ public class TestCache {
 	public void testCache() throws Exception {
 		Path index = site.getGenerated().resolve("index.html");
 		long timestap = Files.getLastModifiedTime(index).toMillis();
-		service.compile(site);
 		Thread.sleep(2000);
+		service.compile(site);
+		service.waitFor(site.getSource());
+		
 		long timestap2 = Files.getLastModifiedTime(index).toMillis();
 		Assert.assertEquals(timestap, timestap2);
 		Files.write(index, "3333".getBytes());
 		service.compile(site);
+		service.waitFor(site.getSource());
 		Thread.sleep(2000);
 		timestap2 = Files.getLastModifiedTime(index).toMillis();
 		Assert.assertNotSame(timestap, timestap2);
@@ -74,10 +77,12 @@ public class TestCache {
 		long timestamp = Files.getLastModifiedTime(pic).toMillis();
 
 		service.compile(site);
+		service.waitFor(site.getSource());
 		Thread.sleep(2000);
 		long timestamp2 = Files.getLastModifiedTime(pic).toMillis();
 
 		service.compile(site);
+		service.waitFor(site.getSource());
 		Thread.sleep(2000);
 		long timestamp3 = Files.getLastModifiedTime(pic).toMillis();
 
