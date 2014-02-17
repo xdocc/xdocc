@@ -1,1 +1,5 @@
 language: java
+
+install:
+	- maven install -DskipTests=true
+	- maven test
