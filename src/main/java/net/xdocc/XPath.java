@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 public class XPath implements Comparable<XPath> {
-	
 	private static final Logger LOG = LoggerFactory.getLogger(XPath.class);
 
 	private final static Pattern PATTERN_NUMBER = Pattern.compile("^([0-9]+)");
