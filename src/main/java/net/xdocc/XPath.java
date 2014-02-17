@@ -60,7 +60,7 @@ public class XPath implements Comparable<XPath> {
 	private String url;
 
 	private Map<String, String> properties = new HashMap<>();
-	
+
 	private boolean visible;
 
 	/**
@@ -84,7 +84,8 @@ public class XPath implements Comparable<XPath> {
 		this.site = site;
 		this.filename = getFileName();
 		String extensionFilteredFileName = findKnownExtensions(site, filename);
-		this.visible = parse(extensionFilteredFileName, site.getSource().equals(path));
+		this.visible = parse(extensionFilteredFileName, site.getSource()
+				.equals(path));
 		if (Files.isRegularFile(path)) {
 			parseFrontmatter();
 		} else if (Files.isDirectory(path)) {
@@ -196,48 +197,23 @@ public class XPath implements Comparable<XPath> {
 
 		try {
 			int firstPipeIndex = name.indexOf('|');
-			String url = "";
-			String order = "";
 			String mandatory = "";
-			int lastDelimiterIndex = 0;
 			int nextPipeIndex = 0;
 			int offset = 0;
-			// first mandatory patterns: order, url
+
+			// first mandatory patterns
 			if (firstPipeIndex == -1) {
 				mandatory = name;
-				if (!isRoot()) {
-					lastDelimiterIndex = mandatory.lastIndexOf('-');
-					if (lastDelimiterIndex != -1) {
-						url = mandatory.substring(lastDelimiterIndex + 1);
-						order = mandatory.substring(0, lastDelimiterIndex);
-					} else {
-//						order = mandatory;
-						return false;
-					}
-				} else {
-					url = mandatory;
-				}
 			} else {
 				mandatory = name.substring(0, firstPipeIndex);
-				if (!isRoot()) {
-					lastDelimiterIndex = mandatory.lastIndexOf('-');
-					if (lastDelimiterIndex != -1) {
-						order = mandatory.substring(0, lastDelimiterIndex);
-						url = mandatory.substring(lastDelimiterIndex + 1);
-					} else {
-//						order = mandatory;
-						return false;
-					}
-				} else {
-					url = mandatory;
-				}
 			}
-			Matcher matcher1 = PATTERN_DATETIME.matcher(order);
-			Matcher matcher2 = PATTERN_DATE.matcher(order);
-			Matcher matcher3 = PATTERN_NUMBER.matcher(order);
+
+			Matcher matcher1 = PATTERN_DATETIME.matcher(mandatory);
+			Matcher matcher2 = PATTERN_DATE.matcher(mandatory);
+			Matcher matcher3 = PATTERN_NUMBER.matcher(mandatory);
 
 			// order
-			if (root) {
+			if (isRoot()) {
 				nr = 1;
 			} else {
 				if (matcher1.find()) {
@@ -246,6 +222,7 @@ public class XPath implements Comparable<XPath> {
 					try {
 						date = parserSDF.parse(matcher1.group(1));
 						nr = date.getTime();
+						offset = matcher1.end(1);
 					} catch (ParseException e) {
 						LOG.error("Cannot parse date time: ", e);
 						return false;
@@ -256,6 +233,7 @@ public class XPath implements Comparable<XPath> {
 					try {
 						date = parserSDF.parse(matcher2.group(1));
 						nr = date.getTime();
+						offset = matcher2.end(1);
 					} catch (ParseException e) {
 						LOG.error("Cannot parse date: ", e);
 						return false;
@@ -263,6 +241,7 @@ public class XPath implements Comparable<XPath> {
 				} else if (matcher3.find()) {
 					try {
 						nr = Long.parseLong(matcher3.group(1));
+						offset = matcher3.end(1);
 					} catch (NumberFormatException e) {
 						LOG.error("Cannot parse number: ", e);
 						return false;
@@ -271,12 +250,22 @@ public class XPath implements Comparable<XPath> {
 					return false;
 				}
 			}
-			// url
-			Matcher matcher4 = PATTERN_URL.matcher(url);
-			if (matcher4.find()) {
-				this.url = matcher4.group(1);
+			// mandatory '-'
+			if(offset >= mandatory.length() || (mandatory.charAt(offset) != '-' && !isRoot())) {
+				return false;
 			}
-
+			// url
+			if(!isRoot()) {
+			Matcher matcher4 = PATTERN_URL.matcher(mandatory);
+			if (matcher4.find(offset+1)) {
+				this.url = matcher4.group(1);
+				offset = matcher4.end(1);
+			}else {
+				this.url = "";
+			}
+			}else {
+				this.url = mandatory;
+			}
 			//  tags
 			if (firstPipeIndex != -1) {
 				offset = firstPipeIndex;
@@ -431,11 +420,8 @@ public class XPath implements Comparable<XPath> {
 
 	public String getTargetURLFilename() {
 		String[] paths = Utils.createURLSplit(site.getSource(), this);
-		paths[paths.length - 1] = getName();
+		paths[paths.length - 1] = getFileName();
 		String url = Utils.createURL(paths);
-		/*
-		 * if ( url.indexOf( "/" ) == 0 ) { url = url.substring( 1 ); }
-		 */
 		return url;
 	}
 
@@ -445,11 +431,7 @@ public class XPath implements Comparable<XPath> {
 	public String getTargetURL() {
 		String[] paths = Utils.createURLSplit(site.getSource(), this);
 		String url = Utils.createURL(paths);
-		/*
-		 * if ( url.indexOf( "/" ) == 0 ) { url = url.substring( 1 ); }
-		 */
 		return url;
-
 	}
 
 	public String getTargetURLPath() {
@@ -495,15 +477,15 @@ public class XPath implements Comparable<XPath> {
 
 	public boolean isVisible() {
 		// first check if property "copy" is somewhere
-		if(isCopyAllInherited()) {
+		if (isCopyAllInherited()) {
 			return false;
 		}
 		// second check if property "all" is somewhere
-		if(isAllInherited()) {
+		if (isAllInherited()) {
 			return true;
 		}
 		// third if the parent is "none"
-		if(getParent() != null && getParent().isNone()) {
+		if (getParent() != null && getParent().isNone()) {
 			return false;
 		}
 		// third if no property found we return parse result
@@ -527,7 +509,7 @@ public class XPath implements Comparable<XPath> {
 		if (!isVisible()) {
 			return getFileName();
 		}
-		if(isAllInherited() && (url == null || url.equals(""))) {
+		if (isAllInherited() && (url == null || url.equals(""))) {
 			return getFileName().replace(extensions, "");
 		}
 		if (url == null || url.equals("")) {
@@ -681,7 +663,7 @@ public class XPath implements Comparable<XPath> {
 	public boolean isHighlight() {
 		return hasProperty("highlight") || hasProperty("h");
 	}
-	
+
 	public boolean isAll(XPath parent) {
 		while (parent != null) {
 			if (parent.hasProperty("a", "all")) {
@@ -793,14 +775,14 @@ public class XPath implements Comparable<XPath> {
 			return 0;
 		}
 	}
-	
+
 	/**
 	 * Search a property the hierarchy up, starting at "this"
 	 * 
 	 * @param names
 	 * @return
 	 */
-	public String searchProperty(String...names) {
+	public String searchProperty(String... names) {
 		XPath current = this;
 		do {
 			String property = current.getProperty(names);
@@ -808,16 +790,16 @@ public class XPath implements Comparable<XPath> {
 				return property;
 			}
 		} while ((current = current.getParent()) != null);
-		
-		for(String name : names) {
-			if(name.equals("sn") || name.equals("size_normal")) {
+
+		for (String name : names) {
+			if (name.equals("sn") || name.equals("size_normal")) {
 				return "800x600^";
 			}
-			if(name.equals("si") || name.equals("size_icon")) {
+			if (name.equals("si") || name.equals("size_icon")) {
 				return "250x250^c";
 			}
 		}
 		return null;
 	}
-	
+
 }

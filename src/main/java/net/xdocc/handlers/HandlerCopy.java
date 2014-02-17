@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Date;
@@ -43,11 +44,13 @@ public class HandlerCopy implements Handler {
 		Map<String, Object> model = new HashMap<>(handlerBean.getModel());
 		final Path generatedFile;
 		if (handlerBean.getxPath().isVisible()) {
+			String filename = handlerBean.getxPath().getFileName();
+			String extension = filename.substring(filename.lastIndexOf("."));
 			generatedFile = handlerBean.getxPath().getTargetPath(
-					handlerBean.getxPath().getTargetURLFilename());
+					handlerBean.getxPath().getTargetURL()+extension);
 		} else {
 			generatedFile = handlerBean.getxPath().getTargetPath(
-					handlerBean.getxPath().getTargetURL());
+					handlerBean.getxPath().getTargetURLFilename());
 		}
 		try {
 			if (writeToDisk) {
