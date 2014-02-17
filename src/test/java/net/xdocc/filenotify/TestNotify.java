@@ -120,32 +120,5 @@ public class TestNotify {
 		Assert.assertEquals("test", xPath.getPath().getFileName().toString());
 	}
 
-	@Test
-	public void testXPath() {
-		Path dir = site.getSource();
-		Path dir2 = dir.resolve("1|testxx|");
-		XPath xp = new XPath(site, dir2);
-		Assert.assertEquals(false, xp.isHidden());
-		Assert.assertEquals(true, xp.isCompile());
-		Assert.assertEquals(false, xp.isCopyAll());
-		//
-		dir2 = dir.resolve("testxx");
-		xp = new XPath(site, dir2);
-		Assert.assertEquals(false, xp.isHidden());
-		Assert.assertEquals(false, xp.isCompile());
-		Assert.assertEquals(false, xp.isCopyAll());
-		//
-		dir2 = dir.resolve(".testxx");
-		xp = new XPath(site, dir2);
-		Assert.assertEquals(true, xp.isHidden());
-		Assert.assertEquals(false, xp.isCompile());
-		Assert.assertEquals(false, xp.isCopyAll());
-		//
-		dir2 = dir.resolve("testxx~");
-		xp = new XPath(site, dir2);
-		Assert.assertEquals(true, xp.isHidden());
-		Assert.assertEquals(false, xp.isCompile());
-		Assert.assertEquals(false, xp.isCopyAll());
-	}
 
 }
