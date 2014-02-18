@@ -145,6 +145,9 @@ public class HandlerDirectory implements Handler {
 			compileResult = new CompileResult(doc0, handlerBean.getxPath()
 					.getPath(), handlerBean, this, generatedFile0);
 		}
+		if(compileResult.getHandler() == null || compileResult.getHandlerBean() == null || compileResult.getFileInfos() == null) {
+			LOG.info("bad compile result: "+handlerBean.getxPath());
+		}
 		return compileResult;
 	}
 

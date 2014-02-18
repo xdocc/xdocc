@@ -34,12 +34,10 @@ public class Site {
 
 	final private Path generated;
 
-	final private Map<String, TemplateBean> templates;
-
 	final private List<Handler> handlers;
 
 	final private Properties properties;
-	
+
 	final private Service service;
 
 	private Configuration freemakerEngine;
@@ -48,10 +46,10 @@ public class Site {
 
 	private Path templatePath;
 
-	public Site(Service service, String source, String generated, List<Handler> handlers,
-			Properties properties) throws IOException {
-		this(service, Paths.get(filterXPath(source)), Paths.get(filterXPath(generated)),
-				handlers, properties);
+	public Site(Service service, String source, String generated,
+			List<Handler> handlers, Properties properties) throws IOException {
+		this(service, Paths.get(filterXPath(source)), Paths
+				.get(filterXPath(generated)), handlers, properties);
 	}
 
 	private static String filterXPath(final String path) throws IOException {
@@ -75,8 +73,8 @@ public class Site {
 		return path;
 	}
 
-	public Site(Service service, Path source, Path generated, List<Handler> handlers,
-			Properties properties) throws IOException {
+	public Site(Service service, Path source, Path generated,
+			List<Handler> handlers, Properties properties) throws IOException {
 		this.service = service;
 		this.source = source;
 		this.generated = generated;
@@ -84,7 +82,7 @@ public class Site {
 		this.properties = properties;
 		this.templatePath = this.source.resolve(".templates");
 		freemakerEngine = createTemplateEngine(templatePath);
-		templates = loadTemplates(templatePath);
+		loadTemplates(templatePath, this);
 	}
 
 	public Path getTemplatePath() {
@@ -94,7 +92,7 @@ public class Site {
 	public Path getSource() {
 		return source;
 	}
-	
+
 	public XPath getSourceX() {
 		return new XPath(this, source);
 	}
@@ -107,15 +105,12 @@ public class Site {
 		return handlers;
 	}
 
-	/*
-	 * public Template getTemplate( String name ) throws IOException { return
-	 * getTemplate( null, name ); }
-	 */
 	public TemplateBean getTemplate(String suffix, String name, Path dependency)
 			throws IOException {
-		TemplateBean templateBean = templates.get(name + suffix + ".ftl");
+		TemplateBean templateBean = service.getTemplateBeans(this).get(
+				name + suffix + ".ftl");
 		if (templateBean == null || templateBean.getFile() == null) {
-			templateBean = templates.get(name + ".ftl");
+			templateBean = service.getTemplateBeans(this).get(name + ".ftl");
 			if (templateBean == null || templateBean.getFile() == null) {
 				throw new FileNotFoundException("Template "
 						+ name
@@ -144,7 +139,7 @@ public class Site {
 			templateBean.setFilesize(filesize);
 
 		}
-		if(dependency!=null) {
+		if (dependency != null) {
 			templateBean.addDependency(dependency);
 		}
 		return templateBean;
@@ -168,9 +163,16 @@ public class Site {
 		return cfg;
 	}
 
-	private Map<String, TemplateBean> loadTemplates(Path source)
-			throws IOException {
-		final Map<String, TemplateBean> templates = new HashMap<>();
+	private void loadTemplates(Path source, final Site site) throws IOException {
+
+		final Map<String, TemplateBean> tmps;
+		// check if cache already created
+		if (service.getTemplateBeans(site) == null) {
+			tmps = new HashMap<String, TemplateBean>();
+		} else {
+			tmps = service.getTemplateBeans(site);
+		}
+
 		Files.walkFileTree(source, new FileVisitor<Path>() {
 			@Override
 			public FileVisitResult preVisitDirectory(Path dir,
@@ -181,18 +183,33 @@ public class Site {
 			@Override
 			public FileVisitResult visitFile(Path file,
 					BasicFileAttributes attrs) throws IOException {
+
 				if (file.getFileName().toString().toLowerCase()
 						.endsWith(".ftl")) {
-					String name = file.getFileName().toString();
-					TemplateBean templateBean = new TemplateBean();
+
+					// check if template cached
+					TemplateBean templateBean = tmps.get(file.getFileName());
+					if (templateBean != null) {
+						return FileVisitResult.CONTINUE;
+					}
+					// template not cached
+					templateBean = new TemplateBean();
 					templateBean.setFile(file);
-//					FileTime fileTime = Files.getLastModifiedTime(templateBean
-//							.getFile());
-//					long filesize = Files.size(templateBean.getFile());
-//					templateBean.setTimestamp(fileTime.toMillis());
-//					templateBean.setFilesize(filesize);
-					templates.put(name, templateBean);
-					LOG.debug("add "+name);
+					Template template;
+					synchronized (Utils.lock) {
+						template = freemakerEngine.getTemplate(templateBean
+								.getFile().getFileName().toString());
+					}
+					templateBean.setTemplate(template);
+					FileTime fileTime = Files.getLastModifiedTime(templateBean
+							.getFile());
+					long filesize = Files.size(templateBean.getFile());
+					templateBean.setTimestamp(fileTime.toMillis());
+					templateBean.setFilesize(filesize);
+					tmps.put(file.getFileName().toString(), templateBean);
+					LOG.debug("adding template: "
+							+ file.getFileName().toString()
+							+ " to: " + site.toString());
 				}
 				return FileVisitResult.CONTINUE;
 			}
@@ -209,18 +226,16 @@ public class Site {
 				return FileVisitResult.CONTINUE;
 			}
 		});
-		return templates;
+
+		service.addTemplateBeans(site, tmps);
 	}
 
 	public static class TemplateBean {
+
 		private Template template;
-
 		private Long timestamp;
-
 		private long filesize;
-
 		private Path file;
-
 		private Collection<Path> dependencies = new HashSet<>();
 		private Collection<Collection<Path>> forgeinDependencies = new HashSet<>();
 
@@ -237,7 +252,7 @@ public class Site {
 						|| getFilesize() != filesize;
 				return dirty;
 			} catch (IOException e) {
-				LOG.info("file removed?: "+file.toString());
+				LOG.info("file removed?: " + file.toString());
 				return true;
 			}
 		}
@@ -305,7 +320,10 @@ public class Site {
 		this.link = link;
 	}
 
-	public Link getNavigation() {
+	public Link getNavigation() throws IOException {
+		if(link == null) {
+			link = service.readNavigation(this);
+		}
 		return link;
 	}
 
@@ -332,10 +350,6 @@ public class Site {
 		return sb.toString();
 	}
 
-	public Map<String, TemplateBean> getTemplates() {
-		return templates;
-	}
-	
 	public Service service() {
 		return service;
 	}

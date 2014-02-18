@@ -468,14 +468,7 @@ public class Utils {
 				return null;
 			}
 
-			TemplateBean templateBean = site.getTemplates().get(name);
-			// FileTime fileTime = Files.getLastModifiedTime(templateBean
-			// .getFile());
-			// long filesize = Files.size(templateBean.getFile());
-			// templateBean.setTimestamp(fileTime.toMillis());
-			// templateBean.setFilesize(filesize);
-
-			//
+			TemplateBean templateBean = site.service().getTemplateBeans(site).get(name);
 			templateBean.addDependencies(parentTemplateBean);
 
 			return source;

@@ -93,20 +93,20 @@ public class Compiler implements Runnable {
 	private boolean compile(Handler handler, XPath xPath) {
 		CompileResult result = site.service().getCompileResult(xPath.getPath());
 		if(result != null) {
-//			boolean cached = true;
-//			if(result.getFileInfos()!=null) {
-//				for(FileInfos fileInfos:result.getFileInfos()) {
-//					if( site.service().isCached(site, xPath.getPath(), fileInfos.getTarget().toPath())) {
-//						dirtyset.add(fileInfos.getTarget().toPath());
-//					} else {
-//						cached = false;
-//					}
-//				}
-//			}
-//			if(cached) {
+			boolean cached = true;
+			if(result.getFileInfos()!=null) {
+				for(FileInfos fileInfos:result.getFileInfos()) {
+					if( site.service().isCached(site, xPath.getPath(), fileInfos.getTarget().toPath())) {
+						dirtyset.add(fileInfos.getTarget().toPath());
+					} else {
+						cached = false;
+					}
+				}
+			}
+			if(cached) {
 				site.service().notifyFor();
 				return true;
-//			}
+			}
 		}
 		try {
 			String relativePathToRoot = Utils.relativePathToRoot(site.getSource(),

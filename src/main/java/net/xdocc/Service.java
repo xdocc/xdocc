@@ -61,7 +61,10 @@ public class Service {
 
 	private final Map<Path, CompileResult> compileResult = Collections
 			.synchronizedMap(new HashMap<Path, CompileResult>());
+
 	private static Map<String, Set<FileInfos>> cache;
+
+	private static Map<Site, Map<String, TemplateBean>> cacheTemplates;
 
 	private static DB db;
 
@@ -135,6 +138,7 @@ public class Service {
 						compile(site);
 						waitFor(site.getSource());
 						LOG.info("compiling done: " + site);
+						db.commit();
 					} catch (IOException | InterruptedException e) {
 						LOG.error("compiler exception: " + e);
 					}
@@ -173,6 +177,7 @@ public class Service {
 	void setupCache(File cacheDir) {
 		db = DBMaker.newFileDB(cacheDir).closeOnJvmShutdown().make();
 		cache = db.getHashMap("results");
+		cacheTemplates = new HashMap<Site, Map<String, TemplateBean>>();
 		if (clearCache) {
 			cache.clear();
 		}
@@ -194,6 +199,7 @@ public class Service {
 			compile(site);
 			waitFor(site.getSource());
 			LOG.info("compiling done: " + site);
+			db.commit();
 		}
 
 		return sites;
@@ -255,8 +261,8 @@ public class Service {
 	public void compile(Site site, Path path, Map<String, Object> model)
 			throws IOException {
 		LOG.debug("compiling: " + site + "/" + path);
-		Link link = readNavigation(site);
-		site.setNavigation(link);
+//		Link link = readNavigation(site);
+//		site.setNavigation(link);
 		executorServiceCompiler.execute(new Compiler(site, path, dirtySet,
 				model));
 	}
@@ -284,8 +290,8 @@ public class Service {
 		if (compilerCounter == 1) {
 			// some templates may be used within a template -> find those and
 			// get the file size and date
-			Map<String, TemplateBean> templates = site.getTemplates();
-			for (Map.Entry<String, TemplateBean> entry : templates.entrySet()) {
+			for (Map.Entry<String, TemplateBean> entry : cacheTemplates.get(
+					site).entrySet()) {
 				if (entry.getValue().isDirty()) {
 					String baseName = FilenameUtils.getBaseName(entry.getKey());
 					site.getTemplate("", baseName, null);
@@ -373,30 +379,22 @@ public class Service {
 	}
 
 	public void addCompileResult(Path path, CompileResult result) {
-		if (compileResult.containsKey(path)) {
-			LOG.info("Path " + path + " already there. Overwriting");
-		}
 		compileResult.put(path, result);
-		if (cache != null && result.getFileInfos() != null
-				&& result.getDocument() != null) {
+		if(result.getFileInfos() != null) { 
 			cache.put(path.toString(), result.getFileInfos());
-			LOG.debug("add to cache " + result.getDocument().getFilename()
-					+ " / " + (result.getFileInfos() == null));
-			db.commit();
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("compiled and stored " + path);
+//			LOG.info("add to cache: key=" + path.toString()	+ ", value (FileInfos.size())=" + result.getFileInfos().size());
+		}else {
+			LOG.info("no file infos: "+path);
 		}
 	}
-
+	
 	public boolean isCached(Site site, Path source, Path target) {
 		if (cache == null) {
 			return false;
 		}
 		Set<FileInfos> infos = cache.get(source.toString());
 		if (infos == null) {
-			LOG.debug("not found in cache " + source.toFile());
+			LOG.info("not found in cache " + source.toFile());
 			return false;
 		}
 		for (FileInfos info : infos) {
@@ -416,25 +414,13 @@ public class Service {
 					return !isSourceDirty && !isTargetDirty;
 				} else if (info.isDirectories(source)) {
 
-					// we need to check recursively for all children if they
-					// are dirty!
-					List<XPath> childrens = Utils.getDownDependencies(site,
-							source);
-					boolean isDirCached = true;
-					for (XPath child : childrens) {
-						isDirCached = isCached(site, child.getPath(), null);
-						if (!isDirCached) {
-							break;
-						}
-					}
-
 					// no need to check target, since it will be modified
 					// when a file changes inside
 
 					long sourceTimestamp = Files.getLastModifiedTime(source)
 							.toMillis();
 					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp);
-					return !isSourceDirty && isDirCached;
+					return !isSourceDirty;
 				} else {
 					return false;
 				}
@@ -461,6 +447,14 @@ public class Service {
 		return null;
 	}
 
+	public Map<String, TemplateBean> getTemplateBeans(Site site) {
+		return cacheTemplates.get(site);
+	}
+
+	public void addTemplateBeans(Site site, Map<String, TemplateBean> templates) {
+		cacheTemplates.put(site, templates);
+	}
+	
 	public void waitFor(Path path) throws InterruptedException {
 		while (getCompileResult(path) == null) {
 			synchronized (compileResult) {
@@ -472,8 +466,8 @@ public class Service {
 	private void invalidateCache(Site site) throws IOException {
 		Set<Path> dependencies = new HashSet<>();
 		// template cache
-		Map<String, TemplateBean> templates = site.getTemplates();
-		for (Map.Entry<String, TemplateBean> entry : templates.entrySet()) {
+		for (Map.Entry<String, TemplateBean> entry : cacheTemplates.get(site)
+				.entrySet()) {
 			if (entry.getValue().isDirty()) {
 				LOG.debug("yes, we are dirty: " + entry.getKey());
 				dependencies.addAll(entry.getValue().getFlatDependencies());
@@ -516,7 +510,8 @@ public class Service {
 			}
 		}
 		for (Path dependency : dependencies) {
-			LOG.debug("removing dependency from cache&compileresult " + dependency);
+			LOG.debug("removing dependency from cache&compileresult "
+					+ dependency);
 			if (cache != null) {
 				cache.remove(dependency.getFileName().toString());
 			}
