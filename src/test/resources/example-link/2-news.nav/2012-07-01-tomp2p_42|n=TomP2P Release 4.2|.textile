@@ -1,0 +1,7 @@
+New release of "TomP2P 4.2":../downloads/tom4_2.html. The major changes are: 
+
+* better MapReduce support
+* new API for put/get/add
+* JDBM 8MB fix
+* tons of fixes/improvements
+* update to Netty 3.5.2 and latest JDBM

@@ -1,0 +1,10 @@
+New release of "TomP2P 4.1.2-preview":../downloads/tom4_1_2.html. The changes are: 
+
+* upgrade to latest JDBM
+* switched to logback for logging
+* added support for Bloom filters in get() and digetst()
+* better handling of "connection reset by peer"
+* fixed PeerConnection
+* improved success evaluation for futures
+* added examples for similarity search, distributed segment trees, and Bloom filters
+
