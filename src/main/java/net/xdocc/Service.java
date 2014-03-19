@@ -523,5 +523,9 @@ public class Service {
 		WatchService.shutdown();
 		executorServiceCompiler.shutdown();
 	}
+	
+	public static void setFileListener(boolean set) {
+		fileChangeListener = set;
+	}
 
 }

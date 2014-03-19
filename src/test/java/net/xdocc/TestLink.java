@@ -1,6 +1,10 @@
 package net.xdocc;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -41,6 +45,7 @@ public class TestLink {
 		// setup cache
 		mapCache = new File("/tmp/testcache.mapdb");
 		service = new Service();
+		Service.setFileListener(true);
 		service.setupCache(mapCache);
 		site = new Site(service, source, generated, service.findHandlers(),
 				null);

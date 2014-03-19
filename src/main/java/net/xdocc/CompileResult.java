@@ -156,8 +156,10 @@ public class CompileResult implements Serializable {
 	public CompileResult copyDocument() {
 		if (document != null) {
 			copy(document, document.getDocuments());
-			return new CompileResult(document.copy(), fileInfos, handlerBean,
+			CompileResult tmp = new CompileResult(document.copy(), fileInfos, handlerBean,
 					handler);
+			tmp.addAllDependencies(dependenciesUp, dependenciesDown);
+			return tmp;
 		} else
 			return this;
 	}

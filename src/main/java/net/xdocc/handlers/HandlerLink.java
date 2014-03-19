@@ -102,6 +102,10 @@ public class HandlerLink implements Handler {
 				}
 				compileResult.addAllDependencies(dependenciesUp,
 						dependenciesDown);
+				
+				// put compileResult in cache
+				handlerBean.getSite().service().addCompileResult(found.getPath(), compileResult);
+				
 			}
 
 			if (limit >= 0) {
