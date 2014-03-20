@@ -82,11 +82,11 @@ public class HandlerLink implements Handler {
 						&& compileResult.getHandler() != this) {
 					compileResult.getHandlerBean().getModel()
 							.put("relative", found.getTargetURLPath());
-					CompileResult compileResult2 = compileResult.getHandler()
-							.compile(compileResult.getHandlerBean(), false);
+//					CompileResult compileResult2 = compileResult.getHandler()
+//							.compile(compileResult.getHandlerBean(), false);
 					// this may happen is a file is not hidden, but also not
 					// visible
-					documents.add(compileResult2.getDocument());
+					documents.add(compileResult.getDocument());
 				}
 
 //				Set<FileInfos> result = new HashSet<>();

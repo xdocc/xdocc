@@ -433,14 +433,14 @@ public class Service {
 
 	public void addCompileResult(Path path, CompileResult result) {
 		synchronized (compileResult) {
-			LOG.info("adding CR: "+path);
-			for (FileInfos inf : result.getFileInfos()) {
-				LOG.info("- fileInfos "+inf.getTarget().toString());
-				LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-						+ inf.getSourceTimestamp());
-				LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-						+ inf.getTargetTimestamp());
-			}
+//			LOG.info("adding CR: "+path);
+//			for (FileInfos inf : result.getFileInfos()) {
+//				LOG.info("- fileInfos "+inf.getTarget().toString());
+//				LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+//						+ inf.getSourceTimestamp());
+//				LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+//						+ inf.getTargetTimestamp());
+//			}
 			compileResult.put(path, result);
 		}
 		if (result.getFileInfos() != null) {
@@ -469,13 +469,13 @@ public class Service {
 
 	public void addToCache(Path path, Set<FileInfos> infos) {
 		synchronized (cache) {
-			LOG.info("adding CACHE: "+path+" size FileInfos: "+infos.size());
+//			LOG.info("adding CACHE: "+path+" size FileInfos: "+infos.size());
 			for (FileInfos inf : infos) {
-				LOG.info("- fileInfo: " + inf.getTarget().toString());
-				LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-						+ inf.getSourceTimestamp());
-				LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-						+ inf.getTargetTimestamp());
+//				LOG.info("- fileInfo: " + inf.getTarget().toString());
+//				LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+//						+ inf.getSourceTimestamp());
+//				LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+//						+ inf.getTargetTimestamp());
 			}
 			cache.put(path.toString(), infos);
 		}

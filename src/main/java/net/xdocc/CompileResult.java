@@ -46,18 +46,18 @@ public class CompileResult implements Serializable {
 		this.fileInfos = fileInfos;
 		this.handlerBean = handlerBean;
 		this.handler = handler;
-		LOG.info("created CR ");
-		if(fileInfos != null) {
-		for (FileInfos inf : fileInfos) {
-			LOG.info("- fileInfo: " + inf.getTarget().toString());
-			LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-					+ inf.getSourceTimestamp());
-			LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-					+ inf.getTargetTimestamp());
-		}
-		}else {
-			LOG.info(" - with NULL fileinfos");
-		}
+//		LOG.info("created CR ");
+//		if(fileInfos != null) {
+//		for (FileInfos inf : fileInfos) {
+//			LOG.info("- fileInfo: " + inf.getTarget().toString());
+//			LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+//					+ inf.getSourceTimestamp());
+//			LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+//					+ inf.getTargetTimestamp());
+//		}
+//		}else {
+//			LOG.info(" CR with NULL fileinfos");
+//		}
 	}
 
 	public CompileResult(Document document, Path source,
@@ -85,14 +85,14 @@ public class CompileResult implements Serializable {
 				}
 			}
 		}
-		LOG.info("created CR ");
-		for (FileInfos inf : fileInfos) {
-			LOG.info("- fileInfo: " + inf.getTarget().toString());
-			LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-					+ inf.getSourceTimestamp());
-			LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-					+ inf.getTargetTimestamp());
-		}
+//		LOG.info("created CR ");
+//		for (FileInfos inf : fileInfos) {
+//			LOG.info("- fileInfo: " + inf.getTarget().toString());
+//			LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+//					+ inf.getSourceTimestamp());
+//			LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+//					+ inf.getTargetTimestamp());
+//		}
 	}
 
 	public Document getDocument() {
