@@ -70,10 +70,13 @@ public class HandlerLink implements Handler {
 
 				compileResult.addDependencies(found.getPath(), handlerBean
 						.getxPath().getPath());
-				Map<Path, Set<Path>> dependenciesUp = compileResult
-						.getDependenciesUp();
-				Map<Path, Set<Path>> dependenciesDown = compileResult
-						.getDependenciesDown();
+//				Map<Path, Set<Path>> dependenciesUp = compileResult
+//						.getDependenciesUp();
+//				Map<Path, Set<Path>> dependenciesDown = compileResult
+//						.getDependenciesDown();
+//				
+//				compileResult.addAllDependencies(dependenciesUp,
+//						dependenciesDown);
 
 				if (compileResult.getDocument() != null
 						&& compileResult.getHandler() != this) {
@@ -86,22 +89,20 @@ public class HandlerLink implements Handler {
 					documents.add(compileResult2.getDocument());
 				}
 
-				Set<FileInfos> result = new HashSet<>();
-				if (compileResult.getFileInfos() != null) {
-					for (FileInfos fileInfos : compileResult.getFileInfos()) {
-						long sourceSize = Files.size(handlerBean.getxPath()
-								.getPath());
-						long sourceTimestamp = Files.getLastModifiedTime(
-								handlerBean.getxPath().getPath()).toMillis();
-						result.add(fileInfos.copy(sourceTimestamp, sourceSize));
-					}
-					compileResult = new CompileResult(
-							compileResult.getDocument(), result, handlerBean,
-							this);
-
-				}
-				compileResult.addAllDependencies(dependenciesUp,
-						dependenciesDown);
+//				Set<FileInfos> result = new HashSet<>();
+//				if (compileResult.getFileInfos() != null) {
+//					for (FileInfos fileInfos : compileResult.getFileInfos()) {
+//						long sourceSize = Files.size(handlerBean.getxPath()
+//								.getPath());
+//						long sourceTimestamp = Files.getLastModifiedTime(
+//								handlerBean.getxPath().getPath()).toMillis();
+//						result.add(fileInfos.copy(sourceTimestamp, sourceSize));
+//					}
+//					compileResult = new CompileResult(
+//							compileResult.getDocument(), result, handlerBean,
+//							this);
+//
+//				}
 				
 				// put compileResult in cache
 				handlerBean.getSite().service().addCompileResult(found.getPath(), compileResult);

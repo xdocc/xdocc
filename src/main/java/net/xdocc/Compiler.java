@@ -60,6 +60,9 @@ public class Compiler implements Runnable {
 	}
 
 	public void compile(Path siteToCompile) throws InterruptedException {
+		if(siteToCompile.getFileName().toString().endsWith("~")) {
+			return;
+		}
 		XPath xPath = new XPath(site, siteToCompile);
 		if (xPath.isHidden()) {
 			return;

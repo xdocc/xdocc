@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.xdocc.handlers.Handler;
 import net.xdocc.handlers.HandlerBean;
 
@@ -23,6 +26,8 @@ import net.xdocc.handlers.HandlerBean;
 public class CompileResult implements Serializable {
 
 	private static final long serialVersionUID = -673796597290628935L;
+	private static final Logger LOG = LoggerFactory.getLogger(CompileResult.class);
+	
 	public final static CompileResult DONE = new CompileResult(null, null,
 			null, null);
 	public final static CompileResult ERROR = new CompileResult(null, null,
@@ -41,6 +46,18 @@ public class CompileResult implements Serializable {
 		this.fileInfos = fileInfos;
 		this.handlerBean = handlerBean;
 		this.handler = handler;
+		LOG.info("created CR ");
+		if(fileInfos != null) {
+		for (FileInfos inf : fileInfos) {
+			LOG.info("- fileInfo: " + inf.getTarget().toString());
+			LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+					+ inf.getSourceTimestamp());
+			LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+					+ inf.getTargetTimestamp());
+		}
+		}else {
+			LOG.info(" - with NULL fileinfos");
+		}
 	}
 
 	public CompileResult(Document document, Path source,
@@ -67,6 +84,14 @@ public class CompileResult implements Serializable {
 					}
 				}
 			}
+		}
+		LOG.info("created CR ");
+		for (FileInfos inf : fileInfos) {
+			LOG.info("- fileInfo: " + inf.getTarget().toString());
+			LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+					+ inf.getSourceTimestamp());
+			LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+					+ inf.getTargetTimestamp());
 		}
 	}
 

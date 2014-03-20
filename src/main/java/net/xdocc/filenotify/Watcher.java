@@ -111,6 +111,9 @@ public class Watcher implements Runnable {
 				if (base == null) {
 					continue;
 				}
+				if(filename != null && filename.toString().endsWith("~")) {
+					continue;
+				}
 				Path resolved = base.resolve(filename);
 				if (!Files.exists(resolved)
 						&& kind != StandardWatchEventKinds.ENTRY_DELETE) {
