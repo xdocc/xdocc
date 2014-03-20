@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -139,6 +140,7 @@ public class Service {
 						waitFor(site.getSource());
 						LOG.info("compiling done: " + site);
 						db.commit();
+						LOG.info("service ready!");
 					} catch (IOException | InterruptedException e) {
 						LOG.error("compiler exception: " + e);
 					}
@@ -177,7 +179,8 @@ public class Service {
 	void setupCache(File cacheDir) {
 		db = DBMaker.newFileDB(cacheDir).closeOnJvmShutdown().make();
 		cache = db.getHashMap("results");
-		cacheTemplates = new HashMap<Site, Map<String, TemplateBean>>();
+		cacheTemplates = Collections
+				.synchronizedMap(new HashMap<Site, Map<String, TemplateBean>>());
 		if (clearCache) {
 			cache.clear();
 		}
@@ -261,8 +264,8 @@ public class Service {
 	public void compile(Site site, Path path, Map<String, Object> model)
 			throws IOException {
 		LOG.debug("compiling: " + site + "/" + path);
-//		Link link = readNavigation(site);
-//		site.setNavigation(link);
+		// Link link = readNavigation(site);
+		// site.setNavigation(link);
 		executorServiceCompiler.execute(new Compiler(site, path, dirtySet,
 				model));
 	}
@@ -378,23 +381,13 @@ public class Service {
 		}
 	}
 
-	public void addCompileResult(Path path, CompileResult result) {
-		compileResult.put(path, result);
-		if(result.getFileInfos() != null) { 
-			cache.put(path.toString(), result.getFileInfos());
-//			LOG.info("add to cache: key=" + path.toString()	+ ", value (FileInfos.size())=" + result.getFileInfos().size());
-		}else {
-			LOG.info("no file infos: "+path);
-		}
-	}
-	
 	public boolean isCached(Site site, Path source, Path target) {
 		if (cache == null) {
 			return false;
 		}
-		Set<FileInfos> infos = cache.get(source.toString());
+		Set<FileInfos> infos = getFromCache(source);
 		if (infos == null) {
-			LOG.info("not found in cache " + source.toFile());
+			LOG.info("not found in cache " + source.toString());
 			return false;
 		}
 		for (FileInfos info : infos) {
@@ -439,22 +432,62 @@ public class Service {
 		}
 	}
 
-	public CompileResult getCompileResult(Path path) {
-		CompileResult compileResult1 = compileResult.get(path);
-		if (compileResult1 != null) {
-			return compileResult1.copyDocument();
+	public void addCompileResult(Path path, CompileResult result) {
+		synchronized (compileResult) {
+			LOG.info("adding CR: "+path);
+			compileResult.put(path, result);
 		}
-		return null;
+		if (result.getFileInfos() != null) {
+			addToCache(path, result.getFileInfos());
+		} else {
+			LOG.info("no file infos: " + path
+					+ " added to CR but NOT IN CACHE!");
+		}
 	}
 
-	public Map<String, TemplateBean> getTemplateBeans(Site site) {
+	public CompileResult getCompileResult(Path path) {
+		synchronized (compileResult) {
+			return compileResult.get(path);
+		}
+		// if (compileResult1 != null) {
+		// return compileResult1.copyDocument();
+		// }
+	}
+
+	public void removeCompileResult(Path path) {
+		synchronized (compileResult) {
+			compileResult.remove(path);
+			LOG.info("remove CR: "+path);
+		}
+	}
+
+	public void addToCache(Path path, Set<FileInfos> infos) {
+		synchronized (cache) {
+			cache.put(path.toString(), infos);
+		}
+	}
+
+	public Set<FileInfos> getFromCache(Path path) {
+		synchronized (cache) {
+			return cache.get(path.toString());
+		}
+	}
+
+	public void removeFromCache(Path path) {
+		synchronized (cache) {
+			cache.remove(path.toString());
+		}
+	}
+
+	public synchronized Map<String, TemplateBean> getTemplateBeans(Site site) {
 		return cacheTemplates.get(site);
 	}
 
-	public void addTemplateBeans(Site site, Map<String, TemplateBean> templates) {
+	public synchronized void addTemplateBeans(Site site,
+			Map<String, TemplateBean> templates) {
 		cacheTemplates.put(site, templates);
 	}
-	
+
 	public void waitFor(Path path) throws InterruptedException {
 		while (getCompileResult(path) == null) {
 			synchronized (compileResult) {
@@ -466,7 +499,7 @@ public class Service {
 	private void invalidateCache(Site site) throws IOException {
 		Set<Path> dependencies = new HashSet<>();
 		// template cache
-		for (Map.Entry<String, TemplateBean> entry : cacheTemplates.get(site)
+		for (Map.Entry<String, TemplateBean> entry : getTemplateBeans(site)
 				.entrySet()) {
 			if (entry.getValue().isDirty()) {
 				LOG.debug("yes, we are dirty: " + entry.getKey());
@@ -476,21 +509,18 @@ public class Service {
 
 		// content cache
 		synchronized (compileResult) {
-
-			for (Iterator<Entry<Path, CompileResult>> iterater = compileResult
-					.entrySet().iterator(); iterater.hasNext();) {
-				Entry<Path, CompileResult> compileResult2 = iterater.next();
-				if (!Utils.isChild(compileResult2.getKey(), site.getSource())) {
+			for (Path key : compileResult.keySet()) {
+				CompileResult cr = compileResult.get(key);
+				if (!Utils.isChild(key, site.getSource())) {
 					continue;
 				}
-				Collection<FileInfos> list = compileResult2.getValue()
-						.getFileInfos();
+				Set<FileInfos> list = cr.getFileInfos();
 				if (list == null) {
 					continue;
 				}
 
 				for (FileInfos fileInfos : list) {
-					Path source = compileResult2.getKey();
+					Path source = key;
 					Path target = fileInfos.getTarget().toPath();
 
 					// if the cache is not valid OR if the template changed
@@ -498,12 +528,8 @@ public class Service {
 							|| dependencies.contains(source)) {
 						LOG.debug("cache: invalidate {} with target {}",
 								source, target);
-						dependencies.addAll(compileResult2.getValue()
-								.findDependencies(source));
-						iterater.remove();
-						if (cache != null) {
-							cache.remove(source.toString());
-						}
+						dependencies.add(source);
+						dependencies.addAll(cr.findDependencies(source));
 						break;
 					}
 				}
@@ -512,10 +538,8 @@ public class Service {
 		for (Path dependency : dependencies) {
 			LOG.debug("removing dependency from cache&compileresult "
 					+ dependency);
-			if (cache != null) {
-				cache.remove(dependency.getFileName().toString());
-			}
-			compileResult.remove(dependency);
+			removeCompileResult(dependency);
+			removeFromCache(dependency);
 		}
 	}
 
@@ -523,9 +547,45 @@ public class Service {
 		WatchService.shutdown();
 		executorServiceCompiler.shutdown();
 	}
-	
+
 	public static void setFileListener(boolean set) {
 		fileChangeListener = set;
 	}
 
+	private synchronized void printAll() {
+
+		synchronized (compileResult) {
+			// CompileResult
+			LOG.info("------CR---------");
+			for (Path key : compileResult.keySet()) {
+				CompileResult cr = getCompileResult(key);
+				LOG.info(key.toString());
+				for (FileInfos inf : cr.getFileInfos()) {
+					LOG.info("- fileInfos "+inf.getTarget().toString());
+					LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+							+ inf.getSourceTimestamp());
+					LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+							+ inf.getTargetTimestamp());
+				}
+				LOG.info("");
+			}
+		}
+
+		synchronized (cache) {
+			// CompileResult
+			LOG.info("------CACHE---------");
+			for (String key : cache.keySet()) {
+				LOG.info(key);
+				Set<FileInfos> infos = getFromCache(Paths.get(key));
+				for (FileInfos inf : infos) {
+					LOG.info("- fileInfo: " + inf.getTarget().toString());
+					LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+							+ inf.getSourceTimestamp());
+					LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+							+ inf.getTargetTimestamp());
+				}
+				LOG.info("");
+			}
+		}
+	}
 }
