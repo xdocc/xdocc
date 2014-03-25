@@ -64,14 +64,30 @@ public class HandlerWikiText implements Handler {
 	@Override
 	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
-		String path = Utils.relativePathToRoot(handlerBean.getSite()
-				.getSource(), handlerBean.getxPath().getPath());
 		
-		final Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getTargetPath());
+		// edit for link special
+		String path;
+		if(!handlerBean.getxPath().isLinkCopy()) {
+			path = Utils.relativePathToRoot(handlerBean.getSite()
+					.getSource(), handlerBean.getxPath().getPath());
+		}else {
+			path = handlerBean.getRelativePathToRoot();
+		}
+
+		// edit for link special
+		Key<Path> crk;
+		if(!handlerBean.getxPath().isLinkCopy()) {
+			crk = new Key<Path>(handlerBean.getxPath().getPath(),
+				handlerBean.getxPath().getTargetPath());
+		}else {
+			crk = new Key<Path>(handlerBean.getxPath().getPath(),
+					handlerBean.getxPath().getTargetPath().resolve(handlerBean.getxPath().getTargetPath()+HandlerLink.LINK_INCLUDE_ADDITION));
+		}
+		
+		
 		// apply text ftl
 		TemplateBean templateText = handlerBean.getSite().getTemplate(
-				handlerBean.getxPath().getLayoutSuffix(), "wikitext",
-				crk);
+				handlerBean.getxPath().getLayoutSuffix(), "wikitext", crk);
 
 		// String htmlText = Utils.applyTemplate( templateText, model );
 		// create the document
@@ -85,8 +101,7 @@ public class HandlerWikiText implements Handler {
 		doc.applyPath1(path);
 		// create the site to layout ftl
 		TemplateBean templateSite = handlerBean.getSite().getTemplate(
-				handlerBean.getxPath().getLayoutSuffix(), "page",
-				crk);
+				handlerBean.getxPath().getLayoutSuffix(), "page", crk);
 		Map<String, Object> model = HandlerUtils.fillPage(
 				handlerBean.getSite(), handlerBean.getxPath(), doc);
 		model.put("type", "document");
@@ -96,8 +111,15 @@ public class HandlerWikiText implements Handler {
 		Path generatedFile = null;
 		// write to disk
 		if (writeToDisk) {
-			generatedFile = handlerBean.getxPath().getTargetPath(
-					handlerBean.getxPath().getTargetURL() + ".html");
+			
+			// edit for link special
+			if(!handlerBean.getxPath().isLinkCopy()) {
+				generatedFile = handlerBean.getxPath().getTargetPath(
+						handlerBean.getxPath().getTargetURL() + ".html");
+			}else {
+				generatedFile = handlerBean.getxPath().getTargetPath(
+						handlerBean.getxPath().getTargetURL() + ".html"+HandlerLink.LINK_INCLUDE_ADDITION);
+			}
 			handlerBean.getDirtyset().add(generatedFile);
 			Path generatedDir = Files.createDirectories(generatedFile
 					.getParent());
@@ -210,7 +232,7 @@ public class HandlerWikiText implements Handler {
 				e.printStackTrace();
 			}
 		}
-		
+
 		@Override
 		public void imageLink(Attributes linkAttributes,
 				Attributes imageAttributes, String href, String imageUrl) {

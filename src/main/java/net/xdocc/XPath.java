@@ -63,6 +63,8 @@ public class XPath implements Comparable<XPath> {
 
 	private boolean visible;
 
+	private boolean linkCopy;
+
 	/**
 	 * Creates a xPath object from a path. The path will be parsed and
 	 * information will be extracted.
@@ -75,6 +77,7 @@ public class XPath implements Comparable<XPath> {
 	 * @throws IllegalArgumentException
 	 *             if the path is not inside the context of site
 	 */
+
 	public XPath(Site site, Path path) {
 		if (!Utils.isChild(path, site.getSource())) {
 			throw new IllegalArgumentException(path + "is not a child of "
@@ -251,19 +254,20 @@ public class XPath implements Comparable<XPath> {
 				}
 			}
 			// mandatory '-'
-			if(offset >= mandatory.length() || (mandatory.charAt(offset) != '-' && !isRoot())) {
+			if (offset >= mandatory.length()
+					|| (mandatory.charAt(offset) != '-' && !isRoot())) {
 				return false;
 			}
 			// url
-			if(!isRoot()) {
-			Matcher matcher4 = PATTERN_URL.matcher(mandatory);
-			if (matcher4.find(offset+1)) {
-				this.url = matcher4.group(1);
-				offset = matcher4.end(1);
-			}else {
-				this.url = "";
-			}
-			}else {
+			if (!isRoot()) {
+				Matcher matcher4 = PATTERN_URL.matcher(mandatory);
+				if (matcher4.find(offset + 1)) {
+					this.url = matcher4.group(1);
+					offset = matcher4.end(1);
+				} else {
+					this.url = "";
+				}
+			} else {
 				this.url = mandatory;
 			}
 			//  tags
@@ -802,4 +806,11 @@ public class XPath implements Comparable<XPath> {
 		return null;
 	}
 
+	public boolean isLinkCopy() {
+		return linkCopy;
+	}
+	
+	public void setLinkCopy(boolean linkCopy) {
+		this.linkCopy = linkCopy;
+	}
 }

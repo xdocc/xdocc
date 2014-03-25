@@ -28,6 +28,7 @@ import net.xdocc.filenotify.FileListener;
 import net.xdocc.filenotify.WatchService;
 import net.xdocc.handlers.Handler;
 import net.xdocc.handlers.HandlerCopy;
+import net.xdocc.handlers.HandlerLink;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -62,6 +63,7 @@ public class Service {
 	private final Map<Key<Path>, CompileResult> compileResult = Collections
 			.synchronizedMap(new HashMap<Key<Path>, CompileResult>());
 
+	// target path !! (xpath.getTargetPath())
 	private static Map<String, Set<FileInfos>> cache;
 
 	private static Map<Site, Map<String, TemplateBean>> cacheTemplates;
@@ -136,8 +138,8 @@ public class Service {
 				for (Site site : sites) {
 					try {
 						compile(site);
-						Key<Path> crk = new Key<Path>(
-								site.getSource(), site.getGenerated());
+						Key<Path> crk = new Key<Path>(site.getSource(), site
+								.getGenerated());
 						waitFor(crk);
 						LOG.info("compiling done: " + site);
 						db.commit();
@@ -201,8 +203,7 @@ public class Service {
 		for (Site site : sites) {
 			Utils.createDirectory(site);
 			compile(site);
-			Key<Path> crk = new Key<Path>(
-					site.getSource(), site.getGenerated());
+			Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
 			waitFor(crk);
 			LOG.info("compiling done: " + site);
 			db.commit();
@@ -397,7 +398,7 @@ public class Service {
 		if (cache == null) {
 			return false;
 		}
-		Set<FileInfos> infos = getFromCache(source);
+		Set<FileInfos> infos = getFromCache(target);
 		if (infos == null) {
 			return false;
 		}
@@ -444,20 +445,15 @@ public class Service {
 	}
 
 	public void addCompileResult(Path path, CompileResult result) {
+		LOG.info("");
+		Key<Path> k = new Key<Path>(path, result.getHandlerBean().getxPath()
+				.getTargetPath());
 		synchronized (compileResult) {
-			// LOG.info("adding CR: "+path);
-			// for (FileInfos inf : result.getFileInfos()) {
-			// LOG.info("- fileInfos "+inf.getTarget().toString());
-			// LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-			// + inf.getSourceTimestamp());
-			// LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-			// + inf.getTargetTimestamp());
-			// }
-			Key<Path> k = new Key<Path>(path, result.getHandlerBean().getxPath().getTargetPath());
+			LOG.info("adding CR " + k);
 			compileResult.put(k, result);
 		}
 		if (result.getFileInfos() != null) {
-			addToCache(path, result.getFileInfos());
+			addToCache(k.getTarget(), result.getFileInfos());
 		} else {
 			LOG.info("no file infos: " + path
 					+ " added to CR but NOT IN CACHE!");
@@ -479,14 +475,8 @@ public class Service {
 
 	public void addToCache(Path path, Set<FileInfos> infos) {
 		synchronized (cache) {
-			// LOG.info("adding CACHE: "+path+" size FileInfos: "+infos.size());
-//			for (FileInfos inf : infos) {
-				// LOG.info("- fileInfo: " + inf.getTarget().toString());
-				// LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-				// + inf.getSourceTimestamp());
-				// LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-				// + inf.getTargetTimestamp());
-//			}
+			LOG.info("adding CACHE: " + path + " size FileInfos: "
+					+ infos.size());
 			cache.put(path.toString(), infos);
 		}
 	}
@@ -522,7 +512,7 @@ public class Service {
 
 	private void invalidateCache(Site site) throws IOException {
 		Set<Key<Path>> dependencies = new HashSet<Key<Path>>();
-		
+
 		// template cache
 		for (Map.Entry<String, TemplateBean> entry : getTemplateBeans(site)
 				.entrySet()) {
