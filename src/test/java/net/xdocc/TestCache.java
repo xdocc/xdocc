@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import junit.framework.Assert;
+import net.xdocc.CompileResult.Key;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -44,7 +45,8 @@ public class TestCache {
 		site = new Site(service, source, generated, service.findHandlers(),
 				null);
 		service.compile(site);
-		service.waitFor(site.getSource());
+		Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+		service.waitFor(crk);
 		log.info("testcompile done 1");
 	}
 
@@ -67,7 +69,8 @@ public class TestCache {
 		long timestap = Files.getLastModifiedTime(index).toMillis();
 		Thread.sleep(2000);
 		service.compile(site);
-		service.waitFor(site.getSource());
+		Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+		service.waitFor(crk);
 		Thread.sleep(2000);
 		log.info("testcompile done 2");
 		long timestap2 = Files.getLastModifiedTime(index).toMillis();
@@ -75,7 +78,7 @@ public class TestCache {
 		Files.write(index, "3333".getBytes());
 		Thread.sleep(2000);
 		service.compile(site);
-		service.waitFor(site.getSource());
+		service.waitFor(crk);
 		Thread.sleep(2000);
 		log.info("testcompile done 3");
 		timestap2 = Files.getLastModifiedTime(index).toMillis();

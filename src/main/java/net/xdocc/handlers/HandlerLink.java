@@ -1,21 +1,16 @@
 package net.xdocc.handlers;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import net.xdocc.CompileResult;
 import net.xdocc.Document;
-import net.xdocc.FileInfos;
-import net.xdocc.Service;
 import net.xdocc.Site;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
+import net.xdocc.CompileResult.Key;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -36,6 +31,8 @@ public class HandlerLink implements Handler {
 	@Override
 	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
+
+		final Key<Path> crkParent = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getTargetPath());
 
 		Configuration config = new PropertiesConfiguration(handlerBean
 				.getxPath().getPath().toFile());
@@ -64,12 +61,11 @@ public class HandlerLink implements Handler {
 			Utils.sort2(founds, ascending);
 
 			for (XPath found : founds) {
-				handlerBean.getSite().service().waitFor(found.getPath());
-				CompileResult compileResult = handlerBean.getSite().service().getCompileResult(found
-						.getPath());
-
-				compileResult.addDependencies(found.getPath(), handlerBean
-						.getxPath().getPath());
+				final Key<Path> crk = new Key<Path>(found.getPath(), found.getTargetPath());
+				handlerBean.getSite().service().waitFor(crk);
+				CompileResult compileResult = handlerBean.getSite().service().getCompileResult(crk);
+				compileResult.addDependencies(crk, crkParent);
+				
 //				Map<Path, Set<Path>> dependenciesUp = compileResult
 //						.getDependenciesUp();
 //				Map<Path, Set<Path>> dependenciesDown = compileResult

@@ -19,6 +19,7 @@ import net.xdocc.CompileResult;
 import net.xdocc.Document;
 import net.xdocc.DocumentGenerator;
 import net.xdocc.Site;
+import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -65,11 +66,12 @@ public class HandlerWikiText implements Handler {
 			throws Exception {
 		String path = Utils.relativePathToRoot(handlerBean.getSite()
 				.getSource(), handlerBean.getxPath().getPath());
-
+		
+		final Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getTargetPath());
 		// apply text ftl
 		TemplateBean templateText = handlerBean.getSite().getTemplate(
 				handlerBean.getxPath().getLayoutSuffix(), "wikitext",
-				handlerBean.getxPath().getPath());
+				crk);
 
 		// String htmlText = Utils.applyTemplate( templateText, model );
 		// create the document
@@ -84,7 +86,7 @@ public class HandlerWikiText implements Handler {
 		// create the site to layout ftl
 		TemplateBean templateSite = handlerBean.getSite().getTemplate(
 				handlerBean.getxPath().getLayoutSuffix(), "page",
-				handlerBean.getxPath().getPath());
+				crk);
 		Map<String, Object> model = HandlerUtils.fillPage(
 				handlerBean.getSite(), handlerBean.getxPath(), doc);
 		model.put("type", "document");

@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import junit.framework.Assert;
+import net.xdocc.CompileResult.Key;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -50,7 +51,8 @@ public class TestLink {
 		site = new Site(service, source, generated, service.findHandlers(),
 				null);
 		service.compile(site);
-		service.waitFor(site.getSource());
+		Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+		service.waitFor(crk);
 	}
 	
 	@AfterClass
@@ -67,11 +69,14 @@ public class TestLink {
 	}
 
 	@Test
-	public void testLink() {
+	public void testLink() throws InterruptedException {
 		Path p = site.getGenerated().resolve("index.html");
 		Assert.assertTrue(Files.exists(p));
 		Path link = site.getSource().resolve("1-mylink.link");
-		CompileResult result = service.getCompileResult(link);
+		Path linkTarget = site.getGenerated().resolve("1-mylink.link");
+		Key<Path> crk = new Key<Path>(link, linkTarget);
+		service.waitFor(crk);
+		CompileResult result = service.getCompileResult(crk);
 		Assert.assertTrue(result.getDocument().getDocuments().size() == 3);
 	}
 	

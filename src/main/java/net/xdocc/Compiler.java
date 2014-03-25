@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.xdocc.CompileResult.Key;
 import net.xdocc.handlers.Handler;
 import net.xdocc.handlers.HandlerBean;
 import net.xdocc.handlers.HandlerCopy;
@@ -94,7 +95,8 @@ public class Compiler implements Runnable {
 	}
 
 	private boolean compile(Handler handler, XPath xPath) {
-		CompileResult result = site.service().getCompileResult(xPath.getPath());
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
+		CompileResult result = site.service().getCompileResult(crk);
 		if(result != null) {
 			boolean cached = true;
 			if(result.getFileInfos()!=null) {

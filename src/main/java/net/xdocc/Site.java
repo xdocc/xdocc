@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import net.xdocc.CompileResult.Key;
 import net.xdocc.handlers.Handler;
 
 import org.apache.commons.lang.StringUtils;
@@ -105,7 +106,7 @@ public class Site {
 		return handlers;
 	}
 
-	public TemplateBean getTemplate(String suffix, String name, Path dependency)
+	public TemplateBean getTemplate(String suffix, String name, Key<Path> dependency)
 			throws IOException {
 		TemplateBean templateBean = service.getTemplateBeans(this).get(
 				name + suffix + ".ftl");
@@ -236,8 +237,8 @@ public class Site {
 		private Long timestamp;
 		private long filesize;
 		private Path file;
-		private Collection<Path> dependencies = new HashSet<>();
-		private Collection<Collection<Path>> forgeinDependencies = new HashSet<>();
+		private Collection<Key<Path>> dependencies = new HashSet<>();
+		private Collection<Collection<Key<Path>>> forgeinDependencies = new HashSet<>();
 
 		public Template getTemplate() {
 			return template;
@@ -269,27 +270,27 @@ public class Site {
 			return filesize;
 		}
 
-		public Collection<Path> getFlatDependencies() {
-			final Collection<Path> result;
+		public Collection<Key<Path>> getFlatDependencies() {
+			final Collection<Key<Path>> result;
 			synchronized (dependencies) {
 				result = new HashSet<>(dependencies);
 			}
 			synchronized (forgeinDependencies) {
-				for (Collection<Path> tmp : forgeinDependencies) {
+				for (Collection<Key<Path>> tmp : forgeinDependencies) {
 					result.addAll(tmp);
 				}
 			}
 			return result;
 		}
 
-		public void addDependency(Path dependency) {
+		public void addDependency(Key<Path> dependency) {
 			synchronized (dependencies) {
 				dependencies.add(dependency);
 			}
 		}
 
 		public void addDependencies(TemplateBean parent) {
-			final Collection<Path> tmp;
+			final Collection<Key<Path>> tmp;
 			synchronized (parent.dependencies) {
 				tmp = new HashSet<>(parent.dependencies);
 			}

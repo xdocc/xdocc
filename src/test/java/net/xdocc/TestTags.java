@@ -13,6 +13,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import junit.framework.Assert;
+import net.xdocc.CompileResult.Key;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -60,7 +61,8 @@ public class TestTags {
 		site = new Site(service, source, generated, service.findHandlers(),
 				null);
 		service.compile(site);
-		service.waitFor(site.getSource());
+		Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+		service.waitFor(crk);
 	}
 	
 	@AfterClass
@@ -143,8 +145,12 @@ public class TestTags {
 	}
 	
 	@Test
-	public void testPaging() throws IOException {
-		CompileResult cr = service.getCompileResult(site.getSource().resolve("1-folder0|l=x|n=Folder 0|all|.nav/1-folder00|l2=z|n=Folder 00/1-folder000|p=3|n=Folder 000"));
+	public void testPaging() throws IOException, InterruptedException {
+		service.printAll();
+		Key<Path> crk = new Key<Path>(site.getSource().resolve("1-folder0|l=x|n=Folder 0|all|.nav/1-folder00|l2=z|n=Folder 00/1-folder000|p=3|n=Folder 000"), 
+				site.getGenerated().resolve("1-folder0|l=x|n=Folder 0|all|.nav/1-folder00|l2=z|n=Folder 00/1-folder000|p=3|n=Folder 000"));
+		service.waitFor(crk);
+		CompileResult cr = service.getCompileResult(crk);
 		List<Document> docs = cr.getDocument().getDocuments();
 		Assert.assertEquals(3, docs.size());
 		Path h000 = site.getGenerated().resolve("folder0/folder00/folder000/index_1.html");
@@ -165,10 +171,12 @@ public class TestTags {
 	
 	@Test
 	public void testPreview() {
-		CompileResult crPre = service.getCompileResult(site.getSource().resolve("1-folder0|l=x|n=Folder 0|all|.nav/2-folder01|n=Folder 01/1-folder010|n=Folder 010|.pre"));
+		Key<Path> crk = new Key<Path>(site.getSource().resolve("1-folder0|l=x|n=Folder 0|all|.nav/2-folder01|n=Folder 01/1-folder010|n=Folder 010|.pre"), site.getGenerated().resolve("1-folder0|l=x|n=Folder 0|all|.nav/2-folder01|n=Folder 01/1-folder010|n=Folder 010|.pre"));
+		CompileResult crPre = service.getCompileResult(crk);
 		Assert.assertNotNull(crPre);
 		Assert.assertEquals(0, crPre.getDocument().getDocuments().size());
-		CompileResult crNormal = service.getCompileResult(site.getSource().resolve("1-folder0|l=x|n=Folder 0|all|.nav/2-folder01|n=Folder 01"));
+		crk = new Key<Path>(site.getSource().resolve("1-folder0|l=x|n=Folder 0|all|.nav/2-folder01|n=Folder 01"), site.getGenerated().resolve("1-folder0|l=x|n=Folder 0|all|.nav/2-folder01|n=Folder 01"));
+		CompileResult crNormal = service.getCompileResult(crk);
 		Assert.assertNotNull(crNormal);
 		Assert.assertEquals(4, crNormal.getDocument().getDocuments().size());
 	}

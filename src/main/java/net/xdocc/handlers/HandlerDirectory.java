@@ -14,6 +14,7 @@ import net.xdocc.Document;
 import net.xdocc.DocumentGenerator;
 import net.xdocc.Link;
 import net.xdocc.Site;
+import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -63,7 +64,7 @@ public class HandlerDirectory implements Handler {
 			Path p = handlerBean.getxPath().getTargetPath(url);
 			Path generatedDir = Files.createDirectories(p);
 			handlerBean.getDirtyset().add(generatedDir);
-			return CompileResult.DONE;
+			return new CompileResult(null, null, handlerBean, this);
 		}
 		int pageSize = handlerBean.getxPath().getPageSize();
 
@@ -200,6 +201,7 @@ public class HandlerDirectory implements Handler {
 				xPath.getPath());
 		final List<CompileResult> aggregate = new ArrayList<>();
 		final List<Document> documents = new ArrayList<>();
+		final Key<Path> crkParent = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
 		final boolean ascending;
 		if (xPath.isAutoSort()) {
 			ascending = Utils.guessAutoSort(children);
@@ -208,11 +210,10 @@ public class HandlerDirectory implements Handler {
 		}
 		Utils.sort2(children, ascending);
 		for (XPath xPathChild : children) {
-
-			site.service().waitFor(xPathChild.getPath());
-			CompileResult result = site.service().getCompileResult(
-					xPathChild.getPath());
-			result.addDependencies(xPathChild.getPath(), xPath.getPath());
+			Key<Path> crk = new Key<Path>(xPathChild.getPath(), xPathChild.getTargetPath());
+			site.service().waitFor(crk);
+			CompileResult result = site.service().getCompileResult(crk);
+			result.addDependencies(crk, crkParent);
 			boolean pre = xPathChild.isPreview();
 			//TODO: full is default, no need for isFull
 			boolean full = xPathChild.isFull() && !pre;
@@ -252,9 +253,10 @@ public class HandlerDirectory implements Handler {
 		if (prefix.equals("")) {
 			prefix = xPath.getLayoutSuffix();
 		}
-
+		
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
 		TemplateBean templateText = site.getTemplate(prefix, templateName,
-				xPath.getPath());
+				crk);
 
 		DocumentGenerator gen = new DocumentGenerator(site, templateText);
 

@@ -10,20 +10,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.LogManager;
 
+import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.filenotify.FileListener;
 import net.xdocc.filenotify.WatchService;
@@ -60,8 +59,8 @@ public class Service {
 	private final Set<Path> dirtySet = Collections
 			.synchronizedSet(new HashSet<Path>());
 
-	private final Map<Path, CompileResult> compileResult = Collections
-			.synchronizedMap(new HashMap<Path, CompileResult>());
+	private final Map<Key<Path>, CompileResult> compileResult = Collections
+			.synchronizedMap(new HashMap<Key<Path>, CompileResult>());
 
 	private static Map<String, Set<FileInfos>> cache;
 
@@ -137,7 +136,9 @@ public class Service {
 				for (Site site : sites) {
 					try {
 						compile(site);
-						waitFor(site.getSource());
+						Key<Path> crk = new Key<Path>(
+								site.getSource(), site.getGenerated());
+						waitFor(crk);
 						LOG.info("compiling done: " + site);
 						db.commit();
 						LOG.info("service ready!");
@@ -200,7 +201,9 @@ public class Service {
 		for (Site site : sites) {
 			Utils.createDirectory(site);
 			compile(site);
-			waitFor(site.getSource());
+			Key<Path> crk = new Key<Path>(
+					site.getSource(), site.getGenerated());
+			waitFor(crk);
 			LOG.info("compiling done: " + site);
 			db.commit();
 		}
@@ -230,14 +233,18 @@ public class Service {
 		File[] configFiles = configDir.listFiles();
 		List<Site> sites = new ArrayList<Site>();
 		for (File configFile : configFiles) {
-			Site site = readSite(configFile, handlers);
-			if (!"true".equalsIgnoreCase(StringUtils.trim(site
-					.getProperty("enabled")))) {
-				continue;
+			try {
+				Site site = readSite(configFile, handlers);
+				if (!"true".equalsIgnoreCase(StringUtils.trim(site
+						.getProperty("enabled")))) {
+					continue;
+				}
+				sites.add(site);
+				Link link = readNavigation(site);
+				site.setNavigation(link);
+			} catch (Throwable t) {
+				LOG.error(t.getMessage());
 			}
-			sites.add(site);
-			Link link = readNavigation(site);
-			site.setNavigation(link);
 		}
 		return sites;
 	}
@@ -371,10 +378,15 @@ public class Service {
 	}
 
 	private Site readSite(File configFile, List<Handler> handlers)
-			throws FileNotFoundException, IOException {
+			throws Exception {
 		Properties properties = new Properties();
 		try (FileReader fr = new FileReader(configFile)) {
 			properties.load(fr);
+			if (properties.getProperty(PROPERTY_SOURCE) == null
+					|| properties.getProperty(PROPERTY_GENERATED) == null) {
+				throw new Exception("bad config file: "
+						+ configFile.getPath().toString());
+			}
 			return new Site(this, properties.getProperty(PROPERTY_SOURCE),
 					properties.getProperty(PROPERTY_GENERATED), handlers,
 					properties);
@@ -433,15 +445,16 @@ public class Service {
 
 	public void addCompileResult(Path path, CompileResult result) {
 		synchronized (compileResult) {
-//			LOG.info("adding CR: "+path);
-//			for (FileInfos inf : result.getFileInfos()) {
-//				LOG.info("- fileInfos "+inf.getTarget().toString());
-//				LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-//						+ inf.getSourceTimestamp());
-//				LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-//						+ inf.getTargetTimestamp());
-//			}
-			compileResult.put(path, result);
+			// LOG.info("adding CR: "+path);
+			// for (FileInfos inf : result.getFileInfos()) {
+			// LOG.info("- fileInfos "+inf.getTarget().toString());
+			// LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+			// + inf.getSourceTimestamp());
+			// LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+			// + inf.getTargetTimestamp());
+			// }
+			Key<Path> k = new Key<Path>(path, result.getHandlerBean().getxPath().getTargetPath());
+			compileResult.put(k, result);
 		}
 		if (result.getFileInfos() != null) {
 			addToCache(path, result.getFileInfos());
@@ -451,32 +464,29 @@ public class Service {
 		}
 	}
 
-	public CompileResult getCompileResult(Path path) {
+	public CompileResult getCompileResult(Key<Path> key) {
 		synchronized (compileResult) {
-			return compileResult.get(path);
+			return compileResult.get(key);
 		}
-		// if (compileResult1 != null) {
-		// return compileResult1.copyDocument();
-		// }
 	}
 
-	public void removeCompileResult(Path path) {
+	public void removeCompileResult(Key<Path> key) {
 		synchronized (compileResult) {
-			compileResult.remove(path);
-			LOG.info("remove CR: "+path);
+			compileResult.remove(key);
+			LOG.info("remove CR: " + key.getSource() + " " + key.getTarget());
 		}
 	}
 
 	public void addToCache(Path path, Set<FileInfos> infos) {
 		synchronized (cache) {
-//			LOG.info("adding CACHE: "+path+" size FileInfos: "+infos.size());
-			for (FileInfos inf : infos) {
-//				LOG.info("- fileInfo: " + inf.getTarget().toString());
-//				LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-//						+ inf.getSourceTimestamp());
-//				LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-//						+ inf.getTargetTimestamp());
-			}
+			// LOG.info("adding CACHE: "+path+" size FileInfos: "+infos.size());
+//			for (FileInfos inf : infos) {
+				// LOG.info("- fileInfo: " + inf.getTarget().toString());
+				// LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+				// + inf.getSourceTimestamp());
+				// LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+				// + inf.getTargetTimestamp());
+//			}
 			cache.put(path.toString(), infos);
 		}
 	}
@@ -502,8 +512,8 @@ public class Service {
 		cacheTemplates.put(site, templates);
 	}
 
-	public void waitFor(Path path) throws InterruptedException {
-		while (getCompileResult(path) == null) {
+	public void waitFor(Key<Path> key) throws InterruptedException {
+		while (getCompileResult(key) == null) {
 			synchronized (compileResult) {
 				compileResult.wait();
 			}
@@ -511,7 +521,8 @@ public class Service {
 	}
 
 	private void invalidateCache(Site site) throws IOException {
-		Set<Path> dependencies = new HashSet<>();
+		Set<Key<Path>> dependencies = new HashSet<Key<Path>>();
+		
 		// template cache
 		for (Map.Entry<String, TemplateBean> entry : getTemplateBeans(site)
 				.entrySet()) {
@@ -523,9 +534,9 @@ public class Service {
 
 		// content cache
 		synchronized (compileResult) {
-			for (Path key : compileResult.keySet()) {
+			for (Key<Path> key : compileResult.keySet()) {
 				CompileResult cr = compileResult.get(key);
-				if (!Utils.isChild(key, site.getSource())) {
+				if (!Utils.isChild(key.getSource(), site.getSource())) {
 					continue;
 				}
 				Set<FileInfos> list = cr.getFileInfos();
@@ -534,26 +545,26 @@ public class Service {
 				}
 
 				for (FileInfos fileInfos : list) {
-					Path source = key;
+					Path source = key.getSource();
 					Path target = fileInfos.getTarget().toPath();
 
 					// if the cache is not valid OR if the template changed
 					if (!isCached(site, source, target)
-							|| dependencies.contains(source)) {
+							|| dependencies.contains(key)) {
 						LOG.debug("cache: invalidate {} with target {}",
 								source, target);
-						dependencies.add(source);
-						dependencies.addAll(cr.findDependencies(source));
+						dependencies.add(key);
+						dependencies.addAll(cr.findDependencies(key));
 						break;
 					}
 				}
 			}
 		}
-		for (Path dependency : dependencies) {
-			LOG.debug("removing dependency from cache&compileresult "
-					+ dependency);
+		for (Key<Path> dependency : dependencies) {
+			LOG.debug("removing dependency from cache " + dependency);
+			removeFromCache(dependency.getSource());
+			LOG.debug("removing key from CR " + dependency);
 			removeCompileResult(dependency);
-			removeFromCache(dependency);
 		}
 	}
 
@@ -566,16 +577,16 @@ public class Service {
 		fileChangeListener = set;
 	}
 
-	private synchronized void printAll() {
+	public synchronized void printAll() {
 
 		synchronized (compileResult) {
 			// CompileResult
 			LOG.info("------CR---------");
-			for (Path key : compileResult.keySet()) {
+			for (Key<Path> key : compileResult.keySet()) {
 				CompileResult cr = getCompileResult(key);
 				LOG.info(key.toString());
 				for (FileInfos inf : cr.getFileInfos()) {
-					LOG.info("- fileInfos "+inf.getTarget().toString());
+					LOG.info("- fileInfos " + inf.getTarget().toString());
 					LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
 							+ inf.getSourceTimestamp());
 					LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "

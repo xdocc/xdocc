@@ -27,6 +27,7 @@ import java.util.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
@@ -806,8 +807,9 @@ public class Utils {
 	public static Document createDocument(Site site, XPath xPath,
 			String relativePathToRoot, String htmlContent, String template,
 			String type) throws IOException {
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
-				template, xPath.getPath());
+				template, crk);
 		// create the document
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,
 				templateText);
@@ -830,8 +832,9 @@ public class Utils {
 			String relativePathToRoot, Document doc, Path generatedFile,
 			String type, Map<String, Object> modelSite) throws IOException,
 			TemplateException {
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
-				"page", xPath.getPath());
+				"page", crk);
 		modelSite.put("path", relativePathToRoot);
 		modelSite.put("document", doc);
 		modelSite.put("type", type);

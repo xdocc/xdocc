@@ -17,6 +17,7 @@ import net.xdocc.Document;
 import net.xdocc.DocumentGenerator;
 import net.xdocc.Service;
 import net.xdocc.Site;
+import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.XPath;
 
@@ -121,8 +122,9 @@ public class HandlerCopy implements Handler {
 
 	public static Document createDocumentFile(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
-				"file", xPath.getPath());
+				"file", crk);
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,
 				templateText);
 		Document document = new Document(xPath, documentGenerator,
@@ -137,8 +139,9 @@ public class HandlerCopy implements Handler {
 
 	public static Document createDocumentBrowse(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
-				"browse", xPath.getPath());
+				"browse", crk);
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,
 				templateText);
 		Document document = new Document(xPath, documentGenerator,

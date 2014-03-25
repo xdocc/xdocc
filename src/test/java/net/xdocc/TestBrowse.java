@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import junit.framework.Assert;
+import net.xdocc.CompileResult.Key;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -45,7 +46,8 @@ public class TestBrowse {
 		site = new Site(service, source, generated, service.findHandlers(),
 				null);
 		service.compile(site);
-		service.waitFor(site.getSource());
+		Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+		service.waitFor(crk);
 	}
 	
 	@AfterClass

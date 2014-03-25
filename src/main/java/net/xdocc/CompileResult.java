@@ -4,18 +4,16 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import net.xdocc.handlers.Handler;
 import net.xdocc.handlers.HandlerBean;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The result of a compilation can be a document or a collection of documents.
@@ -26,8 +24,9 @@ import net.xdocc.handlers.HandlerBean;
 public class CompileResult implements Serializable {
 
 	private static final long serialVersionUID = -673796597290628935L;
-	private static final Logger LOG = LoggerFactory.getLogger(CompileResult.class);
-	
+	private static final Logger LOG = LoggerFactory
+			.getLogger(CompileResult.class);
+
 	public final static CompileResult DONE = new CompileResult(null, null,
 			null, null);
 	public final static CompileResult ERROR = new CompileResult(null, null,
@@ -36,9 +35,9 @@ public class CompileResult implements Serializable {
 	private final Set<FileInfos> fileInfos;
 	private final HandlerBean handlerBean;
 	private final Handler handler;
-	
-	private final Map<Path, Set<Path>> dependenciesUp = new HashMap<>();
-	private final Map<Path, Set<Path>> dependenciesDown = new HashMap<>();
+
+	private final Map<Key<Path>, Set<Key<Path>>> dependenciesUp = new HashMap<Key<Path>, Set<Key<Path>>>();
+	private final Map<Key<Path>, Set<Key<Path>>> dependenciesDown = new HashMap<Key<Path>, Set<Key<Path>>>();
 
 	public CompileResult(Document document, Set<FileInfos> fileInfos,
 			HandlerBean handlerBean, Handler handler) {
@@ -46,18 +45,18 @@ public class CompileResult implements Serializable {
 		this.fileInfos = fileInfos;
 		this.handlerBean = handlerBean;
 		this.handler = handler;
-//		LOG.info("created CR ");
-//		if(fileInfos != null) {
-//		for (FileInfos inf : fileInfos) {
-//			LOG.info("- fileInfo: " + inf.getTarget().toString());
-//			LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-//					+ inf.getSourceTimestamp());
-//			LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-//					+ inf.getTargetTimestamp());
-//		}
-//		}else {
-//			LOG.info(" CR with NULL fileinfos");
-//		}
+		// LOG.info("created CR ");
+		// if(fileInfos != null) {
+		// for (FileInfos inf : fileInfos) {
+		// LOG.info("- fileInfo: " + inf.getTarget().toString());
+		// LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+		// + inf.getSourceTimestamp());
+		// LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+		// + inf.getTargetTimestamp());
+		// }
+		// }else {
+		// LOG.info(" CR with NULL fileinfos");
+		// }
 	}
 
 	public CompileResult(Document document, Path source,
@@ -85,14 +84,14 @@ public class CompileResult implements Serializable {
 				}
 			}
 		}
-//		LOG.info("created CR ");
-//		for (FileInfos inf : fileInfos) {
-//			LOG.info("- fileInfo: " + inf.getTarget().toString());
-//			LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-//					+ inf.getSourceTimestamp());
-//			LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-//					+ inf.getTargetTimestamp());
-//		}
+		// LOG.info("created CR ");
+		// for (FileInfos inf : fileInfos) {
+		// LOG.info("- fileInfo: " + inf.getTarget().toString());
+		// LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
+		// + inf.getSourceTimestamp());
+		// LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
+		// + inf.getTargetTimestamp());
+		// }
 	}
 
 	public Document getDocument() {
@@ -103,13 +102,15 @@ public class CompileResult implements Serializable {
 		return fileInfos;
 	}
 
-	public void addDependencies(Path child, Path parent) {
+	public void addDependencies(Key<Path> child,
+			Key<Path> parent) {
 		addDependencyUp(child, parent);
 		addDependencyDown(child, parent);
 	}
 
-	private void addDependencyUp(Path child, Path parent) {
-		Set<Path> parentSet = getDependenciesUp().get(child);
+	private void addDependencyUp(Key<Path> child,
+			Key<Path> parent) {
+		Set<Key<Path>> parentSet = getDependenciesUp().get(child);
 		if (parentSet == null) {
 			parentSet = new HashSet<>();
 			getDependenciesUp().put(child, parentSet);
@@ -117,9 +118,10 @@ public class CompileResult implements Serializable {
 		parentSet.add(parent);
 	}
 
-	private void addDependencyDown(Path child, Path parent) {
-
-		Set<Path> childSet = getDependenciesDown().get(parent);
+	private void addDependencyDown(Key<Path> child,
+			Key<Path> parent) {
+		Set<Key<Path>> childSet = getDependenciesDown()
+				.get(parent);
 		if (childSet == null) {
 			childSet = new HashSet<>();
 			getDependenciesDown().put(parent, childSet);
@@ -127,85 +129,92 @@ public class CompileResult implements Serializable {
 		childSet.add(child);
 	}
 
-	public Set<Path> findDependencies(Path source) {
-		Set<Path> result = new HashSet<>();
+	public Set<Key<Path>> findDependencies(
+			Key<Path> source) {
+		Set<Key<Path>> result = new HashSet<>();
 		findDependenciesUpRec(source, result);
 		findDependenciesDownRec(source, result);
 		return result;
 	}
-	
-	private void findDependenciesUpRec(Path up, Set<Path> result) {
+
+	private void findDependenciesUpRec(Key<Path> up,
+			Set<Key<Path>> result) {
 		CompileResult cr = handlerBean.getSite().service().getCompileResult(up);
 		if (cr == null) {
 			return;
 		}
-		Set<Path> parentSet = cr.getDependenciesUp().get(up);
+		Set<Key<Path>> parentSet = cr.getDependenciesUp().get(up);
 		if (parentSet == null) {
 			return;
 		}
-		for (Path path : parentSet) {
+		for (Key<Path> path : parentSet) {
 			result.add(path);
 			findDependenciesUpRec(path, result);
 		}
 	}
 
-	private void findDependenciesDownRec(Path down, Set<Path> result) {
-		CompileResult cr = handlerBean.getSite().service().getCompileResult(down);
+	private void findDependenciesDownRec(Key<Path> down,
+			Set<Key<Path>> result) {
+		CompileResult cr = handlerBean.getSite().service()
+				.getCompileResult(down);
 		if (cr == null) {
 			return;
 		}
-		Set<Path> childSet = cr.getDependenciesDown().get(down);
+		Set<Key<Path>> childSet = cr.getDependenciesDown().get(
+				down);
 		if (childSet == null) {
 			return;
 		}
-		for (Path path : childSet) {
+		for (Key<Path> path : childSet) {
 			result.add(path);
 			findDependenciesDownRec(path, result);
 		}
 	}
 
-	public Map<Path, Set<Path>> getDependenciesUp() {
+	public Map<Key<Path>, Set<Key<Path>>> getDependenciesUp() {
 		return dependenciesUp;
 	}
 
-	public Map<Path, Set<Path>> getDependenciesDown() {
+	public Map<Key<Path>, Set<Key<Path>>> getDependenciesDown() {
 		return dependenciesDown;
 	}
 
-	public void addAllDependencies(Map<Path, Set<Path>> dependenciesUp,
-			Map<Path, Set<Path>> dependenciesDown) {
+	public void addAllDependencies(
+			Map<Key<Path>, Set<Key<Path>>> dependenciesUp,
+			Map<Key<Path>, Set<Key<Path>>> dependenciesDown) {
 		this.dependenciesUp.putAll(dependenciesUp);
 		this.dependenciesDown.putAll(dependenciesDown);
 	}
 
-	public CompileResult copyDocument() {
-		if (document != null) {
-			copy(document, document.getDocuments());
-			CompileResult tmp = new CompileResult(document.copy(), fileInfos, handlerBean,
-					handler);
-			tmp.addAllDependencies(dependenciesUp, dependenciesDown);
-			return tmp;
-		} else
-			return this;
-	}
+	// public CompileResult copyDocument() {
+	// if (document != null) {
+	// copy(document, document.getDocuments());
+	// CompileResult tmp = new CompileResult(document.copy(), fileInfos,
+	// handlerBean,
+	// handler);
+	// tmp.addAllDependencies(dependenciesUp, dependenciesDown);
+	// return tmp;
+	// } else
+	// return this;
+	// }
 
-	private void copy(Document documentOrig, List<Document> documents) {
-		if (documentOrig.getCompleteDocument() != null) {
-			documentOrig.setCompleteDocument(documentOrig.getCompleteDocument()
-					.copy());
-		}
-		if (documents == null) {
-			return;
-		}
-		List<Document> copies = new ArrayList<>();
-		for (Document document : documentOrig.getDocuments()) {
-			if (document.getDocuments() != null) {
-				copy(document, document.getDocuments());
-			}
-			copies.add(document.copy());
-		}
-		documentOrig.setDocuments(copies);
-	}
+	// private void copy(Document documentOrig, List<Document> documents) {
+	// if (documentOrig.getCompleteDocument() != null) {
+	// documentOrig.setCompleteDocument(documentOrig.getCompleteDocument()
+	// .copy());
+	// }
+	// if (documents == null) {
+	// return;
+	// }
+	// List<Document> copies = new ArrayList<>();
+	// for (Document document : documentOrig.getDocuments()) {
+	// if (document.getDocuments() != null) {
+	// copy(document, document.getDocuments());
+	// }
+	// copies.add(document.copy());
+	// }
+	// documentOrig.setDocuments(copies);
+	// }
 
 	public HandlerBean getHandlerBean() {
 		return handlerBean;
@@ -213,5 +222,47 @@ public class CompileResult implements Serializable {
 
 	public Handler getHandler() {
 		return handler;
+	}
+
+	public static class Key<T> {
+
+		final private T source;
+		final private T target;
+
+		public Key(T source, T target) {
+			this.source = source;
+			this.target = target;
+		}
+
+		public T getSource() {
+			return source;
+		}
+
+		public T getTarget() {
+			return target;
+		}
+		
+		@Override
+		public int hashCode() {
+			return source.hashCode() ^ target.hashCode();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			if (!(obj instanceof Key<?>)) {
+				return false;
+			}
+			Key<?> o = (Key<?>) obj;
+			return source.equals(o.source) && target.equals(o.target);
+		}
+		
+		@Override
+		public String toString() {
+			return "source: "+source.toString()+" target: "+target.toString();
+		}
+
 	}
 }

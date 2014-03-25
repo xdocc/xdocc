@@ -18,6 +18,7 @@ import net.xdocc.CompileResult;
 import net.xdocc.Document;
 import net.xdocc.DocumentGenerator;
 import net.xdocc.Site;
+import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -43,6 +44,9 @@ public class HandlerImage implements Handler {
 			ImageAttributes attributes, String relativePathToRoot,
 			HandlerBean handlerBean, boolean writeToDisk)
 			throws TemplateException, IOException, InterruptedException {
+		
+		final Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getTargetPath());
+		
 		// copy the original image
 		Path generatedFile = xPath.getTargetPath(xPath.getTargetURL()
 				+ xPath.getExtensions());
@@ -85,7 +89,7 @@ public class HandlerImage implements Handler {
 
 		// apply text ftl
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
-				"image", xPath.getPath());
+				"image", crk);
 		String documentName = xPath.getName();
 		String documentURL = xPath.getTargetURL() + xPath.getExtensions();
 		Date documentDate = xPath.getDate();
@@ -116,7 +120,7 @@ public class HandlerImage implements Handler {
 		//
 		// create the site to layout ftl
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
-				"page", xPath.getPath());
+				"page", crk);
 		Map<String, Object> modelSite = HandlerUtils.fillPage(site, xPath, doc);
 		modelSite.put("type", "file");
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
