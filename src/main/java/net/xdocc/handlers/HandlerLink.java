@@ -62,30 +62,16 @@ public class HandlerLink implements Handler {
 
 			for (XPath found : founds) {
 				
-				/*
-				 * TODO (ongoing work, already started)
-				 * 
-				 * - Irgendwie ein neues handlerBean.getHandler().compile() starten, und dieses
-				 * dann unter einer einem neuen target xpath speichern (links korrekt handlen)
-				 * 
-				 * - Das neue CR für dieses "spezial-file" abspeichern mit gleicher source wie normales file aber neue
-				 * target 
-				 * 
-				 * 
-				 */
-				
-				// reguläres CR
+				// regular CR
 				final Key<Path> crk = new Key<Path>(found.getPath(), found.getPath());
 				handlerBean.getSite().service().waitFor(crk);
 				CompileResult compileResult = handlerBean.getSite().service().getCompileResult(crk);
-//				compileResult.addDependencies(crk, crkParent);
 				
-				// spezial CR
+				// special CR
 				final Key<Path> crkNew = new Key<Path>(found.getPath(), handlerBean.getxPath().getPath());
 				CompileResult specialCR;
+				boolean isCompiled = false;
 				if(handlerBean.getSite().service().getCompileResult(crkNew) == null) {
-					// TODO: HIER neuer Target Path einbauen, aber wie???
-					// erster versuch, mal schauen obs klappt...
 					HandlerBean hbNew = new HandlerBean();
 					hbNew.setDirtyset(compileResult.getHandlerBean().getDirtyset());
 					hbNew.setModel(compileResult.getHandlerBean().getModel());
@@ -94,11 +80,12 @@ public class HandlerLink implements Handler {
 					XPath xNew = compileResult.getHandlerBean().getxPath();
 					hbNew.setxPath(xNew);
 					specialCR = compileResult.getHandler().compile(hbNew, false);
+					isCompiled = true;
 				}else {
-					// TODO: special CR already compiled -> cache still valid??
 					specialCR = handlerBean.getSite().service().getCompileResult(crkNew);
 				}
-				
+				compileResult.addDependencies(crk, crkParent);
+				compileResult.addDependencies(crk, crkNew);
 				specialCR.addDependencies(crk, crkParent);
 				
 				if (specialCR.getDocument() != null
@@ -109,7 +96,9 @@ public class HandlerLink implements Handler {
 				}
 
 				// put specialCR in cache
-				handlerBean.getSite().service().addCompileResult(crkNew, specialCR);
+				if(isCompiled) {
+					handlerBean.getSite().service().addCompileResult(crkNew, specialCR);
+				}
 				
 			}
 

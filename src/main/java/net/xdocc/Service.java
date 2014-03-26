@@ -434,6 +434,9 @@ public class Service {
 				return false;
 			}
 		}
+		if(!key.getSource().toString().equals(key.getTarget())) {
+			return true;
+		}
 		return false;
 	}
 
