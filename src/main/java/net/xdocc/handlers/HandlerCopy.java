@@ -107,10 +107,7 @@ public class HandlerCopy implements Handler {
 		CompileResult cr = new CompileResult(null, handlerBean.getxPath().getPath(),
 				handlerBean, this, generatedFile);
 		
-		if(cr.getFileInfos() == null) {
-			LOG.info("HERE");
-		}
-		
+				
 		return cr;
 	}
 
