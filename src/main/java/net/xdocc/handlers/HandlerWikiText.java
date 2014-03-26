@@ -16,10 +16,10 @@ import java.util.Map;
 import java.util.Set;
 
 import net.xdocc.CompileResult;
+import net.xdocc.CompileResult.Key;
 import net.xdocc.Document;
 import net.xdocc.DocumentGenerator;
 import net.xdocc.Site;
-import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -210,21 +210,20 @@ public class HandlerWikiText implements Handler {
 				e.printStackTrace();
 			}
 		}
-
+		
+		/**
+		 * 
+		 */
 		@Override
-		public void imageLink(Attributes linkAttributes,
-				Attributes imageAttributes, String href, String imageUrl) {
-			// TODO Auto-generated method stub
-			super.imageLink(linkAttributes, imageAttributes, href, imageUrl);
+		protected void emitAnchorHref(String href) {
+			if(!href.startsWith("http")) {
+				href = href.replace("../", "");
+				writer.writeAttribute("href", makeUrlAbsolute(handlerBean.getRelativePathToRoot() + href)); //$NON-NLS-1$
+			} else {
+				super.emitAnchorHref(href);
+			}
 		}
-
-		@Override
-		public void link(Attributes attributes, String hrefOrHashName,
-				String text) {
-			String relativePathToRoot = Utils.relativePathToRoot(
-					site.getSource(), current.getPath());
-			super.link(attributes, relativePathToRoot + hrefOrHashName, text);
-		}
+		
 
 		private String parseExtension(String pURL, HandlerImage handlerImage) {
 			for (String extension : handlerImage.knownExtensions()) {

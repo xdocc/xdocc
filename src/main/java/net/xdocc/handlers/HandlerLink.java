@@ -83,7 +83,7 @@ public class HandlerLink implements Handler {
 //				compileResult.addDependencies(crk, crkParent);
 				
 				// spezial CR
-				final Key<Path> crkNew = new Key<Path>(found.getPath(), found.getTargetPath());
+				final Key<Path> crkNew = new Key<Path>(found.getPath(), found.getTargetPath().resolve(LINK_INCLUDE_ADDITION));
 				CompileResult specialCR;
 				if(handlerBean.getSite().service().getCompileResult(crkNew) == null) {
 					// TODO: HIER neuer Target Path einbauen, aber wie???
@@ -95,7 +95,7 @@ public class HandlerLink implements Handler {
 					hbNew.setSite(compileResult.getHandlerBean().getSite());
 					XPath xNew = compileResult.getHandlerBean().getxPath();
 					hbNew.setxPath(xNew);
-					specialCR = compileResult.getHandler().compile(hbNew, true);
+					specialCR = compileResult.getHandler().compile(hbNew, false);
 				}else {
 					// TODO: special CR already compiled -> cache still valid??
 					specialCR = handlerBean.getSite().service().getCompileResult(crkNew);
