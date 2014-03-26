@@ -138,8 +138,7 @@ public class Service {
 				for (Site site : sites) {
 					try {
 						compile(site);
-						Key<Path> crk = new Key<Path>(site.getSource(), site
-								.getGenerated());
+						Key<Path> crk = new Key<Path>(site.getSource(), site.getSource());
 						waitFor(crk);
 						LOG.info("compiling done: " + site);
 						db.commit();
@@ -203,7 +202,7 @@ public class Service {
 		for (Site site : sites) {
 			Utils.createDirectory(site);
 			compile(site);
-			Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+			Key<Path> crk = new Key<Path>(site.getSource(), site.getSource());
 			waitFor(crk);
 			LOG.info("compiling done: " + site);
 			db.commit();
@@ -466,7 +465,7 @@ public class Service {
 	public void removeCompileResult(Key<Path> key) {
 		synchronized (compileResult) {
 			compileResult.remove(key);
-			LOG.info("remove CR: " + key.getSource() + " " + key.getTarget());
+			LOG.info("remove CR: " + key.getSource() + " " + key);
 		}
 	}
 
@@ -474,30 +473,35 @@ public class Service {
 		synchronized (cache) {
 			LOG.info("adding CACHE: " + key + " size FileInfos: "
 					+ infos.size());
-			cache.put(key.getTarget().toString(), infos);
+			cache.put(key.toString(), infos);
 		}
 	}
 
 	public Set<FileInfos> getFromCache(Key<Path> key) {
 		synchronized (cache) {
-			return cache.get(key.getTarget().toString());
+			return cache.get(key.toString());
 		}
 	}
 
 	public void removeFromCache(Key<Path> key) {
 		synchronized (cache) {
-			cache.remove(key.getTarget().toString());
-			LOG.info("remove CACHE: " + key.getTarget());
+			cache.remove(key.toString());
+			LOG.info("remove CACHE: " + key);
 		}
 	}
 
 	public synchronized Map<String, TemplateBean> getTemplateBeans(Site site) {
+		if(cacheTemplates == null) {
+			return null;
+		}
 		return cacheTemplates.get(site);
 	}
 
 	public synchronized void addTemplateBeans(Site site,
 			Map<String, TemplateBean> templates) {
-		cacheTemplates.put(site, templates);
+		if(cacheTemplates!=null) {
+			cacheTemplates.put(site, templates);
+		}
 	}
 
 	public void waitFor(Key<Path> key) throws InterruptedException {

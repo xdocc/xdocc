@@ -45,7 +45,7 @@ public class TestCompiler {
 		site = new Site(service, source, generated, service.findHandlers(),
 				null);
 		service.compile(site);
-		Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+		Key<Path> crk = new Key<Path>(site.getSource(), site.getSource());
 		service.waitFor(crk);
 	}
 

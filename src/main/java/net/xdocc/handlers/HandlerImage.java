@@ -45,7 +45,7 @@ public class HandlerImage implements Handler {
 			HandlerBean handlerBean, boolean writeToDisk)
 			throws TemplateException, IOException, InterruptedException {
 		
-		final Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getTargetPath());
+		final Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getPath());
 		
 		// copy the original image
 		Path generatedFile = xPath.getTargetPath(xPath.getTargetURL()

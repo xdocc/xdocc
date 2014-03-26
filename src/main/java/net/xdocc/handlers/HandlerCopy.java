@@ -65,7 +65,7 @@ public class HandlerCopy implements Handler {
 					Path generatedDir2 = Files.createDirectories(generatedFile
 							.getParent());
 					handlerBean.getDirtyset().add(generatedDir2);
-					Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getTargetPath());
+					Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getPath());
 					if (!handlerBean.getSite().service().isCached(handlerBean.getSite(), crk)) {
 						Files.copy(handlerBean.getxPath().getPath(),
 								generatedFile,
@@ -121,7 +121,7 @@ public class HandlerCopy implements Handler {
 
 	public static Document createDocumentFile(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				"file", crk);
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,
@@ -138,7 +138,7 @@ public class HandlerCopy implements Handler {
 
 	public static Document createDocumentBrowse(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				"browse", crk);
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,

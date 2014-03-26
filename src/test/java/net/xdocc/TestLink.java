@@ -51,7 +51,7 @@ public class TestLink {
 		site = new Site(service, source, generated, service.findHandlers(),
 				null);
 		service.compile(site);
-		Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+		Key<Path> crk = new Key<Path>(site.getSource(), site.getSource());
 		service.waitFor(crk);
 	}
 	
@@ -73,7 +73,7 @@ public class TestLink {
 		Path p = site.getGenerated().resolve("index.html");
 		Assert.assertTrue(Files.exists(p));
 		Path link = site.getSource().resolve("1-mylink.link");
-		Path linkTarget = site.getGenerated().resolve("1-mylink.link");
+		Path linkTarget = site.getSource().resolve("1-mylink.link");
 		Key<Path> crk = new Key<Path>(link, linkTarget);
 		service.waitFor(crk);
 		CompileResult result = service.getCompileResult(crk);

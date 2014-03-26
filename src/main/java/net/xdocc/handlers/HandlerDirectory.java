@@ -201,7 +201,7 @@ public class HandlerDirectory implements Handler {
 				xPath.getPath());
 		final List<CompileResult> aggregate = new ArrayList<>();
 		final List<Document> documents = new ArrayList<>();
-		final Key<Path> crkParent = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
+		final Key<Path> crkParent = new Key<Path>(xPath.getPath(), xPath.getPath());
 		final boolean ascending;
 		if (xPath.isAutoSort()) {
 			ascending = Utils.guessAutoSort(children);
@@ -210,7 +210,7 @@ public class HandlerDirectory implements Handler {
 		}
 		Utils.sort2(children, ascending);
 		for (XPath xPathChild : children) {
-			Key<Path> crk = new Key<Path>(xPathChild.getPath(), xPathChild.getTargetPath());
+			Key<Path> crk = new Key<Path>(xPathChild.getPath(), xPathChild.getPath());
 			site.service().waitFor(crk);
 			CompileResult result = site.service().getCompileResult(crk);
 			result.addDependencies(crk, crkParent);
@@ -254,7 +254,7 @@ public class HandlerDirectory implements Handler {
 			prefix = xPath.getLayoutSuffix();
 		}
 		
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
 		TemplateBean templateText = site.getTemplate(prefix, templateName,
 				crk);
 

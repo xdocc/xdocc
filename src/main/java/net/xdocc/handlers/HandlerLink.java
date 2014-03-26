@@ -17,8 +17,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 public class HandlerLink implements Handler {
 	
-	public static final String LINK_INCLUDE_ADDITION = ".link";
-
 	@Override
 	public boolean canHandle(Site site, XPath xPath) {
 		return xPath.isCompile() && !xPath.isDirectory()
@@ -34,7 +32,7 @@ public class HandlerLink implements Handler {
 	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
 
-		final Key<Path> crkParent = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getTargetPath());
+		final Key<Path> crkParent = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getPath());
 		
 		Configuration config = new PropertiesConfiguration(handlerBean
 				.getxPath().getPath().toFile());
@@ -77,13 +75,13 @@ public class HandlerLink implements Handler {
 				 */
 				
 				// reguläres CR
-				final Key<Path> crk = new Key<Path>(found.getPath(), found.getTargetPath());
+				final Key<Path> crk = new Key<Path>(found.getPath(), found.getPath());
 				handlerBean.getSite().service().waitFor(crk);
 				CompileResult compileResult = handlerBean.getSite().service().getCompileResult(crk);
 //				compileResult.addDependencies(crk, crkParent);
 				
 				// spezial CR
-				final Key<Path> crkNew = new Key<Path>(found.getPath(), found.getTargetPath().resolve(LINK_INCLUDE_ADDITION));
+				final Key<Path> crkNew = new Key<Path>(found.getPath(), handlerBean.getxPath().getPath());
 				CompileResult specialCR;
 				if(handlerBean.getSite().service().getCompileResult(crkNew) == null) {
 					// TODO: HIER neuer Target Path einbauen, aber wie???

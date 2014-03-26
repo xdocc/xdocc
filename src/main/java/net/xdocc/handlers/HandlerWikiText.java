@@ -68,7 +68,7 @@ public class HandlerWikiText implements Handler {
 		String path = handlerBean.getRelativePathToRoot();
 
 		// edit for link special
-		Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(),	handlerBean.getxPath().getTargetPath());
+		Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(),	handlerBean.getxPath().getPath());
 		
 		// apply text ftl
 		TemplateBean templateText = handlerBean.getSite().getTemplate(

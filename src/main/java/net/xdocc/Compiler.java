@@ -95,7 +95,7 @@ public class Compiler implements Runnable {
 	}
 
 	private boolean compile(Handler handler, XPath xPath) {
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
 		CompileResult result = site.service().getCompileResult(crk);
 		if(result != null) {
 			if(site.service().isCached(site, crk)) {

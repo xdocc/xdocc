@@ -45,7 +45,7 @@ public class TestCache {
 		site = new Site(service, source, generated, service.findHandlers(),
 				null);
 		service.compile(site);
-		Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+		Key<Path> crk = new Key<Path>(site.getSource(), site.getSource());
 		service.waitFor(crk);
 		log.info("testcompile done 1");
 	}
@@ -69,7 +69,7 @@ public class TestCache {
 		long timestap = Files.getLastModifiedTime(index).toMillis();
 		Thread.sleep(2000);
 		service.compile(site);
-		Key<Path> crk = new Key<Path>(site.getSource(), site.getGenerated());
+		Key<Path> crk = new Key<Path>(site.getSource(), site.getSource());
 		service.waitFor(crk);
 		Thread.sleep(2000);
 		log.info("testcompile done 2");

@@ -807,7 +807,7 @@ public class Utils {
 	public static Document createDocument(Site site, XPath xPath,
 			String relativePathToRoot, String htmlContent, String template,
 			String type) throws IOException {
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
 		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
 				template, crk);
 		// create the document
@@ -832,7 +832,7 @@ public class Utils {
 			String relativePathToRoot, Document doc, Path generatedFile,
 			String type, Map<String, Object> modelSite) throws IOException,
 			TemplateException {
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
+		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
 				"page", crk);
 		modelSite.put("path", relativePathToRoot);

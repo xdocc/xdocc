@@ -21,7 +21,8 @@ public class TestXPath {
 	@Test
 	public void test() throws IOException, InstantiationException,
 			IllegalAccessException {
-		Site site = new Site(new Service(), "/tmp|tagroot=a|.nav", genString,
+		Service service = new Service();
+		Site site = new Site(service, "/tmp|tagroot=a|.nav", genString,
 				null, null);
 		Path p = Paths
 				.get("/tmp|tagroot=a|.nav/1-url123|tag1=x|tag2=y|tag3=z|name=Myname|.txt");
@@ -32,7 +33,8 @@ public class TestXPath {
 		Assert.assertEquals("Myname", x.getName());
 		Assert.assertEquals(true, xNav.isNavigation());
 
-		site = new Site(new Service(), "/tmp|.nav", genString, null, null);
+		 
+		site = new Site(service, "/tmp|.nav", genString, null, null);
 		p = Paths
 				.get("/tmp|.nav/1-url123|tag1=x|tag2=y|tag3=z|name=Myname|.txt");
 		nav = Paths.get("/tmp|.nav");
@@ -42,13 +44,13 @@ public class TestXPath {
 		Assert.assertEquals("Myname", x.getName());
 		Assert.assertEquals(true, xNav.isNavigation());
 
-		site = new Site(new Service(), "/tmp", genString, null, null);
+		site = new Site(service, "/tmp", genString, null, null);
 		p = Paths.get("/tmp/1-url123|tag1=x|tag2=y|tag3=z|name=Myname|.txt");
 		x = new XPath(site, p);
 		Assert.assertEquals("url123", x.getUrl());
 		Assert.assertEquals("Myname", x.getName());
 
-		site = new Site(new Service(), "/tmp", genString, null, null);
+		site = new Site(service, "/tmp", genString, null, null);
 		p = Paths
 				.get("/tmp/1-url1/1-url2|tag1=x|tag2=y|tag3=z|name=Myname|.txt");
 		x = new XPath(site, p);
@@ -79,7 +81,7 @@ public class TestXPath {
 		x = new XPath(site, p);
 		Assert.assertFalse(x.isVisible());
 
-		site = new Site(new Service(), "/tmp", genString, findHandlers(), null);
+		site = new Site(service, "/tmp", genString, findHandlers(), null);
 
 		p = Paths.get("/tmp/1.txt");
 		x = new XPath(site, p);
@@ -129,6 +131,8 @@ public class TestXPath {
 		p = Paths.get("/tmp/2014-|tag=value.test");
 		x = new XPath(site, p);
 		Assert.assertTrue(x.isVisible());
+		
+		service.shutdown();
 	}
 
 	public List<Handler> findHandlers() throws InstantiationException,
