@@ -64,7 +64,7 @@ public class HandlerDirectory implements Handler {
 			Path p = handlerBean.getxPath().getTargetPath(url);
 			Path generatedDir = Files.createDirectories(p);
 			handlerBean.getDirtyset().add(generatedDir);
-			return new CompileResult(null, null, handlerBean, this);
+			return new CompileResult(null, handlerBean.getxPath().getPath(), handlerBean, this, generatedDir);
 		}
 		int pageSize = handlerBean.getxPath().getPageSize();
 

@@ -98,20 +98,13 @@ public class Compiler implements Runnable {
 		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getTargetPath());
 		CompileResult result = site.service().getCompileResult(crk);
 		if(result != null) {
-			boolean cached = true;
-			if(result.getFileInfos()!=null) {
-				for(FileInfos fileInfos:result.getFileInfos()) {
-					if( site.service().isCached(site, xPath.getPath(), fileInfos.getTarget().toPath())) {
-						dirtyset.add(fileInfos.getTarget().toPath());
-					} else {
-						cached = false;
-					}
+			if(site.service().isCached(site, crk)) {
+				for(FileInfos fileInfos : site.service().getFromCache(crk)) {
+					dirtyset.add(fileInfos.getTarget().toPath());
 				}
-			}
-			if(cached) {
 				site.service().notifyFor();
 				return true;
-			}
+			} 
 		}
 		try {
 			String relativePathToRoot = Utils.relativePathToRoot(site.getSource(),
@@ -123,12 +116,12 @@ public class Compiler implements Runnable {
 			handlerBean.setModel(model);
 			handlerBean.setRelativePathToRoot(relativePathToRoot);
 			result = handler.compile(handlerBean, true);
-			site.service().addCompileResult(siteToCompile, result);
+			site.service().addCompileResult(crk, result);
 			site.service().notifyFor();
 			return true;
 		} catch (Throwable t) {
 			LOG.error("could not compile " + siteToCompile, t);
-			site.service().addCompileResult(siteToCompile, CompileResult.ERROR);
+			site.service().addCompileResult(crk, CompileResult.ERROR);
 		}
 		return false;
 	}

@@ -63,7 +63,7 @@ public class Service {
 	private final Map<Key<Path>, CompileResult> compileResult = Collections
 			.synchronizedMap(new HashMap<Key<Path>, CompileResult>());
 
-	// target path !! (xpath.getTargetPath())
+	// target path as key !!! handlerBean.getTargetPath().toString()
 	private static Map<String, Set<FileInfos>> cache;
 
 	private static Map<Site, Map<String, TemplateBean>> cacheTemplates;
@@ -394,35 +394,35 @@ public class Service {
 		}
 	}
 
-	public boolean isCached(Site site, Path source, Path target) {
+	public boolean isCached(Site site, Key<Path> key) {
 		if (cache == null) {
 			return false;
 		}
-		Set<FileInfos> infos = getFromCache(target);
+		Set<FileInfos> infos = getFromCache(key);
 		if (infos == null) {
 			return false;
 		}
 		for (FileInfos info : infos) {
 			try {
-				if (info.isFiles(source)) {
+				if (info.isFiles(key.getSource())) {
 					// now we have all the files found
-					long sourceSize = Files.size(source);
+					long sourceSize = Files.size(key.getSource());
 					long targetSize = Files.size(info.getTarget().toPath());
 					long targetTimestamp = Files.getLastModifiedTime(
 							info.getTarget().toPath()).toMillis();
-					long sourceTimestamp = Files.getLastModifiedTime(source)
+					long sourceTimestamp = Files.getLastModifiedTime(key.getSource())
 							.toMillis();
 					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp,
 							sourceSize);
 					boolean isTargetDirty = info.isTargetDirty(info.getTarget()
 							.toPath(), targetTimestamp, targetSize);
 					return !isSourceDirty && !isTargetDirty;
-				} else if (info.isDirectories(source)) {
+				} else if (info.isDirectories(key.getSource())) {
 
 					// no need to check target, since it will be modified
 					// when a file changes inside
 
-					long sourceTimestamp = Files.getLastModifiedTime(source)
+					long sourceTimestamp = Files.getLastModifiedTime(key.getSource())
 							.toMillis();
 					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp);
 					return !isSourceDirty;
@@ -431,7 +431,7 @@ public class Service {
 				}
 			} catch (IOException e) {
 				LOG.info("exception in isCached - probably due to file removed event: "
-						+ source.toString());
+						+ key);
 				return false;
 			}
 		}
@@ -444,19 +444,16 @@ public class Service {
 		}
 	}
 
-	public void addCompileResult(Path path, CompileResult result) {
+	public void addCompileResult(Key<Path> key, CompileResult result) {
 		LOG.info("");
-		Key<Path> k = new Key<Path>(path, result.getHandlerBean().getxPath()
-				.getTargetPath());
 		synchronized (compileResult) {
-			LOG.info("adding CR " + k);
-			compileResult.put(k, result);
+			LOG.info("adding CR " + key);
+			compileResult.put(key, result);
 		}
 		if (result.getFileInfos() != null) {
-			addToCache(k.getTarget(), result.getFileInfos());
+			addToCache(key, result.getFileInfos());
 		} else {
-			LOG.info("no file infos: " + path
-					+ " added to CR but NOT IN CACHE!");
+			LOG.info("no file infos: " + key + " added to CR but NOT IN CACHE!");
 		}
 	}
 
@@ -473,23 +470,24 @@ public class Service {
 		}
 	}
 
-	public void addToCache(Path path, Set<FileInfos> infos) {
+	public void addToCache(Key<Path> key, Set<FileInfos> infos) {
 		synchronized (cache) {
-			LOG.info("adding CACHE: " + path + " size FileInfos: "
+			LOG.info("adding CACHE: " + key + " size FileInfos: "
 					+ infos.size());
-			cache.put(path.toString(), infos);
+			cache.put(key.getTarget().toString(), infos);
 		}
 	}
 
-	public Set<FileInfos> getFromCache(Path path) {
+	public Set<FileInfos> getFromCache(Key<Path> key) {
 		synchronized (cache) {
-			return cache.get(path.toString());
+			return cache.get(key.getTarget().toString());
 		}
 	}
 
-	public void removeFromCache(Path path) {
+	public void removeFromCache(Key<Path> key) {
 		synchronized (cache) {
-			cache.remove(path.toString());
+			cache.remove(key.getTarget().toString());
+			LOG.info("remove CACHE: " + key.getTarget());
 		}
 	}
 
@@ -534,25 +532,22 @@ public class Service {
 					continue;
 				}
 
-				for (FileInfos fileInfos : list) {
-					Path source = key.getSource();
-					Path target = fileInfos.getTarget().toPath();
-
-					// if the cache is not valid OR if the template changed
-					if (!isCached(site, source, target)
-							|| dependencies.contains(key)) {
-						LOG.debug("cache: invalidate {} with target {}",
-								source, target);
-						dependencies.add(key);
-						dependencies.addAll(cr.findDependencies(key));
-						break;
+				// if the cache is not valid OR if the template changed
+				if (!isCached(site, key) || dependencies.contains(key)) {
+					dependencies.add(key);
+					Set<Key<Path>> deps = cr.findDependencies(key);
+					if(deps.size() > 0)
+						LOG.info("dependencies for "+key+" :");
+					for(Key<Path> kk : deps) {
+						LOG.info(kk.toString());
 					}
+					dependencies.addAll(deps);
 				}
 			}
 		}
 		for (Key<Path> dependency : dependencies) {
 			LOG.debug("removing dependency from cache " + dependency);
-			removeFromCache(dependency.getSource());
+			removeFromCache(dependency);
 			LOG.debug("removing key from CR " + dependency);
 			removeCompileResult(dependency);
 		}
@@ -591,7 +586,7 @@ public class Service {
 			LOG.info("------CACHE---------");
 			for (String key : cache.keySet()) {
 				LOG.info(key);
-				Set<FileInfos> infos = getFromCache(Paths.get(key));
+				Set<FileInfos> infos = cache.get(key);
 				for (FileInfos inf : infos) {
 					LOG.info("- fileInfo: " + inf.getTarget().toString());
 					LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "

@@ -853,7 +853,7 @@ public class Utils {
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
 		dirtyset.add(generatedDir);
 		
-		if (!site.service().isCached(xPath.getSite(), xPath.getPath(), generatedFile)) {
+		if (!site.service().isCached(xPath.getSite(), crk)) {
 			Utils.write(htmlSite, xPath, generatedFile);
 		}
 	}

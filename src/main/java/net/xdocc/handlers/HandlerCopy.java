@@ -65,8 +65,8 @@ public class HandlerCopy implements Handler {
 					Path generatedDir2 = Files.createDirectories(generatedFile
 							.getParent());
 					handlerBean.getDirtyset().add(generatedDir2);
-					if (!handlerBean.getSite().service().isCached(handlerBean.getSite(), handlerBean.getxPath().getPath(),
-							generatedFile)) {
+					Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getTargetPath());
+					if (!handlerBean.getSite().service().isCached(handlerBean.getSite(), crk)) {
 						Files.copy(handlerBean.getxPath().getPath(),
 								generatedFile,
 								StandardCopyOption.COPY_ATTRIBUTES,
@@ -104,7 +104,6 @@ public class HandlerCopy implements Handler {
 					+ handlerBean.getxPath().getPath() + " to " + generatedFile
 					+ " - " + e);
 		}
-		
 		CompileResult cr = new CompileResult(null, handlerBean.getxPath().getPath(),
 				handlerBean, this, generatedFile);
 		

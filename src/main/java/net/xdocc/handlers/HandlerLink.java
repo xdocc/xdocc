@@ -50,7 +50,7 @@ public class HandlerLink implements Handler {
 		}
 		if (founds.size() == 0
 				|| (founds.size() > 0 && !founds.get(0).isVisible())) {
-			return CompileResult.DONE;
+			return new CompileResult(null, null, handlerBean, this);
 		} else {
 			List<Document> documents = new ArrayList<>();
 
@@ -83,7 +83,7 @@ public class HandlerLink implements Handler {
 //				compileResult.addDependencies(crk, crkParent);
 				
 				// spezial CR
-				final Key<Path> crkNew = new Key<Path>(found.getPath(), found.getTargetPath().resolve(found.getTargetPath()+LINK_INCLUDE_ADDITION));
+				final Key<Path> crkNew = new Key<Path>(found.getPath(), found.getTargetPath());
 				CompileResult specialCR;
 				if(handlerBean.getSite().service().getCompileResult(crkNew) == null) {
 					// TODO: HIER neuer Target Path einbauen, aber wie???
@@ -94,7 +94,6 @@ public class HandlerLink implements Handler {
 					hbNew.setRelativePathToRoot(handlerBean.getRelativePathToRoot());
 					hbNew.setSite(compileResult.getHandlerBean().getSite());
 					XPath xNew = compileResult.getHandlerBean().getxPath();
-					xNew.setLinkCopy(true);
 					hbNew.setxPath(xNew);
 					specialCR = compileResult.getHandler().compile(hbNew, true);
 				}else {
@@ -112,7 +111,7 @@ public class HandlerLink implements Handler {
 				}
 
 				// put specialCR in cache
-				handlerBean.getSite().service().addCompileResult(found.getPath(), specialCR);
+				handlerBean.getSite().service().addCompileResult(crkNew, specialCR);
 				
 			}
 

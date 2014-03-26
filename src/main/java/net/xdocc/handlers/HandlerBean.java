@@ -10,6 +10,7 @@ import net.xdocc.XPath;
 public class HandlerBean {
 	private Site site;
 	private XPath xPath;
+	private Path targetPath;
 	private Set<Path> dirtyset;
 	private Map<String, Object> model;
 	private String relativePathToRoot;

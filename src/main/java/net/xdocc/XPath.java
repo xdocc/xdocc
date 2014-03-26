@@ -20,6 +20,7 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 import net.xdocc.handlers.Handler;
+import net.xdocc.handlers.HandlerLink;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -62,8 +63,6 @@ public class XPath implements Comparable<XPath> {
 	private Map<String, String> properties = new HashMap<>();
 
 	private boolean visible;
-
-	private boolean linkCopy;
 
 	/**
 	 * Creates a xPath object from a path. The path will be parsed and
@@ -806,11 +805,4 @@ public class XPath implements Comparable<XPath> {
 		return null;
 	}
 
-	public boolean isLinkCopy() {
-		return linkCopy;
-	}
-	
-	public void setLinkCopy(boolean linkCopy) {
-		this.linkCopy = linkCopy;
-	}
 }
