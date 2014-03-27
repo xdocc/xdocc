@@ -45,18 +45,6 @@ public class CompileResult implements Serializable {
 		this.fileInfos = fileInfos;
 		this.handlerBean = handlerBean;
 		this.handler = handler;
-		// LOG.info("created CR ");
-		// if(fileInfos != null) {
-		// for (FileInfos inf : fileInfos) {
-		// LOG.info("- fileInfo: " + inf.getTarget().toString());
-		// LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-		// + inf.getSourceTimestamp());
-		// LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-		// + inf.getTargetTimestamp());
-		// }
-		// }else {
-		// LOG.info(" CR with NULL fileinfos");
-		// }
 	}
 
 	public CompileResult(Document document, Path source,
@@ -84,14 +72,6 @@ public class CompileResult implements Serializable {
 				}
 			}
 		}
-		// LOG.info("created CR ");
-		// for (FileInfos inf : fileInfos) {
-		// LOG.info("- fileInfo: " + inf.getTarget().toString());
-		// LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-		// + inf.getSourceTimestamp());
-		// LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-		// + inf.getTargetTimestamp());
-		// }
 	}
 
 	public Document getDocument() {
@@ -185,36 +165,6 @@ public class CompileResult implements Serializable {
 		this.dependenciesUp.putAll(dependenciesUp);
 		this.dependenciesDown.putAll(dependenciesDown);
 	}
-
-	// public CompileResult copyDocument() {
-	// if (document != null) {
-	// copy(document, document.getDocuments());
-	// CompileResult tmp = new CompileResult(document.copy(), fileInfos,
-	// handlerBean,
-	// handler);
-	// tmp.addAllDependencies(dependenciesUp, dependenciesDown);
-	// return tmp;
-	// } else
-	// return this;
-	// }
-
-	// private void copy(Document documentOrig, List<Document> documents) {
-	// if (documentOrig.getCompleteDocument() != null) {
-	// documentOrig.setCompleteDocument(documentOrig.getCompleteDocument()
-	// .copy());
-	// }
-	// if (documents == null) {
-	// return;
-	// }
-	// List<Document> copies = new ArrayList<>();
-	// for (Document document : documentOrig.getDocuments()) {
-	// if (document.getDocuments() != null) {
-	// copy(document, document.getDocuments());
-	// }
-	// copies.add(document.copy());
-	// }
-	// documentOrig.setDocuments(copies);
-	// }
 
 	public HandlerBean getHandlerBean() {
 		return handlerBean;

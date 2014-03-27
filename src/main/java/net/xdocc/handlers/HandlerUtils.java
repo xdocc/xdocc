@@ -70,12 +70,12 @@ public class HandlerUtils {
 	public static Map<String, Object> fillModel(String documentName,
 			String documentURL, Date documentDate, long documentNr,
 			String documentFilename, String htmlContent, Map<String, Object> model) {
-		model.put("name", documentName);
-		model.put("url", documentURL);
-		model.put("content", htmlContent);
-		model.put("date", documentDate);
-		model.put("nr", documentNr);
-		model.put("filename", documentFilename);
+		model.put(Document.NAME, documentName);
+		model.put(Document.URL, documentURL);
+		model.put(Document.CONTENT, htmlContent);
+		model.put(Document.DATE, documentDate);
+		model.put(Document.NR, documentNr);
+		model.put(Document.FILENAME, documentFilename);
 		return model;
 	}
 
@@ -84,13 +84,13 @@ public class HandlerUtils {
 		String relativePathToRoot = Utils.relativePathToRoot(site.getSource(),
 				xPath.getPath());
 		Map<String, Object> model = new HashMap<>();
-		model.put("document", document);
+		model.put(Document.DOCUMENT, document);
 		Link current = Utils.find(xPath.getParent(), site.getNavigation());
 		List<Link> pathToRoot = Utils.linkToRoot(site.getSource(), xPath);
-		model.put("current", current);
-		model.put("breadcrumb", pathToRoot);
-		model.put("navigation", site.getNavigation());
-		model.put("path", relativePathToRoot);
+		model.put(Document.CURRENT, current);
+		model.put(Document.BREADCRUMB, pathToRoot);
+		model.put(Document.NAVIGATION, site.getNavigation());
+		model.put(Document.PATH, relativePathToRoot);
 		return model;
 	}
 	

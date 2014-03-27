@@ -28,7 +28,55 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class Document implements Comparable<Document>, Serializable {
+	
+	// model constants
+	public static final String NAME = "name";
+	public static final String URL = "url";
+	public static final String RELATIVE = "relative";
+	public static final String DATE = "date";
+	public static final String FILENAME = "filename";
+	public static final String NR = "nr";
+	public static final String HIGHLIGHT = "highlight";
+	public static final String PATH = "path";
+	public static final String FILESIZE = "filesize";
+	public static final String DEPTH = "path";
+	public static final String PAGE_URLS = "page_urls";
+	public static final String CURRENT_PAGE = "current_page";
+	public static final String CONTENT = "content";
+	public static final String TYPE = "type";
+	public static final String DOCUMENTS = "documents";
+	public static final String DOCUMENT_SIZE = "document_size";
+	public static final String LAYOUT = "layout";
+	public static final String TEMPLATE = "template";
+	public static final String HIGHLIGHT_URL = "highlightUrl";
+	public static final String LEVEL = "highlightUrl";
+	public static final String PREVIEW = "preview";
+	public static final String COMPLETE_DOCUMENT = "complete_document";
 
+	// Page (HandlerUtils.fillPage())
+	public static final String DOCUMENT = "document";
+	public static final String CURRENT = "current";
+	public static final String BREADCRUMB = "breadcrumb";
+	public static final String NAVIGATION = "navigation";
+	
+	// HandlerImage
+	public static final String GROUP = "group";
+	public static final String CSS_CLASS = "css_class";
+	public static final String IMAGE_NORMAL = "image_normal";
+	public static final String IMAGE_THUMB = "image_thumb";
+	
+	// HandlerWikiText
+	public static final String HANDLER = "handler";
+
+	// HandlerDirectory
+	public static final String PAGE_NR = "page_nr";
+	public static final String LOCAL_NAVIGATION = "local_navigation";
+
+	// Utils
+	public static final String DEBUG = "debug";
+
+	
+	
 	private static final Logger LOG = LoggerFactory.getLogger(Document.class);
 	private static final long serialVersionUID = 136066054966377823L;
 	private final DocumentGenerator documentGenerator;
@@ -36,7 +84,6 @@ public class Document implements Comparable<Document>, Serializable {
 	private final XPath source;
 	private final String url;
 
-	// private final String type;
 
 	/**
 	 * Set the document. The name will be set to xPath.getName() as default.
@@ -101,7 +148,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The name of the document. Default is xPath.getName()
 	 */
 	public String getName() {
-		return (String) documentGenerator.getModel().get("name");
+		return (String) documentGenerator.getModel().get(NAME);
 	}
 
 	/**
@@ -111,7 +158,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setName(String name) {
-		documentGenerator.getModel().put("name", name);
+		documentGenerator.getModel().put(NAME, name);
 		return this;
 	}
 
@@ -120,14 +167,14 @@ public class Document implements Comparable<Document>, Serializable {
 	 *         applyPath().
 	 */
 	public String getUrl() {
-		return (String) documentGenerator.getModel().get("url");
+		return (String) documentGenerator.getModel().get(URL);
 	}
 
 	/**
 	 * @return relative path from the link handler.
 	 */
 	public String getRelative() {
-		return (String) documentGenerator.getModel().get("relative");
+		return (String) documentGenerator.getModel().get(RELATIVE);
 	}
 
 	/**
@@ -136,7 +183,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	 public Document setRelative(String relative) {
-		 documentGenerator.getModel().put("relative", relative);
+		 documentGenerator.getModel().put(RELATIVE, relative);
 		 return this;
 	 }
 
@@ -144,7 +191,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The date of the xPath. Default is xPath.getDate()
 	 */
 	public Date getDate() {
-		return (Date) documentGenerator.getModel().get("date");
+		return (Date) documentGenerator.getModel().get(DATE);
 	}
 
 	/**
@@ -154,7 +201,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setDate(Date date) {
-		documentGenerator.getModel().put("date", date);
+		documentGenerator.getModel().put(DATE, date);
 		return this;
 	}
 
@@ -162,7 +209,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The filename of xPath. Default is xPath.getFileName()
 	 */
 	public String getFilename() {
-		return (String) documentGenerator.getModel().get("filename");
+		return (String) documentGenerator.getModel().get(FILENAME);
 	}
 
 	/**
@@ -171,7 +218,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setFilename(String filename) {
-		documentGenerator.getModel().put("filename", filename);
+		documentGenerator.getModel().put(FILENAME, filename);
 		return this;
 	}
 
@@ -179,7 +226,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The number of the document. Default is xPath.getNr().
 	 */
 	public long getNr() {
-		return (long) documentGenerator.getModel().get("nr");
+		return (long) documentGenerator.getModel().get(NR);
 	}
 
 	/**
@@ -188,7 +235,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setNr(long nr) {
-		documentGenerator.getModel().put("nr", nr);
+		documentGenerator.getModel().put(NR, nr);
 		return this;
 	}
 
@@ -197,8 +244,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 *         xPath.isHighlight()
 	 */
 	public boolean getHighlight() {
-		return BooleanUtils.isTrue((Boolean) documentGenerator.getModel().get(
-				"highlight"));
+		return BooleanUtils.isTrue((Boolean) documentGenerator.getModel().get(HIGHLIGHT));
 	}
 
 	/**
@@ -208,7 +254,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @param this class
 	 */
 	public Document setHighlight(boolean highlight) {
-		documentGenerator.getModel().put("highlight", highlight);
+		documentGenerator.getModel().put(HIGHLIGHT, highlight);
 		return this;
 	}
 
@@ -216,7 +262,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The relative path to root
 	 */
 	public String getPath() {
-		return (String) documentGenerator.getModel().get("path");
+		return (String) documentGenerator.getModel().get(PATH);
 	}
 
 	/**
@@ -225,7 +271,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setPath(String path) {
-		documentGenerator.getModel().put("path", path);
+		documentGenerator.getModel().put(PATH, path);
 		return this;
 	}
 
@@ -234,7 +280,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The depth, i.e. the number of directories back to root
 	 */
 	public Integer getDepth() {
-		return (Integer) documentGenerator.getModel().get("depth");
+		return (Integer) documentGenerator.getModel().get(DEPTH);
 	}
 
 	/**
@@ -244,7 +290,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return
 	 */
 	public Document setDepth(Integer depth) {
-		documentGenerator.getModel().put("depth", depth);
+		documentGenerator.getModel().put(DEPTH, depth);
 		return this;
 	}
 
@@ -253,7 +299,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 *         empty file.
 	 */
 	public long getSize() {
-		Long val = (Long) documentGenerator.getModel().get("filesize");
+		Long val = (Long) documentGenerator.getModel().get(FILESIZE);
 		return val == null ? 0 : val;
 	}
 
@@ -263,7 +309,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setFilesize(long filesize) {
-		documentGenerator.getModel().put("filesize", filesize);
+		documentGenerator.getModel().put(FILESIZE, filesize);
 		return this;
 	}
 
@@ -282,7 +328,7 @@ public class Document implements Comparable<Document>, Serializable {
 	public List<Document> getDocuments() {
 		@SuppressWarnings("unchecked")
 		List<Document> documents = (List<Document>) documentGenerator
-				.getModel().get("documents");
+				.getModel().get(DOCUMENTS);
 		if (documents == null) {
 			return Collections.emptyList();
 		}
@@ -295,8 +341,8 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setDocuments(List<Document> documents) {
-		documentGenerator.getModel().put("documents", documents);
-		documentGenerator.getModel().put("document_size", documents.size());
+		documentGenerator.getModel().put(DOCUMENTS, documents);
+		documentGenerator.getModel().put(DOCUMENT_SIZE, documents.size());
 		return this;
 	}
 
@@ -308,18 +354,18 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @param current
 	 */
 	public void setPaging(List<String> pageURLs, Integer current) {
-		documentGenerator.getModel().put("page_urls", pageURLs);
-		documentGenerator.getModel().put("current_page", current);
+		documentGenerator.getModel().put(PAGE_URLS, pageURLs);
+		documentGenerator.getModel().put(CURRENT_PAGE, current);
 
 	}
 	
 	@SuppressWarnings("unchecked")
 	public List<String> getPageURLs() {
-		return (List<String>) documentGenerator.getModel().get("page_urls");
+		return (List<String>) documentGenerator.getModel().get(PAGE_URLS);
 	}
 	
 	public Integer getCurrent() {
-		return (Integer) documentGenerator.getModel().get("current_page");
+		return (Integer) documentGenerator.getModel().get(CURRENT_PAGE);
 
 	}
 
@@ -327,7 +373,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The content
 	 */
 	public String getContent() {
-		return (String) documentGenerator.getModel().get("content");
+		return (String) documentGenerator.getModel().get(CONTENT);
 	}
 
 	/**
@@ -336,7 +382,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setContent(String content) {
-		documentGenerator.getModel().put("content", content);
+		documentGenerator.getModel().put(CONTENT, content);
 		return this;
 	}
 
@@ -344,7 +390,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The type
 	 */
 	public String getType() {
-		return (String) documentGenerator.getModel().get("type");
+		return (String) documentGenerator.getModel().get(TYPE);
 	}
 
 	/**
@@ -353,7 +399,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setType(String type) {
-		documentGenerator.getModel().put("type", type);
+		documentGenerator.getModel().put(TYPE, type);
 		return this;
 	}
 
@@ -361,7 +407,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The template
 	 */
 	public String getTemplate() {
-		return (String) documentGenerator.getModel().get("template");
+		return (String) documentGenerator.getModel().get(TEMPLATE);
 	}
 
 	/**
@@ -370,7 +416,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setTemplate(String template) {
-		documentGenerator.getModel().put("template", template);
+		documentGenerator.getModel().put(TEMPLATE, template);
 		return this;
 	}
 
@@ -378,7 +424,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The layout
 	 */
 	public String getLayout() {
-		return (String) documentGenerator.getModel().get("layout");
+		return (String) documentGenerator.getModel().get(LAYOUT);
 	}
 
 	/**
@@ -387,7 +433,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setLayout(String layout) {
-		documentGenerator.getModel().put("layout", layout);
+		documentGenerator.getModel().put(LAYOUT, layout);
 		return this;
 	}
 
@@ -435,7 +481,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setLevel(int level) {
-		documentGenerator.getModel().put("level", level);
+		documentGenerator.getModel().put(LEVEL, level);
 		return this;
 	}
 
@@ -443,29 +489,29 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The level of this document
 	 */
 	public int getLevel() {
-		Integer int0 = (Integer) documentGenerator.getModel().get("level");
+		Integer int0 = (Integer) documentGenerator.getModel().get(LEVEL);
 		return int0 == null ? 0 : int0;
 	}
 
 	public void setOriginalUrl(String originalUrl) {
-		paths.put("url", originalUrl);
+		paths.put(URL, originalUrl);
 	}
 
 	public void setHighlightUrl(String highlightUrl) {
-		paths.put("highlightUrl", highlightUrl);
+		paths.put(HIGHLIGHT_URL, highlightUrl);
 	}
 
 	public String getHighlightUrl() {
-		return paths.get("highlightUrl");
+		return paths.get(HIGHLIGHT_URL);
 	}
 
 	public Boolean getPreview() {
 		return BooleanUtils.isTrue((Boolean) documentGenerator.getModel().get(
-				"preview"));
+				PREVIEW));
 	}
 
 	public void setPreview(boolean preview) {
-		documentGenerator.getModel().put("preview", preview);
+		documentGenerator.getModel().put(PREVIEW, preview);
 	}
 
 	/**
@@ -557,7 +603,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return this class
 	 */
 	public Document setCompleteDocument(Document documentFull) {
-		documentGenerator.getModel().put("complete_document", documentFull);
+		documentGenerator.getModel().put(COMPLETE_DOCUMENT, documentFull);
 		return this;
 
 	}
@@ -566,7 +612,7 @@ public class Document implements Comparable<Document>, Serializable {
 	 * @return The the full document. If this is set, preview is always true.
 	 */
 	public Document getCompleteDocument() {
-		return (Document) documentGenerator.getModel().get("complete_document");
+		return (Document) documentGenerator.getModel().get(COMPLETE_DOCUMENT);
 	}
 
 }

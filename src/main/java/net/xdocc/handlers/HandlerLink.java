@@ -88,12 +88,7 @@ public class HandlerLink implements Handler {
 				compileResult.addDependencies(crk, crkNew);
 				specialCR.addDependencies(crk, crkParent);
 				
-				if (specialCR.getDocument() != null
-						&& specialCR.getHandler() != this) {
-					specialCR.getHandlerBean().getModel()
-							.put("relative", found.getTargetURLPath());
-					documents.add(specialCR.getDocument());
-				}
+				documents.add(specialCR.getDocument());
 
 				// put specialCR in cache
 				if(isCompiled) {

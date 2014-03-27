@@ -413,7 +413,7 @@ public class Utils {
 
 	public static String applyTemplate(Site site, TemplateBean templateText,
 			Map<String, Object> model) throws TemplateException, IOException {
-		model.put("debug", getDebug(model));
+		model.put(Document.DEBUG, getDebug(model));
 		StringWriter sw = new StringWriter();
 		synchronized (lock) {
 
@@ -835,16 +835,16 @@ public class Utils {
 		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
 				"page", crk);
-		modelSite.put("path", relativePathToRoot);
-		modelSite.put("document", doc);
-		modelSite.put("type", type);
-		modelSite.put("template", "page");
+		modelSite.put(Document.PATH, relativePathToRoot);
+		modelSite.put(Document.DOCUMENT, doc);
+		modelSite.put(Document.TYPE, type);
+		modelSite.put(Document.TEMPLATE, "page");
 		Link current = Utils.find(xPath.getParent(), site.getNavigation());
 		List<Link> pathToRoot = Utils.linkToRoot(site.getSource(), xPath);
-		modelSite.put("current", current);
-		modelSite.put("navigation",
+		modelSite.put(Document.CURRENT, current);
+		modelSite.put(Document.NAVIGATION,
 				Utils.setSelected(pathToRoot, site.getNavigation()));
-		modelSite.put("breadcrumb", pathToRoot);
+		modelSite.put(Document.BREADCRUMB, pathToRoot);
 
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 

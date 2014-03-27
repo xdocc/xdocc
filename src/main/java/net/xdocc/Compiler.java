@@ -132,7 +132,7 @@ public class Compiler implements Runnable {
 					siteToCompile);
 			int sizeDocuments = Utils.countVisibleDocmuntes(children);
 			Map<String, Object> model = new HashMap<>();
-			model.put("document_size", sizeDocuments);
+			model.put(Document.DOCUMENT_SIZE, sizeDocuments);
 			for (XPath child : children) {
 				site.service().compile(site, child.getPath(), model);
 			}

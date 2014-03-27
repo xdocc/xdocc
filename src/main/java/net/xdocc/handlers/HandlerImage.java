@@ -101,18 +101,18 @@ public class HandlerImage implements Handler {
 		HandlerUtils.fillModel(documentName, documentURL, documentDate,
 				documentNr, documentFilename, "", model);
 
-		model.put("group", xPath.getParent().getTargetURL());
+		model.put(Document.GROUP, xPath.getParent().getTargetURL());
 		if (attributes != null && attributes.getCssClass() != null) {
-			model.put("css_class", attributes.getCssClass());
+			model.put(Document.CSS_CLASS, attributes.getCssClass());
 		} else {
-			model.put("css_class", "image");
+			model.put(Document.CSS_CLASS, "image");
 		}
 
 		Document doc = new Document(xPath, gen, xPath.getTargetURL() + ".html",
 				"file");
-		doc.addPath("image_normal",
+		doc.addPath(Document.IMAGE_NORMAL,
 				xPath.getTargetURL() + "_n" + xPath.getExtensions());
-		doc.addPath("image_thumb",
+		doc.addPath(Document.IMAGE_THUMB,
 				xPath.getTargetURL() + "_t" + xPath.getExtensions());
 		doc.applyPath1(relativePathToRoot);
 		// TODO:enable
@@ -122,7 +122,7 @@ public class HandlerImage implements Handler {
 		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
 				"page", crk);
 		Map<String, Object> modelSite = HandlerUtils.fillPage(site, xPath, doc);
-		modelSite.put("type", "file");
+		modelSite.put(Document.TYPE, "file");
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 		// write to disk
 		Path generatedFile2 = xPath.getTargetPath(xPath.getTargetURL()

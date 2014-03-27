@@ -89,7 +89,7 @@ public class HandlerWikiText implements Handler {
 				handlerBean.getxPath().getLayoutSuffix(), "page", crk);
 		Map<String, Object> model = HandlerUtils.fillPage(
 				handlerBean.getSite(), handlerBean.getxPath(), doc);
-		model.put("type", "document");
+		model.put(Document.TYPE, "document");
 
 		String htmlSite = Utils.applyTemplate(handlerBean.getSite(),
 				templateSite, model);
@@ -218,7 +218,9 @@ public class HandlerWikiText implements Handler {
 		protected void emitAnchorHref(String href) {
 			if(!href.startsWith("http")) {
 				href = href.replace("../", "");
-				writer.writeAttribute("href", makeUrlAbsolute(handlerBean.getRelativePathToRoot() + href)); //$NON-NLS-1$
+				String value =  makeUrlAbsolute(handlerBean.getRelativePathToRoot() + href);
+//				LOG.info("rPath: "+handlerBean.getRelativePathToRoot()+" href: "+href+" --- WRITING URL: "+value);
+				writer.writeAttribute("href", value); //$NON-NLS-1$
 			} else {
 				super.emitAnchorHref(href);
 			}
@@ -291,8 +293,8 @@ public class HandlerWikiText implements Handler {
 					site, dirtyset, xPath, handlerBean, writeToDisk);
 
 			try {
-				if (getModel().containsKey("relative")) {
-					String rel = (String) getModel().get("relative");
+				if (getModel().containsKey(Document.RELATIVE)) {
+					String rel = (String) getModel().get(Document.RELATIVE);
 					builder.setBase(new URI(rel));
 				}
 			} catch (URISyntaxException e) {
@@ -339,8 +341,8 @@ public class HandlerWikiText implements Handler {
 			String rawFileContent = FileUtils.readFileToString(xPath.getPath()
 					.toFile(), charset);
 			parser.parse(rawFileContent);
-			getModel().put("handler", type);
-			getModel().put("content", writer.toString());
+			getModel().put(Document.HANDLER, type);
+			getModel().put(Document.CONTENT, writer.toString());
 		}
 
 		@Override

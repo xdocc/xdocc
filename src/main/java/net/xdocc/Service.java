@@ -445,9 +445,9 @@ public class Service {
 	}
 
 	public void addCompileResult(Key<Path> key, CompileResult result) {
-		LOG.info("");
+//		LOG.info("");
 		synchronized (compileResult) {
-			LOG.info("adding CR " + key);
+//			LOG.info("adding CR " + key);
 			compileResult.put(key, result);
 		}
 		if (result.getFileInfos() != null) {
@@ -472,8 +472,8 @@ public class Service {
 
 	public void addToCache(Key<Path> key, Set<FileInfos> infos) {
 		synchronized (cache) {
-			LOG.info("adding CACHE: " + key + " size FileInfos: "
-					+ infos.size());
+//			LOG.info("adding CACHE: " + key + " size FileInfos: "
+//					+ infos.size());
 			cache.put(key.toString(), infos);
 		}
 	}

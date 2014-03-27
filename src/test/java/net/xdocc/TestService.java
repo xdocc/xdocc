@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import junit.framework.Assert;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -61,7 +63,8 @@ public class TestService {
 	@Test
 	public void test() throws InterruptedException {
 		Service.main(args);
-		Thread.sleep(2000);
+		Thread.sleep(5000);
+		Assert.assertTrue(Files.exists(Paths.get(props.getProperty("generated")+"/index.html")));
 	}
 	
 	@AfterClass

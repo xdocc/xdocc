@@ -104,18 +104,18 @@ public class HandlerDirectory implements Handler {
 								"index_" + counter + ".html"));
 			}
 			Map<String, Object> model = new HashMap<>();
-			model.put("page_nr", list.size());
-			model.put("page_urls", pageURLs);
-			model.put("current_page", counter);
-			model.put("document_size", documents.size());
-			model.put("url", url);
+			model.put(Document.PAGE_NR, list.size());
+			model.put(Document.PAGE_URLS, pageURLs);
+			model.put(Document.CURRENT_PAGE, counter);
+			model.put(Document.DOCUMENT_SIZE, documents.size());
+			model.put(Document.URL, url);
 			if (!handlerBean.getxPath().isRoot()) {
 				Link current = handlerBean
 						.getSite()
 						.service()
 						.readNavigation(handlerBean.getSite(),
 								handlerBean.getxPath());
-				model.put("local_navigation", current);
+				model.put(Document.LOCAL_NAVIGATION, current);
 			}
 			if (writeToDisk && !handlerBean.getxPath().isPreview()) {
 				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(),
@@ -166,35 +166,7 @@ public class HandlerDirectory implements Handler {
 		return retVal;
 	}
 
-	/*
-	 * private void apply(List<Document> documents, String key, Object value) {
-	 * apply(documents, "parent.", key, value ); }
-	 * 
-	 * private void apply(List<Document> documents, String prefix, String key,
-	 * Object value) { for (Document document : documents) { Map<String, Object>
-	 * model = document.getDocumentGenerator().getModel(); model.put(prefix +
-	 * key, value); Object obj = document.getDocumentGenerator().getModel()
-	 * .get("documents"); if (obj != null && obj instanceof List) {
-	 * 
-	 * @SuppressWarnings("unchecked") List<Document> documents2 =
-	 * (List<Document>) obj; apply(documents2, prefix + "parent." , key, value);
-	 * } }
-	 * 
-	 * }
-	 */
-
-	// private void applyPath(List<Document> documents, String path) {
-	/*
-	 * for (Document document : documents) {
-	 * 
-	 * if (document.getHighlight()) {
-	 * document.setOriginalUrl(document.getHighlightUrl()); }
-	 * document.applyPath(path); List<Document> documents2 =
-	 * document.getDocuments(); if (documents2 != null) { applyPath(documents2,
-	 * path); } }
-	 */
-	// }
-
+	
 	private List<Document> recursiveHandler(Site site, XPath xPath)
 			throws IOException, InterruptedException {
 		final List<XPath> children = Utils.getNonHiddenChildren(site,
