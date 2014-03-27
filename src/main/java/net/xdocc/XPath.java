@@ -412,14 +412,6 @@ public class XPath implements Comparable<XPath> {
 		return path.getFileName().toString();
 	}
 
-	/**
-	 * @return The path of file in the web folder for files that have been
-	 *         copied
-	 */
-	public Path getTargetPath() {
-		Path relative = site.getSource().relativize(path);
-		return site.getGenerated().resolve(relative);
-	}
 
 	public String getTargetURLFilename() {
 		String[] paths = Utils.createURLSplit(site.getSource(), this);

@@ -60,7 +60,7 @@ public class TestBrowse {
 		if(Files.exists(Paths.get("/tmp/testcache.mapdb.t"))) {
 			new File("/tmp/testcache.mapdb.t").delete();
 		}
-//		FileUtils.deleteDirectory(new File(genString));
+		FileUtils.deleteDirectory(new File(genString));
 	}
 
 	@Test

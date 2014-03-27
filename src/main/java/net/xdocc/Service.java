@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,7 +27,6 @@ import net.xdocc.filenotify.FileListener;
 import net.xdocc.filenotify.WatchService;
 import net.xdocc.handlers.Handler;
 import net.xdocc.handlers.HandlerCopy;
-import net.xdocc.handlers.HandlerLink;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -63,7 +61,6 @@ public class Service {
 	private final Map<Key<Path>, CompileResult> compileResult = Collections
 			.synchronizedMap(new HashMap<Key<Path>, CompileResult>());
 
-	// target path as key !!! handlerBean.getTargetPath().toString()
 	private static Map<String, Set<FileInfos>> cache;
 
 	private static Map<Site, Map<String, TemplateBean>> cacheTemplates;
@@ -138,7 +135,8 @@ public class Service {
 				for (Site site : sites) {
 					try {
 						compile(site);
-						Key<Path> crk = new Key<Path>(site.getSource(), site.getSource());
+						Key<Path> crk = new Key<Path>(site.getSource(), site
+								.getSource());
 						waitFor(crk);
 						LOG.info("compiling done: " + site);
 						db.commit();
@@ -409,8 +407,8 @@ public class Service {
 					long targetSize = Files.size(info.getTarget().toPath());
 					long targetTimestamp = Files.getLastModifiedTime(
 							info.getTarget().toPath()).toMillis();
-					long sourceTimestamp = Files.getLastModifiedTime(key.getSource())
-							.toMillis();
+					long sourceTimestamp = Files.getLastModifiedTime(
+							key.getSource()).toMillis();
 					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp,
 							sourceSize);
 					boolean isTargetDirty = info.isTargetDirty(info.getTarget()
@@ -421,8 +419,8 @@ public class Service {
 					// no need to check target, since it will be modified
 					// when a file changes inside
 
-					long sourceTimestamp = Files.getLastModifiedTime(key.getSource())
-							.toMillis();
+					long sourceTimestamp = Files.getLastModifiedTime(
+							key.getSource()).toMillis();
 					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp);
 					return !isSourceDirty;
 				} else {
@@ -434,7 +432,7 @@ public class Service {
 				return false;
 			}
 		}
-		if(!key.getSource().toString().equals(key.getTarget())) {
+		if (!key.getSource().toString().equals(key.getTarget())) {
 			return true;
 		}
 		return false;
@@ -494,7 +492,7 @@ public class Service {
 	}
 
 	public synchronized Map<String, TemplateBean> getTemplateBeans(Site site) {
-		if(cacheTemplates == null) {
+		if (cacheTemplates == null) {
 			return null;
 		}
 		return cacheTemplates.get(site);
@@ -502,7 +500,7 @@ public class Service {
 
 	public synchronized void addTemplateBeans(Site site,
 			Map<String, TemplateBean> templates) {
-		if(cacheTemplates!=null) {
+		if (cacheTemplates != null) {
 			cacheTemplates.put(site, templates);
 		}
 	}
@@ -543,9 +541,9 @@ public class Service {
 				if (!isCached(site, key) || dependencies.contains(key)) {
 					dependencies.add(key);
 					Set<Key<Path>> deps = cr.findDependencies(key);
-					if(deps.size() > 0)
-						LOG.info("dependencies for "+key+" :");
-					for(Key<Path> kk : deps) {
+					if (deps.size() > 0)
+						LOG.info("dependencies for " + key + " :");
+					for (Key<Path> kk : deps) {
 						LOG.info(kk.toString());
 					}
 					dependencies.addAll(deps);

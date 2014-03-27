@@ -26,9 +26,6 @@ public class WatchService {
 
 	public static void startWatch(List<Site> sites) {
 		try {
-			// we create a thread because we don't want to notify every time a
-			// file
-			// changes - e.g. copy multiple files
 			executorServiceNotifier.execute(notifier);
 			watcher = new Watcher(sites, notifier);
 			executorServiceWatcher.execute(watcher);
