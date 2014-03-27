@@ -79,6 +79,7 @@ public class HandlerLink implements Handler {
 					hbNew.setSite(compileResult.getHandlerBean().getSite());
 					XPath xNew = compileResult.getHandlerBean().getxPath();
 					hbNew.setxPath(xNew);
+					hbNew.setForceCompile(true);
 					specialCR = compileResult.getHandler().compile(hbNew, false);
 					isCompiled = true;
 				}else {

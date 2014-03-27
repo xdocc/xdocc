@@ -10,10 +10,11 @@ import net.xdocc.XPath;
 public class HandlerBean {
 	private Site site;
 	private XPath xPath;
-	private Path targetPath;
 	private Set<Path> dirtyset;
 	private Map<String, Object> model;
 	private String relativePathToRoot;
+	private boolean forceCompile;
+	
 	public Site getSite() {
 		return site;
 	}
@@ -43,5 +44,11 @@ public class HandlerBean {
 	}
 	public void setRelativePathToRoot(String relativePathToRoot) {
 		this.relativePathToRoot = relativePathToRoot;
+	}
+	public boolean isForceCompile() {
+		return forceCompile;
+	}
+	public void setForceCompile(boolean forceCompile) {
+		this.forceCompile = forceCompile;
 	}
 }

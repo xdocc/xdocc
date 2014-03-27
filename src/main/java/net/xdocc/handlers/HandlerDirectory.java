@@ -50,7 +50,7 @@ public class HandlerDirectory implements Handler {
 			throws Exception {
 		//
 		List<Document> documents = recursiveHandler(handlerBean.getSite(),
-				handlerBean.getxPath());
+				handlerBean.getxPath(), handlerBean);
 		// Utils.adjustUrls(xPath, documents, path);
 
 		String url = handlerBean.getxPath().getTargetURL();
@@ -167,8 +167,8 @@ public class HandlerDirectory implements Handler {
 	}
 
 	
-	private List<Document> recursiveHandler(Site site, XPath xPath)
-			throws IOException, InterruptedException {
+	private List<Document> recursiveHandler(Site site, XPath xPath, HandlerBean fromHandler)
+			throws Exception {
 		final List<XPath> children = Utils.getNonHiddenChildren(site,
 				xPath.getPath());
 		final List<CompileResult> aggregate = new ArrayList<>();
@@ -182,18 +182,62 @@ public class HandlerDirectory implements Handler {
 		}
 		Utils.sort2(children, ascending);
 		for (XPath xPathChild : children) {
-			Key<Path> crk = new Key<Path>(xPathChild.getPath(), xPathChild.getPath());
-			site.service().waitFor(crk);
-			CompileResult result = site.service().getCompileResult(crk);
-			result.addDependencies(crk, crkParent);
-			boolean pre = xPathChild.isPreview();
-			//TODO: full is default, no need for isFull
-			boolean full = xPathChild.isFull() && !pre;
-			boolean nav = xPathChild.isNavigation() && !pre && !full ;
-			boolean none = xPathChild.isNone() && !pre && !full && !nav;
-
-			if (!nav && !none) {
-				aggregate.add(result);
+			// 1. check if is directory
+			// -> no: no recompiling needed
+			if (!xPathChild.isDirectory() && !fromHandler.isForceCompile()) {
+				
+				Key<Path> crk = new Key<Path>(xPathChild.getPath(), xPathChild.getPath());
+				site.service().waitFor(crk);
+				CompileResult result = site.service().getCompileResult(crk);
+				result.addDependencies(crk, crkParent);
+				boolean pre = xPathChild.isPreview();
+				//TODO: full is default, no need for isFull
+				boolean full = xPathChild.isFull() && !pre;
+				boolean nav = xPathChild.isNavigation() && !pre && !full ;
+				boolean none = xPathChild.isNone() && !pre && !full && !nav;
+				
+				if (!nav && !none) {
+					aggregate.add(result);
+				}
+			// --> yes: recompile with relPathToRoot from fromHandler
+			}else {
+				Key<Path> crk = new Key<Path>(xPathChild.getPath(), xPathChild.getPath());
+				Key<Path> crkNew = new Key<Path>(xPathChild.getPath(), fromHandler.getxPath().getPath());
+				CompileResult crNew;
+				// get old result first (regular cr)
+				site.service().waitFor(crk);
+				CompileResult compileResult = site.service().getCompileResult(crk);
+				if(site.service().getCompileResult(crkNew) == null) {
+					// copy handler and set new relPathToRoot
+					HandlerBean hbNew = new HandlerBean();
+					hbNew.setDirtyset(compileResult.getHandlerBean().getDirtyset());
+					hbNew.setModel(compileResult.getHandlerBean().getModel());
+					hbNew.setRelativePathToRoot(fromHandler.getRelativePathToRoot());
+					hbNew.setSite(compileResult.getHandlerBean().getSite());
+					XPath xNew = compileResult.getHandlerBean().getxPath();
+					hbNew.setxPath(xNew);
+					hbNew.setForceCompile(true);
+					// no need to write, only compile
+					crNew = compileResult.getHandler().compile(hbNew, false);
+					// add new cr
+					site.service().addCompileResult(crkNew, crNew);
+				}else {
+					// crNew already compiled
+					crNew = site.service().getCompileResult(crkNew);
+				}
+				// adding dependencies
+				compileResult.addDependencies(crk, crkNew);
+				crNew.addDependencies(crk, crkParent);
+				
+				boolean pre = xPathChild.isPreview();
+				//TODO: full is default, no need for isFull
+				boolean full = xPathChild.isFull() && !pre;
+				boolean nav = xPathChild.isNavigation() && !pre && !full ;
+				boolean none = xPathChild.isNone() && !pre && !full && !nav;
+				
+				if (!nav && !none) {
+					aggregate.add(crNew);
+				}
 			}
 		}
 
