@@ -21,24 +21,30 @@ public class TestNotify {
 	private static Site site;
 	private static final List<Site> sites = new ArrayList<Site>();
 	private static FileNotifier fileNotifier;
+	
+	private static Service service; 
 
 	@BeforeClass
 	public static void setup() throws Exception {
+		try{
 		Path dir = Files.createTempDirectory("xdocc");
 		Path source = Files.createTempDirectory(dir, "source");
 		Files.createDirectories(source.resolve(".templates"));
 		Path generated = Files.createTempDirectory(dir, "generated");
-		Service service = new Service();
+		service = new Service();
 		site = new Site(service, source, generated, null, null);
 		sites.add(site);
-		WatchService.startWatch(sites);
-		fileNotifier = WatchService.getFileNotifier();
+		service.startWatch(sites);
+		fileNotifier = service.getFileNotifier();
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
 	}
 
 	@AfterClass
 	public static void shutdown() throws IOException {
 		sites.clear();
-		WatchService.shutdown();
+		service.shutdown();
 		Utils.deleteDirectory(site.getSource());
 		Utils.deleteDirectory(site.getGenerated());
 	}

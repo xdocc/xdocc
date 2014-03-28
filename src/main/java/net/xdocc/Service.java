@@ -24,6 +24,7 @@ import java.util.logging.LogManager;
 import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.filenotify.FileListener;
+import net.xdocc.filenotify.FileNotifier;
 import net.xdocc.filenotify.WatchService;
 import net.xdocc.handlers.Handler;
 import net.xdocc.handlers.HandlerCopy;
@@ -60,6 +61,8 @@ public class Service {
 
 	private final Map<Key<Path>, CompileResult> compileResult = Collections
 			.synchronizedMap(new HashMap<Key<Path>, CompileResult>());
+	
+	private final WatchService watchService = new WatchService();
 
 	private static Map<String, Set<FileInfos>> cache;
 
@@ -105,7 +108,7 @@ public class Service {
 		try {
 			List<Site> sites = service.init(args);
 			if (sites != null && fileChangeListener) {
-				WatchService.startWatch(sites);
+				service.startWatch(sites);
 				service.compileIfFileChanged();
 			}
 			LOG.info("service ready!");
@@ -114,6 +117,15 @@ public class Service {
 			e.printStackTrace();
 		}
 	}
+
+	public void startWatch(List<Site> sites) {
+	    watchService.startWatch(sites);
+	    
+    }
+	
+	public FileNotifier getFileNotifier() {
+	    return watchService.getFileNotifier();
+    }
 
 	private void addShutdownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -124,7 +136,7 @@ public class Service {
 	}
 
 	public void compileIfFileChanged() {
-		WatchService.getFileNotifier().addListener(new FileListener() {
+		watchService.getFileNotifier().addListener(new FileListener() {
 			@Override
 			public void filesChanged(List<XPath> changedSet,
 					List<XPath> createdSet, List<XPath> deletedSet) {
@@ -558,8 +570,8 @@ public class Service {
 		}
 	}
 
-	void shutdown() {
-		WatchService.shutdown();
+	public void shutdown() {
+		watchService.shutdown();
 		executorServiceCompiler.shutdown();
 	}
 
@@ -603,4 +615,6 @@ public class Service {
 			}
 		}
 	}
+
+	
 }

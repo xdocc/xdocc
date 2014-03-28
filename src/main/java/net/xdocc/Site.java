@@ -336,6 +336,11 @@ public class Site {
 		Site site = (Site) obj;
 		return source.equals(site.source) && generated.equals(site.generated);
 	}
+	
+	@Override
+	public int hashCode() {
+	    return source.hashCode() ^ generated.hashCode();
+	}
 
 	@Override
 	public String toString() {
