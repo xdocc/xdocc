@@ -70,6 +70,7 @@ public class TestLinkUrl2 {
 		String s = FileUtils.readFileToString(p.toFile());
 		Assert.assertTrue(s.contains("Test 6"));
 		Assert.assertTrue(s.contains("\"download/read.me2\""));
+		Assert.assertTrue(s.contains("\"news/morenews/tomp2p_android.png\""));
 		//
 		p = site.getGenerated().resolve("mylink.html");
 		s = FileUtils.readFileToString(p.toFile());

@@ -119,11 +119,7 @@ public class Site {
 						+ " not found, there should be a file called "
 						+ (source + "/" + name + ".ftl" + " / " + (name
 								+ ".ftl" + suffix)));
-			} else {
-				name = name + ".ftl";
 			}
-		} else {
-			name = name + suffix + ".ftl";
 		}
 
 		if (templateBean.isDirty()) {
@@ -354,4 +350,5 @@ public class Site {
 	public Service service() {
 		return service;
 	}
+	
 }
