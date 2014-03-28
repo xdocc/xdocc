@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
  
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+  	<file>/var/log/xdocc/xdocc.log</file>
+    <append>true</append>
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
   
-  <logger name="net.xdocc" level="INFO"/>
+  <logger name="net.xdocc" level="WARN"/>
   
   <!-- default is OFF, options are: TRACE, DEBUG, INFO, WARN, ERROR, OFF. 
        See http://logback.qos.ch/manual/architecture.html for more information-->
-  <root level="DEBUG">
-    <appender-ref ref="STDOUT" />
+  <root level="WARN">
+    <appender-ref ref="FILE" />
   </root>
 </configuration>

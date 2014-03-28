@@ -227,6 +227,7 @@ public class HandlerDirectory implements Handler {
 				}
 				// adding dependencies
 				compileResult.addDependencies(crk, crkNew);
+				compileResult.addDependencies(crk, crkParent);
 				crNew.addDependencies(crk, crkParent);
 				
 				boolean pre = xPathChild.isPreview();

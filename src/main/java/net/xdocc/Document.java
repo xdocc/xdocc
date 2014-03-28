@@ -39,7 +39,7 @@ public class Document implements Comparable<Document>, Serializable {
 	public static final String HIGHLIGHT = "highlight";
 	public static final String PATH = "path";
 	public static final String FILESIZE = "filesize";
-	public static final String DEPTH = "path";
+	public static final String DEPTH = "depth";
 	public static final String PAGE_URLS = "page_urls";
 	public static final String CURRENT_PAGE = "current_page";
 	public static final String CONTENT = "content";

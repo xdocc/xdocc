@@ -323,6 +323,11 @@ public class Site {
 		}
 		return link;
 	}
+	
+	public Site clearNavigation() {
+		link = null;
+		return this;
+	}
 
 	public String getProperty(String key) {
 		return properties.getProperty(key);

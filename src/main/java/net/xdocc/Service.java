@@ -568,6 +568,7 @@ public class Service {
 			LOG.debug("removing key from CR " + dependency);
 			removeCompileResult(dependency);
 		}
+		site.clearNavigation();
 	}
 
 	public void shutdown() {

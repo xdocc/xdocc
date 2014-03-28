@@ -1,10 +1,14 @@
 #!/bin/sh
 # preinst script for xdocc
 
+if [ -f /etc/init.d/xdocc ]; then
+  /etc/init.d/xdocc stop
+fi
+
 mkdir -p /var/log/xdocc
 mkdir -p /var/lib/xdocc
 mkdir -p /var/www/example-xdocc
 
-if [ -f /etc/init.d/xdocc ]; then
-  /etc/init.d/xdocc stop
-fi
+rm /tmp/cache
+rm /tmp/cache.p
+rm /tmp/cache.t
