@@ -9,6 +9,4 @@ mkdir -p /var/log/xdocc
 mkdir -p /var/lib/xdocc
 mkdir -p /var/www/example-xdocc
 
-rm /tmp/cache
-rm /tmp/cache.p
-rm /tmp/cache.t
+rm -f /var/lib/xdocc/xdocc.mapdb*
