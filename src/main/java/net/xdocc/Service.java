@@ -179,7 +179,7 @@ public class Service {
 	private List<Site> initCompile() throws FileNotFoundException, IOException,
 			InterruptedException {
 		// now we read the config files for each site
-		List<Handler> handlers = findHandlers();
+		List<Handler> handlers = Utils.findHandlers();
 		List<Site> sites = createSites(handlers);
 
 		if (LOG.isDebugEnabled()) {
