@@ -138,9 +138,9 @@ public class Utils {
 
     public static String[] createURLSplit(Path source, XPath xPath) {
         List<String> paths = new ArrayList<>();
-        while (!source.equals(xPath.getPath())) {
+        while (!source.equals(xPath.path())) {
             paths.add(0, xPath.url());
-            xPath = new XPath(xPath.getSite(), xPath.getPath().getParent());
+            xPath = new XPath(xPath.site(), xPath.path().getParent());
         }
         return paths.toArray(new String[0]);
     }
@@ -347,8 +347,8 @@ public class Utils {
 
         Path alreadyGeneratedSource = created.get(generatedFile);
         if (alreadyGeneratedSource == null) {
-            created.put(generatedFile, xPath.getPath());
-        } else if (alreadyGeneratedSource.equals(xPath.getPath())) {
+            created.put(generatedFile, xPath.path());
+        } else if (alreadyGeneratedSource.equals(xPath.path())) {
             throw new IOException("create " + generatedFile
                     + ", but it was already created by "
                     + alreadyGeneratedSource + ". Anyway we will overwrite");
@@ -497,7 +497,7 @@ public class Utils {
         if (xPath == null) {
             return navigation;
         }
-        if (navigation.getTarget().getPath().equals(xPath.getPath())) {
+        if (navigation.getTarget().path().equals(xPath.path())) {
             return navigation;
         }
         for (Link link : navigation.getChildren()) {
@@ -510,7 +510,7 @@ public class Utils {
     }
 
     public static Link findRec(XPath xPath, Link navigation) {
-        if (navigation.getTarget().getPath().equals(xPath.getPath())) {
+        if (navigation.getTarget().path().equals(xPath.path())) {
             return navigation;
         }
         for (Link link : navigation.getChildren()) {
@@ -575,7 +575,7 @@ public class Utils {
     public static List<XPath> findChildURL(Site site, XPath current,
             String url, String extension) throws IOException {
         List<XPath> children = Utils.getNonHiddenChildren(site,
-                current.getPath());
+                current.path());
         List<XPath> result = new ArrayList<>();
         for (XPath child : children) {
             if (wildCardMatch(child.url(), url)) {
@@ -692,9 +692,9 @@ public class Utils {
             return Collections.emptyList();
         }
         List<XPath> xPaths = new ArrayList<>();
-        while (!root.equals(xPath.getPath())) {
+        while (!root.equals(xPath.path())) {
             xPaths.add(0, xPath);
-            xPath = new XPath(xPath.getSite(), xPath.getPath().getParent());
+            xPath = new XPath(xPath.site(), xPath.path().getParent());
         }
 
         List<Link> retVal = new ArrayList<>();
@@ -751,7 +751,7 @@ public class Utils {
      */
     public static boolean guessAutoSort(List<XPath> children) {
         for (XPath xpath : children) {
-            if (xpath.getNr() > 1000) {
+            if (xpath.nr() > 1000) {
                 return false;
             }
         }

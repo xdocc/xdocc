@@ -25,18 +25,16 @@ import java.util.logging.LogManager;
 
 import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
-import net.xdocc.filenotify.FileListener;
-import net.xdocc.filenotify.RecursiveWatcherService;
 import net.xdocc.handlers.Handler;
 import net.xdocc.handlers.HandlerCopy;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.OptionHandlerFilter;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.reflections.Reflections;
@@ -44,13 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Service {
-	private static final String CONFIG_FOLDER = "/etc/xdocc";
-
-	private static final String PROPERTY_SOURCE = "source";
-
-	private static final String PROPERTY_GENERATED = "generated";
-
-	private static final Options options = new Options();
 
 	private static final Logger LOG = LoggerFactory.getLogger(Service.class);
 
@@ -76,57 +67,62 @@ public class Service {
 
 	private static boolean fileChangeListener = true;
 
-	private static boolean clearCache = false;
 
 	private static int compilerCounter = 0;
         
         private final List<RecursiveWatcherService> watchServices = new ArrayList<>();
+        
+        @Option(name="watch", required = true, usage="set the directory to watch and recompile on the fly.")
+        private String watchDirectory = ".";
+        
+        @Option(name="output", required = true, usage="set the directory to store generated files.")
+        private String outputDirectory = "/tmp";
+        
+        @Option(name="-c",usage="set the directory to store the cached data")
+        private String cacheDirectory = "/tmp";
+        
+        @Option(name="-r", usage="run only once")
+        private boolean runOnce = false;
+        
+        @Option(name="-x", usage="clear the cache at startup")
+        private boolean clearCache = false;
+        
 
-	static {
-		options.addOption("c", "config", true,
-				"the folder that contains the configuration for the sites");
-		options.addOption("r", "run-once", false,
-				"runs only once and exits. If omited, application runs as a service");
-		options.addOption("f", "file-change-listener", false,
-				"run the file-change-listener to recompile if files changed");
-		options.addOption("s", "cache", true,
-				"set the path to persist the cached data");
-		options.addOption("x", "clear-cache", false, "clear cache at startup");
-		// read config file from project if run in eclipse, otherwise use
-		// directory
-		try {
-			InputStream is = Service.class.getResourceAsStream("/logback.xml");
-			if (is == null)
-				is = new FileInputStream(CONFIG_FOLDER + "/logback.xml");
-			LogManager.getLogManager().readConfiguration(is);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+	public static void main(String[] args) throws IOException, CmdLineException {
+            final Service service = new Service();
+            service.addShutdownHook();
+            service.doMain(args);
 	}
+        
+        public void doMain(String[] args) throws IOException, CmdLineException {
+            CmdLineParser parser = new CmdLineParser(this);
+            
+            try {
+                parser.parseArgument(args);
 
-	public static void main(String[] args) {
-		final Service service = new Service();
-		service.addShutdownHook();
-		try {
-			List<Site> sites = service.init(args);
-			if (sites != null && fileChangeListener) {
-                            FileListener fileListener = (Site site) -> {
-                                try {
-                                    service.compile(site);
-                                } catch (IOException ex) {
-                                   LOG.error("cannot compile sites ", ex);
-                                }
-                            };
-                            for(Site site:sites) {
-				service.startWatch(site, fileListener);
-                            }
-			}
-			LOG.info("service ready!");
-		} catch (IOException e) {
-			LOG.error("cannot compile sites ", e);
-			e.printStackTrace();
-		}
-	}
+            } catch( CmdLineException e ) {
+                System.err.println(e.getMessage());
+                System.err.println("java SampleMain [options...] arguments...");
+                // print the list of available options
+                parser.printUsage(System.err);
+                System.err.println();
+                // print option sample. This is useful some time
+                System.err.println("  Example: java SampleMain"+parser.printExample(OptionHandlerFilter.ALL));
+                shutdown();
+                return;
+            }
+            
+            if(!runOnce) {
+                Site site = new Site(this, Paths.get(watchDirectory), Paths.get(outputDirectory));
+                startWatch(site, new FileListener() {
+                    @Override
+                    public void filesChanged(Site site) {
+                        System.out.println("file changed");
+                    }
+                });
+            }
+            //compile   
+        }
         
         private void addShutdownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -140,31 +136,21 @@ public class Service {
 	    RecursiveWatcherService recursiveWatcherService = new RecursiveWatcherService(site, listener);
             watchServices.add(recursiveWatcherService);
         }
-	
-
-
-	
-
-	
-
-	private List<Site> init(String[] args) throws FileNotFoundException,
-			IOException {
-		LOG.info("Starting XDocC");
-
-		try {
-			initConfig(args);
-			setupCache(cacheDir);
-			LOG.info("configuration directory set to " + configDir);
-			return initCompile();
-		} catch (ParseException | IOException | InterruptedException e) {
-			LOG.error("cannot start xdocc ", e);
-			if (LOG.isDebugEnabled()) {
-				e.printStackTrace();
-			}
-			shutdown();
-			return null;
-		}
+        
+        public void shutdown() {
+		for(RecursiveWatcherService recursiveWatcherService:watchServices) {
+                    recursiveWatcherService.shutdown();
+                }
+		executorServiceCompiler.shutdown();
 	}
+	
+
+
+	
+
+	
+
+	
 
 	void setupCache(File cacheDir) {
 		db = DBMaker.newFileDB(cacheDir).closeOnJvmShutdown().make();
@@ -176,7 +162,7 @@ public class Service {
 		}
 	}
 
-	private List<Site> initCompile() throws FileNotFoundException, IOException,
+	/*private List<Site> initCompile() throws FileNotFoundException, IOException,
 			InterruptedException {
 		// now we read the config files for each site
 		List<Handler> handlers = Utils.findHandlers();
@@ -197,45 +183,11 @@ public class Service {
 		}
 
 		return sites;
-	}
+	}*/
 
-	private void initConfig(String[] args) throws ParseException, IOException {
-		CommandLineParser parser = new PosixParser();
-		CommandLine cmd = parser.parse(options, args);
-		String file = cmd.getOptionValue("c");
-		if (file == null) {
-			throw new IOException("Could not find config file");
-		}
-		fileChangeListener = cmd.hasOption("f");
-		clearCache = cmd.hasOption("x");
-		configDir = new File(file);
-		String tmpCacheDir = cmd.getOptionValue("s");
-		if (tmpCacheDir == null) {
-			throw new IOException("No cache dir specified with -s");
-		}
-		cacheDir = new File(tmpCacheDir);
-	}
+	
 
-	private List<Site> createSites(List<Handler> handlers)
-			throws FileNotFoundException, IOException {
-		File[] configFiles = configDir.listFiles();
-		List<Site> sites = new ArrayList<Site>();
-		for (File configFile : configFiles) {
-			try {
-				Site site = readSite(configFile, handlers);
-				if (!"true".equalsIgnoreCase(StringUtils.trim(site
-						.getProperty("enabled")))) {
-					continue;
-				}
-				sites.add(site);
-				Link link = readNavigation(site);
-				site.navigation(link);
-			} catch (Throwable t) {
-				LOG.error(t.getMessage());
-			}
-		}
-		return sites;
-	}
+	
 
 	/**
 	 * Initial call
@@ -309,7 +261,7 @@ public class Service {
 	public Link readNavigation(Site site, XPath source) throws IOException {
 		Link root = new Link(source, null);
 		List<XPath> children = Utils.getNonHiddenChildren(site,
-				source.getPath());
+				source.path());
 		final boolean ascending;
 		if (source.isAutoSort()) {
 			ascending = Utils.guessAutoSort(children);
@@ -321,7 +273,7 @@ public class Service {
 			if (xPath.isNavigation()) {
 				Link link = new Link(xPath, root);
 				root.addChildren(link);
-				readNavigationRec(site, link, xPath.getPath());
+				readNavigationRec(site, link, xPath.path());
 			}
 		}
 		return root;
@@ -342,39 +294,14 @@ public class Service {
 			if (xPath.isNavigation()) {
 				Link link = new Link(xPath, parent);
 				parent.addChildren(link);
-				readNavigationRec(site, link, xPath.getPath());
+				readNavigationRec(site, link, xPath.path());
 			}
 		}
 	}
 
 	
 
-	private Site readSite(File configFile, List<Handler> handlers)
-			throws Exception {
-		Properties properties = new Properties();
-		try (FileReader fr = new FileReader(configFile)) {
-			properties.load(fr);
-			if (properties.getProperty(PROPERTY_SOURCE) == null) {
-                            throw new Exception("bad config file: " + PROPERTY_SOURCE 
-                                    + "need to be specified in: " + configFile.getPath().toString());
-			}
-                        if (properties.getProperty(PROPERTY_GENERATED) == null) {
-                            throw new Exception("bad config file: " + PROPERTY_GENERATED 
-                                    + "need to be specified in: " + configFile.getPath().toString());
-			}
-                        Path source = Paths.get(properties.getProperty(PROPERTY_SOURCE));
-                        Path generated = Paths.get(properties.getProperty(PROPERTY_GENERATED));
-                        if(!Files.isRegularFile(source)) {
-                            throw new Exception("bad config file: " 
-                                    + properties.getProperty(PROPERTY_SOURCE) + " is not a regular file");
-                        }
-                        if(!Files.isRegularFile(generated)) {
-                            throw new Exception("bad config file: " 
-                                    + properties.getProperty(PROPERTY_GENERATED) + " is not a regular file");
-                        }
-			return new Site(this, source, generated, handlers, properties);
-		}
-	}
+	
 
 	public boolean isCached(Site site, Key<Path> key) {
 		if (cache == null) {
@@ -545,12 +472,7 @@ public class Service {
 		site.navigation(null);
 	}
 
-	public void shutdown() {
-		for(RecursiveWatcherService recursiveWatcherService:watchServices) {
-                    recursiveWatcherService.shutdown();
-                }
-		executorServiceCompiler.shutdown();
-	}
+	
 
 	public static void setFileListener(boolean set) {
 		fileChangeListener = set;

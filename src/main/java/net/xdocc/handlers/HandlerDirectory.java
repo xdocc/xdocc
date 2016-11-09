@@ -64,7 +64,7 @@ public class HandlerDirectory implements Handler {
 			Path p = handlerBean.getxPath().getTargetPath(url);
 			Path generatedDir = Files.createDirectories(p);
 			handlerBean.getDirtyset().add(generatedDir);
-			return new CompileResult(null, handlerBean.getxPath().getPath(), handlerBean, this, generatedDir);
+			return new CompileResult(null, handlerBean.getxPath().path(), handlerBean, this, generatedDir);
 		}
 		int pageSize = handlerBean.getxPath().getPageSize();
 
@@ -141,10 +141,10 @@ public class HandlerDirectory implements Handler {
 						generatedFile0, "directory", handlerBean.getModel());
 			}
 			compileResult = new CompileResult(documentPreview, handlerBean
-					.getxPath().getPath(), handlerBean, this, generatedFile0);
+					.getxPath().path(), handlerBean, this, generatedFile0);
 		} else {
 			compileResult = new CompileResult(doc0, handlerBean.getxPath()
-					.getPath(), handlerBean, this, generatedFile0);
+					.path(), handlerBean, this, generatedFile0);
 		}
 		if(compileResult.getHandler() == null || compileResult.getHandlerBean() == null || compileResult.getFileInfos() == null) {
 			LOG.info("bad compile result: "+handlerBean.getxPath());
@@ -170,10 +170,10 @@ public class HandlerDirectory implements Handler {
 	private List<Document> recursiveHandler(Site site, XPath xPath, HandlerBean fromHandler)
 			throws Exception {
 		final List<XPath> children = Utils.getNonHiddenChildren(site,
-				xPath.getPath());
+				xPath.path());
 		final List<CompileResult> aggregate = new ArrayList<>();
 		final List<Document> documents = new ArrayList<>();
-		final Key<Path> crkParent = new Key<Path>(xPath.getPath(), xPath.getPath());
+		final Key<Path> crkParent = new Key<Path>(xPath.path(), xPath.path());
 		final boolean ascending;
 		if (xPath.isAutoSort()) {
 			ascending = Utils.guessAutoSort(children);
@@ -186,7 +186,7 @@ public class HandlerDirectory implements Handler {
 			// -> no: no recompiling needed
 			if (!xPathChild.isDirectory() && !fromHandler.isForceCompile()) {
 				
-				Key<Path> crk = new Key<Path>(xPathChild.getPath(), xPathChild.getPath());
+				Key<Path> crk = new Key<Path>(xPathChild.path(), xPathChild.path());
 				site.service().waitFor(crk);
 				CompileResult result = site.service().getCompileResult(crk);
 				result.addDependencies(crk, crkParent);
@@ -200,8 +200,8 @@ public class HandlerDirectory implements Handler {
 				}
 			// --> yes: recompile with relPathToRoot from fromHandler
 			}else {
-				Key<Path> crk = new Key<Path>(xPathChild.getPath(), xPathChild.getPath());
-				Key<Path> crkNew = new Key<Path>(xPathChild.getPath(), fromHandler.getxPath().getPath());
+				Key<Path> crk = new Key<Path>(xPathChild.path(), xPathChild.path());
+				Key<Path> crkNew = new Key<Path>(xPathChild.path(), fromHandler.getxPath().path());
 				CompileResult crNew;
 				// get old result first (regular cr)
 				site.service().waitFor(crk);

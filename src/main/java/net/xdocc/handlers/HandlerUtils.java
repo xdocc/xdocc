@@ -82,7 +82,7 @@ public class HandlerUtils {
 	public static Map<String, Object> fillPage(Site site, XPath xPath,
 			Document document) throws IOException {
 		String relativePathToRoot = Utils.relativePathToRoot(site.source(),
-				xPath.getPath());
+				xPath.path());
 		Map<String, Object> model = new HashMap<>();
 		model.put(Document.DOCUMENT, document);
 		Link current = Utils.find(xPath.getParent(), site.navigation());

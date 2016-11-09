@@ -36,8 +36,8 @@ public class HandlerHTML implements Handler {
 	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
 		
-		Charset charset = HandlerUtils.detectCharset(handlerBean.getxPath().getPath());
-		String all = FileUtils.readFileToString(handlerBean.getxPath().getPath().toFile(), charset);
+		Charset charset = HandlerUtils.detectCharset(handlerBean.getxPath().path());
+		String all = FileUtils.readFileToString(handlerBean.getxPath().path().toFile(), charset);
 		
 		org.jsoup.nodes.Document docj = Jsoup.parse(all);
 		Elements e = docj.getElementsByTag("body");
@@ -51,6 +51,6 @@ public class HandlerHTML implements Handler {
 			generatedFile = handlerBean.getxPath().getTargetPath(handlerBean.getxPath().getTargetURL() + ".html");
 			Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getDirtyset(), handlerBean.getRelativePathToRoot(), doc, generatedFile, "single");
 		}
-		return new CompileResult(doc, handlerBean.getxPath().getPath(), handlerBean, this, generatedFile);
+		return new CompileResult(doc, handlerBean.getxPath().path(), handlerBean, this, generatedFile);
 	}
 }

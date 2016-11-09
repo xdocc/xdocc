@@ -1,4 +1,4 @@
-package net.xdocc.filenotify;
+package net.xdocc;
 
 import net.xdocc.Site;
 

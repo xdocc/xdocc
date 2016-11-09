@@ -1,6 +1,5 @@
 package net.xdocc;
 
-import net.xdocc.filenotify.TestNotify;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

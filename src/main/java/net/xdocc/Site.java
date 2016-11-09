@@ -65,7 +65,7 @@ public class Site {
     final private Map<String, TemplateBean> templates = new HashMap<>();
     
     public Site(Service service, Path source, Path generated) throws IOException {
-        this(service, source, generated, Collections.<Handler>emptyList(), new Properties());
+        this(service, source, generated, Utils.findHandlers(), new Properties());
     }
 
     public Site(Service service, Path source, Path generated,

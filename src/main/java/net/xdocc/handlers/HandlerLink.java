@@ -32,10 +32,10 @@ public class HandlerLink implements Handler {
 	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
 
-		final Key<Path> crkParent = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getPath());
+		final Key<Path> crkParent = new Key<Path>(handlerBean.getxPath().path(), handlerBean.getxPath().path());
 		
 		Configuration config = new PropertiesConfiguration(handlerBean
-				.getxPath().getPath().toFile());
+				.getxPath().path().toFile());
 
 		List<Object> urls = config.getList("url", new ArrayList<>());
 		int limit = config.getInt("limit", -1);
@@ -63,12 +63,12 @@ public class HandlerLink implements Handler {
 			for (XPath found : founds) {
 				
 				// regular CR
-				final Key<Path> crk = new Key<Path>(found.getPath(), found.getPath());
+				final Key<Path> crk = new Key<Path>(found.path(), found.path());
 				handlerBean.getSite().service().waitFor(crk);
 				CompileResult compileResult = handlerBean.getSite().service().getCompileResult(crk);
 				
 				// special CR
-				final Key<Path> crkNew = new Key<Path>(found.getPath(), handlerBean.getxPath().getPath());
+				final Key<Path> crkNew = new Key<Path>(found.path(), handlerBean.getxPath().path());
 				CompileResult specialCR;
 				boolean isCompiled = false;
 				if(handlerBean.getSite().service().getCompileResult(crkNew) == null) {
@@ -118,7 +118,7 @@ public class HandlerLink implements Handler {
 						handlerBean.getRelativePathToRoot(), doc,
 						generatedFile, "link");
 			}
-			return new CompileResult(doc, handlerBean.getxPath().getPath(),
+			return new CompileResult(doc, handlerBean.getxPath().path(),
 					handlerBean, this, generatedFile);
 		}
 	}

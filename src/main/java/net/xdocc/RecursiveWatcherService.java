@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.xdocc.filenotify;
+package net.xdocc;
 
+import net.xdocc.FileListener;
 import com.sun.nio.file.SensitivityWatchEventModifier;
 
 import org.slf4j.Logger;
@@ -50,11 +51,12 @@ public class RecursiveWatcherService {
         this.site = site;
         this.listener = listener;
         watcher = FileSystems.getDefault().newWatchService();
-        executor = Executors.newSingleThreadExecutor();
+        executor = Executors.newFixedThreadPool(2);
         startRecursiveWatcher();
     }
 
     public void shutdown() {
+        LOG.info("Stoping Recursive Watcher");
         running = false;
         queue.add(Boolean.FALSE);
         try {
@@ -115,10 +117,9 @@ public class RecursiveWatcherService {
                             final Path absPath = dir.resolve(p);
                             if (absPath.toFile().isDirectory()) {
                                 register.accept(absPath);
-                            } else {
-                                final File f = absPath.toFile();
-                                queue.add(Boolean.TRUE);
                             }
+                            LOG.debug("File/directory changed {}", absPath);
+                            queue.add(Boolean.TRUE);
                         });
 
                 boolean valid = key.reset();
@@ -130,16 +131,18 @@ public class RecursiveWatcherService {
         
         executor.submit(() -> {
             while (running) {
-                final boolean keepRunning;
                 try {
-                    keepRunning = queue.take();
+                    queue.take();
+                    Thread.sleep(1000);
+                    Boolean any;
+                    if((any = queue.poll()) != null) {
+                        queue.clear();
+                        queue.offer(any);
+                        continue;
+                    }
                 } catch (InterruptedException ex) {
                     return;
                 }
-                if(!keepRunning) {
-                    return;
-                }
-                queue.clear();
                 listener.filesChanged(site);
             }
         });

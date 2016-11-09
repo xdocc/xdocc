@@ -42,7 +42,7 @@ public class HandlerMarkdown implements Handler {
 	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
 		try (Writer out = new StringWriter();
-				Reader in = new BufferedReader(new FileReader(handlerBean.getxPath().getPath()
+				Reader in = new BufferedReader(new FileReader(handlerBean.getxPath().path()
 						.toFile()))) {
 			transform(in, out);
 			String htmlContent = out.toString();
@@ -54,7 +54,7 @@ public class HandlerMarkdown implements Handler {
 						.getTargetPath(handlerBean.getxPath().getTargetURL() + ".html");
 				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getDirtyset(), handlerBean.getRelativePathToRoot(), doc, generatedFile, "single");
 			}
-			return new CompileResult(doc, handlerBean.getxPath().getPath(), handlerBean, this, generatedFile);
+			return new CompileResult(doc, handlerBean.getxPath().path(), handlerBean, this, generatedFile);
 		}
 	}
 

@@ -3,7 +3,6 @@ package net.xdocc;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -16,14 +15,11 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import net.xdocc.handlers.Handler;
-import net.xdocc.handlers.HandlerLink;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -47,10 +43,13 @@ public class XPath implements Comparable<XPath> {
     private final static Pattern PATTERN_URL = Pattern
             .compile("([^/|.]*)([.]|[|]|$)");
 
+    @Getter
     private final Path path;
 
+    @Getter
     private final Site site;
 
+    @Getter
     private final String filename;
 
     @Getter
@@ -66,8 +65,7 @@ public class XPath implements Comparable<XPath> {
     private String extensions;
 
     @Getter
-    @Setter
-    private List<String> extensionList;
+    final private List<String> extensionList = new ArrayList<>(2);
 
     @Getter
     @Setter
@@ -101,8 +99,11 @@ public class XPath implements Comparable<XPath> {
         this.site = site;
         this.filename = getFileName();
         String extensionFilteredFileName = findKnownExtensions(site, filename);
-        this.visible = parse(extensionFilteredFileName, site.source()
-                .equals(path));
+        if (extensionList.size() > 0 || Files.isDirectory(path)) {
+            this.visible = parse(extensionFilteredFileName, site.source().equals(path));
+        } else {
+            this.visible = false;
+        }
         if (Files.isRegularFile(path)) {
             parseFrontmatter();
         } else if (Files.isDirectory(path)) {
@@ -174,19 +175,14 @@ public class XPath implements Comparable<XPath> {
     }
 
     private String findKnownExtensions(Site site, String tmpFilename) {
-
+        extensionList.clear();
+        extensions = "";
         for (Handler handler : site.handlers()) {
             for (String extension : handler.knownExtensions()) {
                 if (tmpFilename.endsWith("." + extension)) {
                     tmpFilename = tmpFilename
                             .substring(0, tmpFilename.length() - (extension.length() + 1));
-                    if (extensionList == null) {
-                        // we expect 1 or 2 entries
-                        extensionList = new ArrayList<>(2);
-                    }
-                    if (extensions == null) {
-                        extensions = "";
-                    }
+
                     extensionList.add(extension);
                     extensions = "." + extension + extensions;
                 }
@@ -286,14 +282,6 @@ public class XPath implements Comparable<XPath> {
             }
 
             while (name.length() > offset && offset >= 0) {
-                // check if already at end (extension)
-                if (name.length() > offset + 1
-                        && name.charAt(offset + 1) == '.') {
-                    // leading dot, we got an extension
-                    extensions = name.substring(offset + 1);
-                    extensionList = Utils.splitExtensions(extensions);
-                    return true;
-                }
                 // scan tag key & value
                 String tagString = "";
                 if (nextPipeIndex >= 0) {
@@ -336,23 +324,6 @@ public class XPath implements Comparable<XPath> {
                 }
             }
 
-            // lets go for the extension
-            if (name.length() > offset && offset >= 0) {
-                if (name.charAt(offset) == '.') {
-                    // leading dot, we got an extension
-                    extensions = name.substring(offset);
-                    extensionList = Utils.splitExtensions(extensions);
-                    return true;
-                }
-                int index = name.indexOf(".", offset);
-                if (index > 0) {
-                    LOG.warn("There seems to be an extension, but it was not found properly: "
-                            + name);
-                    extensions = name.substring(index);
-                    extensionList = Utils.splitExtensions(extensions);
-                    return true;
-                }
-            }
             return true;
         } catch (Exception e) {
             LOG.info("name: " + name + " not valid, returning false parse()");
@@ -365,18 +336,6 @@ public class XPath implements Comparable<XPath> {
             return value.replace(">", "/");
         }
         return value;
-    }
-
-    public Path getPath() {
-        return path;
-    }
-
-    public Site getSite() {
-        return site;
-    }
-
-    public long getNr() {
-        return nr;
     }
 
     public List<String> getExtensionList() {
@@ -646,7 +605,7 @@ public class XPath implements Comparable<XPath> {
 
     @Override
     public int compareTo(XPath o2) {
-        long diff = getNr() - o2.getNr();
+        long diff = nr() - o2.nr();
         if (diff != 0) {
             return diff > 0 ? 1 : -1;
         }
@@ -671,7 +630,7 @@ public class XPath implements Comparable<XPath> {
     }
 
     public boolean isRoot() {
-        return getPath().equals(site.source());
+        return path().equals(site.source());
     }
 
     public int getPageSize() {

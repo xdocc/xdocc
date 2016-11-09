@@ -109,7 +109,7 @@ public class Document implements Comparable<Document>, Serializable {
 		setName(xPath.name());
 		setDate(xPath.date());
 		setFilename(xPath.getFileName());
-		setNr(xPath.getNr());
+		setNr(xPath.nr());
 		setHighlight(xPath.isHighlight());
 		initFilesize(xPath);
 		// now set the paths
@@ -129,10 +129,10 @@ public class Document implements Comparable<Document>, Serializable {
 	private void initFilesize(XPath xPath) {
 		if (!xPath.isDirectory()) {
 			try {
-				setFilesize(Files.size(xPath.getPath()));
+				setFilesize(Files.size(xPath.path()));
 			} catch (IOException e) {
 				setFilesize(-1);
-				LOG.debug("cannot get the file size (probably file renamed): "+xPath.getPath());
+				LOG.debug("cannot get the file size (probably file renamed): "+xPath.path());
 			}
 		}
 	}

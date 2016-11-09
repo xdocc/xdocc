@@ -45,7 +45,7 @@ public class HandlerImage implements Handler {
 			HandlerBean handlerBean, boolean writeToDisk)
 			throws TemplateException, IOException, InterruptedException {
 		
-		final Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getPath());
+		final Key<Path> crk = new Key<Path>(handlerBean.getxPath().path(), handlerBean.getxPath().path());
 		
 		// copy the original image
 		Path generatedFile = xPath.getTargetPath(xPath.getTargetURL()
@@ -53,8 +53,8 @@ public class HandlerImage implements Handler {
 		dirtyset.add(generatedFile);
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
 		dirtyset.add(generatedDir);
-		if (!site.service().isCached(xPath.getSite(), crk)) {
-			Files.copy(xPath.getPath(), generatedFile,
+		if (!site.service().isCached(xPath.site(), crk)) {
+			Files.copy(xPath.path(), generatedFile,
 					StandardCopyOption.COPY_ATTRIBUTES,
 					StandardCopyOption.REPLACE_EXISTING,
 					StandardCopyOption.COPY_ATTRIBUTES,
@@ -65,7 +65,7 @@ public class HandlerImage implements Handler {
 		String sizeIcon = xPath.searchProperty("size_icon", "si");
 		Path generatedFileThumb = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_t" + xPath.extensions());
-		if (!site.service().isCached(xPath.getSite(), crk)) {
+		if (!site.service().isCached(xPath.site(), crk)) {
 			if (sizeIcon.endsWith("c")) {
 				cropResize(xPath, generatedFileThumb, stripMod(sizeIcon, "c"));
 			} else {
@@ -78,7 +78,7 @@ public class HandlerImage implements Handler {
 
 		Path generatedFileNorm = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_n" + xPath.extensions());
-		if (!site.service().isCached(xPath.getSite(), crk)) {
+		if (!site.service().isCached(xPath.site(), crk)) {
 			if (sizeNorm.endsWith("c")) {
 				cropResize(xPath, generatedFileNorm, stripMod(sizeNorm, "c"));
 			} else {
@@ -92,7 +92,7 @@ public class HandlerImage implements Handler {
 		String documentName = xPath.name();
 		String documentURL = xPath.getTargetURL() + xPath.extensions();
 		Date documentDate = xPath.date();
-		long documentNr = xPath.getNr();
+		long documentNr = xPath.nr();
 		String documentFilename = xPath.getFileName();
 		DocumentGenerator gen = new DocumentGenerator(site, templateText);
 		Map<String, Object> model = gen.model();
@@ -130,11 +130,11 @@ public class HandlerImage implements Handler {
 				.createDirectories(generatedFile2.getParent());
 		dirtyset.add(generatedDir2);
 		if (writeToDisk) {
-			if (!site.service().isCached(xPath.getSite(), crk)) {
+			if (!site.service().isCached(xPath.site(), crk)) {
 				Utils.write(htmlSite, xPath, generatedFile2);
 			}
 		}
-		return new CompileResult(doc, xPath.getPath(), handlerBean, this,
+		return new CompileResult(doc, xPath.path(), handlerBean, this,
 				generatedFile, generatedFileThumb, generatedFileNorm,
 				generatedFile2);
 	}

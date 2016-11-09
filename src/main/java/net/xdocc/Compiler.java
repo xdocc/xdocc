@@ -95,7 +95,7 @@ public class Compiler implements Runnable {
 	}
 
 	private boolean compile(Handler handler, XPath xPath) {
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
+		Key<Path> crk = new Key<Path>(xPath.path(), xPath.path());
 		CompileResult result = site.service().getCompileResult(crk);
 		if(result != null) {
 			if(site.service().isCached(site, crk)) {
@@ -108,7 +108,7 @@ public class Compiler implements Runnable {
 		}
 		try {
 			String relativePathToRoot = Utils.relativePathToRoot(site.source(),
-					xPath.getPath());
+					xPath.path());
 			HandlerBean handlerBean = new HandlerBean();
 			handlerBean.setSite(site);
 			handlerBean.setxPath(xPath);
@@ -134,7 +134,7 @@ public class Compiler implements Runnable {
 			Map<String, Object> model = new HashMap<>();
 			model.put(Document.DOCUMENT_SIZE, sizeDocuments);
 			for (XPath child : children) {
-				site.service().compile(site, child.getPath(), model);
+				site.service().compile(site, child.path(), model);
 			}
 		} catch (IOException e) {
 			LOG.error("could not fetch children - " + e);

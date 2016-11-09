@@ -68,7 +68,7 @@ public class HandlerWikiText implements Handler {
 		String path = handlerBean.getRelativePathToRoot();
 
 		// edit for link special
-		Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(),	handlerBean.getxPath().getPath());
+		Key<Path> crk = new Key<Path>(handlerBean.getxPath().path(),	handlerBean.getxPath().path());
 		
 		// apply text ftl
 		TemplateBean templateText = handlerBean.getSite().getTemplate(
@@ -104,7 +104,7 @@ public class HandlerWikiText implements Handler {
 			handlerBean.getDirtyset().add(generatedDir);
 			Utils.write(htmlSite, handlerBean.getxPath(), generatedFile);
 		}
-		return new CompileResult(doc, handlerBean.getxPath().getPath(),
+		return new CompileResult(doc, handlerBean.getxPath().path(),
 				handlerBean, this, generatedFile);
 
 	}
@@ -154,7 +154,7 @@ public class HandlerWikiText implements Handler {
 		@Override
 		public void image(Attributes attributes, String url) {
 			String path = Utils.relativePathToRoot(site.source(), current
-					.getParent().getPath());
+					.getParent().path());
 			/*
 			 * if(!current.isVisible()) { super.image(attributes, url); }
 			 */
@@ -188,7 +188,7 @@ public class HandlerWikiText implements Handler {
 				} else {
 					XPath found = founds.get(0);
 					String relativePathToRoot = Utils.relativePathToRoot(
-							site.source(), found.getPath());
+							site.source(), found.path());
 					CompileResult compileResult = handlerImage.compile(site,
 							found, dirtyset, (ImageAttributes) attributes,
 							relativePathToRoot, handlerBean, writeToDisk);
@@ -336,8 +336,8 @@ public class HandlerWikiText implements Handler {
 			}
 
 			parser.setBuilder(builder);
-			Charset charset = HandlerUtils.detectCharset(xPath.getPath());
-			String rawFileContent = FileUtils.readFileToString(xPath.getPath()
+			Charset charset = HandlerUtils.detectCharset(xPath.path());
+			String rawFileContent = FileUtils.readFileToString(xPath.path()
 					.toFile(), charset);
 			parser.parse(rawFileContent);
 			model().put(Document.HANDLER, type);

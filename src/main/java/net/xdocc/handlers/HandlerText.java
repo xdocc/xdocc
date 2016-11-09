@@ -26,8 +26,8 @@ public class HandlerText implements Handler {
 	@Override
 	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
-		Charset charset = HandlerUtils.detectCharset(handlerBean.getxPath().getPath());
-		List<String> lines = Files.readAllLines(handlerBean.getxPath().getPath(), charset);
+		Charset charset = HandlerUtils.detectCharset(handlerBean.getxPath().path());
+		List<String> lines = Files.readAllLines(handlerBean.getxPath().path(), charset);
 		String htmlContent = convertHTML(lines);
 		Document doc = 
 				Utils.createDocument(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getRelativePathToRoot(),
@@ -39,7 +39,7 @@ public class HandlerText implements Handler {
 					.getTargetPath(handlerBean.getxPath().getTargetURL() + ".html");
 			Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getDirtyset(), handlerBean.getRelativePathToRoot(), doc, generatedFile, "single");
 		}
-		return new CompileResult(doc, handlerBean.getxPath().getPath(), handlerBean, this, generatedFile);
+		return new CompileResult(doc, handlerBean.getxPath().path(), handlerBean, this, generatedFile);
 	}
 
 	private String convertHTML(List<String> lines) {

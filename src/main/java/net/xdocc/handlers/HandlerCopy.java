@@ -55,7 +55,7 @@ public class HandlerCopy implements Handler {
 		}
 		try {
 			if (writeToDisk) {
-				if (Files.isDirectory(handlerBean.getxPath().getPath())) {
+				if (Files.isDirectory(handlerBean.getxPath().path())) {
 					Path generatedDir2 = Files.createDirectories(generatedFile);
 					handlerBean.getDirtyset().add(generatedDir2);
 					if (LOG.isDebugEnabled()) {
@@ -65,9 +65,9 @@ public class HandlerCopy implements Handler {
 					Path generatedDir2 = Files.createDirectories(generatedFile
 							.getParent());
 					handlerBean.getDirtyset().add(generatedDir2);
-					Key<Path> crk = new Key<Path>(handlerBean.getxPath().getPath(), handlerBean.getxPath().getPath());
+					Key<Path> crk = new Key<Path>(handlerBean.getxPath().path(), handlerBean.getxPath().path());
 					if (!handlerBean.getSite().service().isCached(handlerBean.getSite(), crk)) {
-						Files.copy(handlerBean.getxPath().getPath(),
+						Files.copy(handlerBean.getxPath().path(),
 								generatedFile,
 								StandardCopyOption.COPY_ATTRIBUTES,
 								StandardCopyOption.REPLACE_EXISTING,
@@ -76,7 +76,7 @@ public class HandlerCopy implements Handler {
 					}
 					handlerBean.getDirtyset().add(generatedFile);
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("copy " + handlerBean.getxPath().getPath()
+						LOG.debug("copy " + handlerBean.getxPath().path()
 								+ " to " + generatedFile);
 					}
 				}
@@ -89,7 +89,7 @@ public class HandlerCopy implements Handler {
 						handlerBean.getxPath(),
 						handlerBean.getRelativePathToRoot(), model);
 				return new CompileResult(document, handlerBean.getxPath()
-						.getPath(), handlerBean, this, generatedFile);
+						.path(), handlerBean, this, generatedFile);
 			} else if (handlerBean.getxPath().isVisible()) {
 				// we have a file with an unknown extension, but we want to have
 				// it visible
@@ -97,14 +97,14 @@ public class HandlerCopy implements Handler {
 						handlerBean.getxPath(),
 						handlerBean.getRelativePathToRoot(), model);
 				return new CompileResult(document, handlerBean.getxPath()
-						.getPath(), handlerBean, this, generatedFile);
+						.path(), handlerBean, this, generatedFile);
 			}
 		} catch (IOException e) {
 			LOG.error("Copy handler faild, cannot copy from "
-					+ handlerBean.getxPath().getPath() + " to " + generatedFile
+					+ handlerBean.getxPath().path() + " to " + generatedFile
 					+ " - " + e);
 		}
-		CompileResult cr = new CompileResult(null, handlerBean.getxPath().getPath(),
+		CompileResult cr = new CompileResult(null, handlerBean.getxPath().path(),
 				handlerBean, this, generatedFile);
 		
 				
@@ -123,7 +123,7 @@ public class HandlerCopy implements Handler {
 				templateText);
 		Document document = new Document(xPath, documentGenerator,
 				xPath.getTargetURLFilename(), "file");
-		Date lastModified = new Date(Files.getLastModifiedTime(xPath.getPath())
+		Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
 				.toMillis());
 		document.setDate(lastModified);
 		document.setTemplate("file");
@@ -138,7 +138,7 @@ public class HandlerCopy implements Handler {
 				templateText);
 		Document document = new Document(xPath, documentGenerator,
 				xPath.getTargetURL(), "file");
-		Date lastModified = new Date(Files.getLastModifiedTime(xPath.getPath())
+		Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
 				.toMillis());
 		document.setDate(lastModified);
 		document.setName(xPath.getFileName());
