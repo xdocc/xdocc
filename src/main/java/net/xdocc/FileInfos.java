@@ -89,9 +89,4 @@ public class FileInfos implements Serializable {
 	public FileInfos copy(long sourceTimestamp, long sourceSize) {
 		return new FileInfos(target.toPath(), targetTimestamp, targetSize, sourceTimestamp, sourceSize);
 	}
-
-	
-
-	
-
 }

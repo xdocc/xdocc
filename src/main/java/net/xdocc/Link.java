@@ -22,10 +22,10 @@ public class Link {
 	public Link(XPath target, Link parent) {
 		this.target = target;
 		this.URL = target.getTargetURL();
-		this.name = target.getName() == null ? target.getFileName() : target
-				.getName();
+		this.name = target.name() == null ? target.getFileName() : target
+				.name();
 		this.parent = parent;
-		this.properties = target.getProperties();
+		this.properties = target.properties();
 	}
 
 	public String getURL() {

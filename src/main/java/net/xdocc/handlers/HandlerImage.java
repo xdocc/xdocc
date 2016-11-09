@@ -49,7 +49,7 @@ public class HandlerImage implements Handler {
 		
 		// copy the original image
 		Path generatedFile = xPath.getTargetPath(xPath.getTargetURL()
-				+ xPath.getExtensions());
+				+ xPath.extensions());
 		dirtyset.add(generatedFile);
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
 		dirtyset.add(generatedDir);
@@ -64,7 +64,7 @@ public class HandlerImage implements Handler {
 		// create a thumbnail
 		String sizeIcon = xPath.searchProperty("size_icon", "si");
 		Path generatedFileThumb = xPath.getTargetPath(xPath.getTargetURL()
-				+ "_t" + xPath.getExtensions());
+				+ "_t" + xPath.extensions());
 		if (!site.service().isCached(xPath.getSite(), crk)) {
 			if (sizeIcon.endsWith("c")) {
 				cropResize(xPath, generatedFileThumb, stripMod(sizeIcon, "c"));
@@ -77,7 +77,7 @@ public class HandlerImage implements Handler {
 		String sizeNorm = xPath.searchProperty("size_normal", "sn");
 
 		Path generatedFileNorm = xPath.getTargetPath(xPath.getTargetURL()
-				+ "_n" + xPath.getExtensions());
+				+ "_n" + xPath.extensions());
 		if (!site.service().isCached(xPath.getSite(), crk)) {
 			if (sizeNorm.endsWith("c")) {
 				cropResize(xPath, generatedFileNorm, stripMod(sizeNorm, "c"));
@@ -88,15 +88,14 @@ public class HandlerImage implements Handler {
 		dirtyset.add(generatedFileNorm);
 
 		// apply text ftl
-		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
-				"image", crk);
-		String documentName = xPath.getName();
-		String documentURL = xPath.getTargetURL() + xPath.getExtensions();
-		Date documentDate = xPath.getDate();
+		TemplateBean templateText = site.getTemplate("image", xPath.getLayoutSuffix());
+		String documentName = xPath.name();
+		String documentURL = xPath.getTargetURL() + xPath.extensions();
+		Date documentDate = xPath.date();
 		long documentNr = xPath.getNr();
 		String documentFilename = xPath.getFileName();
 		DocumentGenerator gen = new DocumentGenerator(site, templateText);
-		Map<String, Object> model = gen.getModel();
+		Map<String, Object> model = gen.model();
 
 		HandlerUtils.fillModel(documentName, documentURL, documentDate,
 				documentNr, documentFilename, "", model);
@@ -111,16 +110,15 @@ public class HandlerImage implements Handler {
 		Document doc = new Document(xPath, gen, xPath.getTargetURL() + ".html",
 				"file");
 		doc.addPath(Document.IMAGE_NORMAL,
-				xPath.getTargetURL() + "_n" + xPath.getExtensions());
+				xPath.getTargetURL() + "_n" + xPath.extensions());
 		doc.addPath(Document.IMAGE_THUMB,
-				xPath.getTargetURL() + "_t" + xPath.getExtensions());
+				xPath.getTargetURL() + "_t" + xPath.extensions());
 		doc.applyPath1(relativePathToRoot);
 		// TODO:enable
 		doc.setTemplate("image");
 		//
 		// create the site to layout ftl
-		TemplateBean templateSite = site.getTemplate(xPath.getLayoutSuffix(),
-				"page", crk);
+		TemplateBean templateSite = site.getTemplate("page", xPath.getLayoutSuffix());
 		Map<String, Object> modelSite = HandlerUtils.fillPage(site, xPath, doc);
 		modelSite.put(Document.TYPE, "file");
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);

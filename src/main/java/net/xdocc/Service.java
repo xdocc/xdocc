@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,13 +20,13 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
 
 import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.filenotify.FileListener;
-import net.xdocc.filenotify.FileNotifier;
-import net.xdocc.filenotify.WatchService;
+import net.xdocc.filenotify.RecursiveWatcherService;
 import net.xdocc.handlers.Handler;
 import net.xdocc.handlers.HandlerCopy;
 
@@ -62,7 +63,6 @@ public class Service {
 	private final Map<Key<Path>, CompileResult> compileResult = Collections
 			.synchronizedMap(new HashMap<Key<Path>, CompileResult>());
 	
-	private final WatchService watchService = new WatchService();
 
 	private static Map<String, Set<FileInfos>> cache;
 
@@ -79,6 +79,8 @@ public class Service {
 	private static boolean clearCache = false;
 
 	private static int compilerCounter = 0;
+        
+        private final List<RecursiveWatcherService> watchServices = new ArrayList<>();
 
 	static {
 		options.addOption("c", "config", true,
@@ -103,31 +105,30 @@ public class Service {
 	}
 
 	public static void main(String[] args) {
-		Service service = new Service();
+		final Service service = new Service();
 		service.addShutdownHook();
 		try {
 			List<Site> sites = service.init(args);
 			if (sites != null && fileChangeListener) {
-				service.startWatch(sites);
-				service.compileIfFileChanged();
+                            FileListener fileListener = (Site site) -> {
+                                try {
+                                    service.compile(site);
+                                } catch (IOException ex) {
+                                   LOG.error("cannot compile sites ", ex);
+                                }
+                            };
+                            for(Site site:sites) {
+				service.startWatch(site, fileListener);
+                            }
 			}
 			LOG.info("service ready!");
 		} catch (IOException e) {
-			LOG.error("cannot compile sites " + e);
+			LOG.error("cannot compile sites ", e);
 			e.printStackTrace();
 		}
 	}
-
-	public void startWatch(List<Site> sites) {
-	    watchService.startWatch(sites);
-	    
-    }
-	
-	public FileNotifier getFileNotifier() {
-	    return watchService.getFileNotifier();
-    }
-
-	private void addShutdownHook() {
+        
+        private void addShutdownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				shutdown();
@@ -135,39 +136,16 @@ public class Service {
 		});
 	}
 
-	public void compileIfFileChanged() {
-		watchService.getFileNotifier().addListener(new FileListener() {
-			@Override
-			public void filesChanged(List<XPath> changedSet,
-					List<XPath> createdSet, List<XPath> deletedSet) {
-				List<Site> sites = new ArrayList<>();
-				collectSites(sites, changedSet);
-				collectSites(sites, createdSet);
-				collectSites(sites, deletedSet);
-				for (Site site : sites) {
-					try {
-						compile(site);
-						Key<Path> crk = new Key<Path>(site.getSource(), site
-								.getSource());
-						waitFor(crk);
-						LOG.info("compiling done: " + site);
-						db.commit();
-						LOG.info("service ready!");
-					} catch (IOException | InterruptedException e) {
-						LOG.error("compiler exception: " + e);
-					}
-				}
-			}
+	public void startWatch(Site site, FileListener listener) throws IOException {
+	    RecursiveWatcherService recursiveWatcherService = new RecursiveWatcherService(site, listener);
+            watchServices.add(recursiveWatcherService);
+        }
+	
 
-			private void collectSites(List<Site> sites, List<XPath> changedSet) {
-				for (XPath xpath : changedSet) {
-					if (!sites.contains(xpath.getSite())) {
-						sites.add(xpath.getSite());
-					}
-				}
-			}
-		});
-	}
+
+	
+
+	
 
 	private List<Site> init(String[] args) throws FileNotFoundException,
 			IOException {
@@ -212,7 +190,7 @@ public class Service {
 		for (Site site : sites) {
 			Utils.createDirectory(site);
 			compile(site);
-			Key<Path> crk = new Key<Path>(site.getSource(), site.getSource());
+			Key<Path> crk = new Key<Path>(site.source(), site.source());
 			waitFor(crk);
 			LOG.info("compiling done: " + site);
 			db.commit();
@@ -251,7 +229,7 @@ public class Service {
 				}
 				sites.add(site);
 				Link link = readNavigation(site);
-				site.setNavigation(link);
+				site.navigation(link);
 			} catch (Throwable t) {
 				LOG.error(t.getMessage());
 			}
@@ -267,7 +245,7 @@ public class Service {
 	 */
 	public void compile(Site site) throws IOException {
 		invalidateCache(site);
-		compile(site, site.getSource(), new HashMap<String, Object>());
+		compile(site, site.source(), new HashMap<String, Object>());
 		compilerCounter++;
 	}
 
@@ -289,7 +267,7 @@ public class Service {
 
 	public void compileDone(Site site) throws IOException {
 		// compileResult.clear();
-		List<Path> children = Utils.getChildren(site, site.getGenerated());
+		List<Path> children = Utils.getChildren(site, site.generated());
 		for (Iterator<Path> iterator = children.iterator(); iterator.hasNext();) {
 			Path foundPath = iterator.next();
 			if (dirtySet.contains(foundPath)) {
@@ -301,7 +279,7 @@ public class Service {
 		// make sure we are in the right directory
 		for (Path pathToDelete : children) {
 			if (!Files.isDirectory(pathToDelete)) {
-				if (Utils.isChild(pathToDelete, site.getGenerated())) {
+				if (Utils.isChild(pathToDelete, site.generated())) {
 					Files.delete(pathToDelete);
 					LOG.debug("delete " + pathToDelete);
 				}
@@ -314,7 +292,7 @@ public class Service {
 					site).entrySet()) {
 				if (entry.getValue().isDirty()) {
 					String baseName = FilenameUtils.getBaseName(entry.getKey());
-					site.getTemplate("", baseName, null);
+					site.getTemplate(baseName, "");
 				}
 			}
 		}
@@ -325,7 +303,7 @@ public class Service {
 	}
 
 	Link readNavigation(Site site) throws IOException {
-		return readNavigation(site, new XPath(site, site.getSource()));
+		return readNavigation(site, new XPath(site, site.source()));
 	}
 
 	public Link readNavigation(Site site, XPath source) throws IOException {
@@ -369,37 +347,32 @@ public class Service {
 		}
 	}
 
-	List<Handler> findHandlers() {
-		Reflections reflections = new Reflections("net.xdocc");
-		Set<Class<? extends Handler>> subTypes = reflections
-				.getSubTypesOf(Handler.class);
-		final List<Handler> handlers = new ArrayList<>();
-		for (Class<? extends Handler> clazz : subTypes) {
-			try {
-				if (!clazz.equals(HandlerCopy.class)) {
-					handlers.add(clazz.newInstance());
-				}
-			} catch (InstantiationException | IllegalAccessException e) {
-				LOG.error("failed to initialize handler " + clazz.toString()
-						+ " - " + e);
-			}
-		}
-		return handlers;
-	}
+	
 
 	private Site readSite(File configFile, List<Handler> handlers)
 			throws Exception {
 		Properties properties = new Properties();
 		try (FileReader fr = new FileReader(configFile)) {
 			properties.load(fr);
-			if (properties.getProperty(PROPERTY_SOURCE) == null
-					|| properties.getProperty(PROPERTY_GENERATED) == null) {
-				throw new Exception("bad config file: "
-						+ configFile.getPath().toString());
+			if (properties.getProperty(PROPERTY_SOURCE) == null) {
+                            throw new Exception("bad config file: " + PROPERTY_SOURCE 
+                                    + "need to be specified in: " + configFile.getPath().toString());
 			}
-			return new Site(this, properties.getProperty(PROPERTY_SOURCE),
-					properties.getProperty(PROPERTY_GENERATED), handlers,
-					properties);
+                        if (properties.getProperty(PROPERTY_GENERATED) == null) {
+                            throw new Exception("bad config file: " + PROPERTY_GENERATED 
+                                    + "need to be specified in: " + configFile.getPath().toString());
+			}
+                        Path source = Paths.get(properties.getProperty(PROPERTY_SOURCE));
+                        Path generated = Paths.get(properties.getProperty(PROPERTY_GENERATED));
+                        if(!Files.isRegularFile(source)) {
+                            throw new Exception("bad config file: " 
+                                    + properties.getProperty(PROPERTY_SOURCE) + " is not a regular file");
+                        }
+                        if(!Files.isRegularFile(generated)) {
+                            throw new Exception("bad config file: " 
+                                    + properties.getProperty(PROPERTY_GENERATED) + " is not a regular file");
+                        }
+			return new Site(this, source, generated, handlers, properties);
 		}
 	}
 
@@ -533,7 +506,7 @@ public class Service {
 				.entrySet()) {
 			if (entry.getValue().isDirty()) {
 				LOG.debug("yes, we are dirty: " + entry.getKey());
-				dependencies.addAll(entry.getValue().getFlatDependencies());
+				//dependencies.addAll(entry.getValue().getFlatDependencies());
 			}
 		}
 
@@ -541,7 +514,7 @@ public class Service {
 		synchronized (compileResult) {
 			for (Key<Path> key : compileResult.keySet()) {
 				CompileResult cr = compileResult.get(key);
-				if (!Utils.isChild(key.getSource(), site.getSource())) {
+				if (!Utils.isChild(key.getSource(), site.source())) {
 					continue;
 				}
 				Set<FileInfos> list = cr.getFileInfos();
@@ -568,11 +541,14 @@ public class Service {
 			LOG.debug("removing key from CR " + dependency);
 			removeCompileResult(dependency);
 		}
-		site.clearNavigation();
+                //empty navigation
+		site.navigation(null);
 	}
 
 	public void shutdown() {
-		watchService.shutdown();
+		for(RecursiveWatcherService recursiveWatcherService:watchServices) {
+                    recursiveWatcherService.shutdown();
+                }
 		executorServiceCompiler.shutdown();
 	}
 

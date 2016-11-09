@@ -81,7 +81,7 @@ public class HandlerCopy implements Handler {
 					}
 				}
 			}
-			if (handlerBean.getxPath().isCopyAll()) {
+			if (handlerBean.getxPath().isRaw()) {
 				// new Date(Files.getLastModifiedTime( xPath.getPath()
 				// ).toMillis())
 				// create the document
@@ -118,9 +118,7 @@ public class HandlerCopy implements Handler {
 
 	public static Document createDocumentFile(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
-		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
-				"file", crk);
+		TemplateBean templateText = site.getTemplate("file", xPath.getLayoutSuffix());
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,
 				templateText);
 		Document document = new Document(xPath, documentGenerator,
@@ -135,9 +133,7 @@ public class HandlerCopy implements Handler {
 
 	public static Document createDocumentBrowse(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
-		TemplateBean templateText = site.getTemplate(xPath.getLayoutSuffix(),
-				"browse", crk);
+		TemplateBean templateText = site.getTemplate("browse", xPath.getLayoutSuffix());
 		DocumentGenerator documentGenerator = new DocumentGenerator(site,
 				templateText);
 		Document document = new Document(xPath, documentGenerator,

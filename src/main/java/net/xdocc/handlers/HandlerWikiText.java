@@ -72,7 +72,7 @@ public class HandlerWikiText implements Handler {
 		
 		// apply text ftl
 		TemplateBean templateText = handlerBean.getSite().getTemplate(
-				handlerBean.getxPath().getLayoutSuffix(), "wikitext", crk);
+				"wikitext", handlerBean.getxPath().getLayoutSuffix());
 
 		// String htmlText = Utils.applyTemplate( templateText, model );
 		// create the document
@@ -81,12 +81,12 @@ public class HandlerWikiText implements Handler {
 				handlerBean.getDirtyset(), handlerBean, writeToDisk);
 		Document doc = new Document(handlerBean.getxPath(), documentGenerator,
 				handlerBean.getxPath().getTargetURL() + ".html", "file");
-		doc.setPreview(handlerBean.getxPath().isPreview());
+		doc.setPreview(handlerBean.getxPath().isSummary());
 		doc.setTemplate("wikitext");
 		doc.applyPath1(path);
 		// create the site to layout ftl
 		TemplateBean templateSite = handlerBean.getSite().getTemplate(
-				handlerBean.getxPath().getLayoutSuffix(), "page", crk);
+				"page", handlerBean.getxPath().getLayoutSuffix());
 		Map<String, Object> model = HandlerUtils.fillPage(
 				handlerBean.getSite(), handlerBean.getxPath(), doc);
 		model.put(Document.TYPE, "document");
@@ -153,7 +153,7 @@ public class HandlerWikiText implements Handler {
 
 		@Override
 		public void image(Attributes attributes, String url) {
-			String path = Utils.relativePathToRoot(site.getSource(), current
+			String path = Utils.relativePathToRoot(site.source(), current
 					.getParent().getPath());
 			/*
 			 * if(!current.isVisible()) { super.image(attributes, url); }
@@ -188,7 +188,7 @@ public class HandlerWikiText implements Handler {
 				} else {
 					XPath found = founds.get(0);
 					String relativePathToRoot = Utils.relativePathToRoot(
-							site.getSource(), found.getPath());
+							site.source(), found.getPath());
 					CompileResult compileResult = handlerImage.compile(site,
 							found, dirtyset, (ImageAttributes) attributes,
 							relativePathToRoot, handlerBean, writeToDisk);
@@ -260,25 +260,24 @@ public class HandlerWikiText implements Handler {
 		public WikiTextDocumentGenerator(TemplateBean templateText, Site site,
 				XPath xPath, Set<Path> dirtyset, HandlerBean handlerBean,
 				boolean writeToDisk) {
-			super(site, templateText);
+			super(site, templateText, handlerBean.getModel());
 			this.site = site;
 			this.xPath = xPath;
 			this.dirtyset = dirtyset;
 			this.handlerBean = handlerBean;
 			this.writeToDisk = writeToDisk;
-			setModel(handlerBean.getModel());
 		}
 
 		public String generate() {
 			try {
 				fillHTML(site, xPath, dirtyset, "BLABAL", handlerBean,
 						writeToDisk);
-				return Utils.applyTemplate(site, getTemplateText(), getModel());
+				return Utils.applyTemplate(site, templateBean(), model());
 			} catch (IOException | TemplateException e) {
 				if (LOG.isWarnEnabled()) {
 					LOG.warn("cannot generate wiki document "
-							+ getTemplateText().getFile().getFileName()
-							+ ". Model is " + getModel(), e);
+							+ templateBean().file().getFileName()
+							+ ". Model is " + model(), e);
 				}
 				return null;
 			}
@@ -293,8 +292,8 @@ public class HandlerWikiText implements Handler {
 					site, dirtyset, xPath, handlerBean, writeToDisk);
 
 			try {
-				if (getModel().containsKey(Document.RELATIVE)) {
-					String rel = (String) getModel().get(Document.RELATIVE);
+				if (model().containsKey(Document.RELATIVE)) {
+					String rel = (String) model().get(Document.RELATIVE);
 					builder.setBase(new URI(rel));
 				}
 			} catch (URISyntaxException e) {
@@ -341,8 +340,8 @@ public class HandlerWikiText implements Handler {
 			String rawFileContent = FileUtils.readFileToString(xPath.getPath()
 					.toFile(), charset);
 			parser.parse(rawFileContent);
-			getModel().put(Document.HANDLER, type);
-			getModel().put(Document.CONTENT, writer.toString());
+			model().put(Document.HANDLER, type);
+			model().put(Document.CONTENT, writer.toString());
 		}
 
 		@Override

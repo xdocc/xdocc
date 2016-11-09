@@ -32,7 +32,7 @@ public class HandlerDirectory implements Handler {
 		// only deal with directories
 		if (!xPath.isDirectory()) {
 			return false;
-		} else if (xPath.isCopyAll()) {
+		} else if (xPath.isRaw()) {
 			return true;
 		}
 		// do not handle if not visible or hidden. Exception: if its the root
@@ -117,7 +117,7 @@ public class HandlerDirectory implements Handler {
 								handlerBean.getxPath());
 				model.put(Document.LOCAL_NAVIGATION, current);
 			}
-			if (writeToDisk && !handlerBean.getxPath().isPreview()) {
+			if (writeToDisk && !handlerBean.getxPath().isSummary()) {
 				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(),
 						handlerBean.getDirtyset(),
 						handlerBean.getRelativePathToRoot(), doc,
@@ -126,14 +126,14 @@ public class HandlerDirectory implements Handler {
 			counter++;
 		}
 
-		if (handlerBean.getxPath().isPreview()) {
+		if (handlerBean.getxPath().isSummary()) {
 			Document documentPreview = Utils.searchHighlight(doc0
 					.getDocuments());
 			documentPreview.setHighlightUrl(target);
 			documentPreview.setHighlight(true);
 			documentPreview.setPreview(true);
 			documentPreview.setCompleteDocument(doc0);
-			documentPreview.setDate(handlerBean.getxPath().getDate());
+			documentPreview.setDate(handlerBean.getxPath().date());
 			if (writeToDisk) {
 				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(),
 						handlerBean.getDirtyset(),
@@ -190,13 +190,12 @@ public class HandlerDirectory implements Handler {
 				site.service().waitFor(crk);
 				CompileResult result = site.service().getCompileResult(crk);
 				result.addDependencies(crk, crkParent);
-				boolean pre = xPathChild.isPreview();
+				boolean pre = xPathChild.isSummary();
 				//TODO: full is default, no need for isFull
-				boolean full = xPathChild.isFull() && !pre;
+				boolean full = xPathChild.isPage() && !pre;
 				boolean nav = xPathChild.isNavigation() && !pre && !full ;
-				boolean none = xPathChild.isNone() && !pre && !full && !nav;
 				
-				if (!nav && !none) {
+				if (!nav) {
 					aggregate.add(result);
 				}
 			// --> yes: recompile with relPathToRoot from fromHandler
@@ -230,13 +229,12 @@ public class HandlerDirectory implements Handler {
 				compileResult.addDependencies(crk, crkParent);
 				crNew.addDependencies(crk, crkParent);
 				
-				boolean pre = xPathChild.isPreview();
+				boolean pre = xPathChild.isSummary();
 				//TODO: full is default, no need for isFull
-				boolean full = xPathChild.isFull() && !pre;
+				boolean full = xPathChild.isPage() && !pre;
 				boolean nav = xPathChild.isNavigation() && !pre && !full ;
-				boolean none = xPathChild.isNone() && !pre && !full && !nav;
-				
-				if (!nav && !none) {
+			
+				if (!nav) {
 					aggregate.add(crNew);
 				}
 			}
@@ -266,27 +264,26 @@ public class HandlerDirectory implements Handler {
 		// since we set the level, we need to work on a copy of this
 		List<Document> documents = HandlerUtils.copy(documentsA,
 				relativePathToRoot);
-		String prefix = original.getLayoutSuffix();
-		if (prefix.equals("")) {
-			prefix = xPath.getLayoutSuffix();
+		String suffix = original.getLayoutSuffix();
+		if (suffix.equals("")) {
+			suffix = xPath.getLayoutSuffix();
 		}
 		
-		Key<Path> crk = new Key<Path>(xPath.getPath(), xPath.getPath());
-		TemplateBean templateText = site.getTemplate(prefix, templateName,
-				crk);
+		
+		TemplateBean templateText = site.getTemplate(templateName, suffix);
 
 		DocumentGenerator gen = new DocumentGenerator(site, templateText);
 
 		Document document = new Document(xPath, gen, xPath.getTargetURL(), type);
-		document.setPreview(xPath.isPreview());
+		document.setPreview(xPath.isSummary());
 		document.setPaging(Arrays.asList(pageURLs), current);
 		document.setTemplate(templateName);
-		Map<String, Object> model = gen.getModel();
-		HandlerUtils.fillModel(xPath.getName(), xPath.getTargetURL(),
-				xPath.getDate(), 0, xPath.getFileName(), "", model);
+		Map<String, Object> model = gen.model();
+		HandlerUtils.fillModel(xPath.name(), xPath.getTargetURL(),
+				xPath.date(), 0, xPath.getFileName(), "", model);
 
 		// if we are in browse mode, show files to browse
-		if (xPath.isCopyAll()) {
+		if (xPath.isRaw()) {
 			List<Document> documents2 = new ArrayList<>();
 			for (Document documentx : documents) {
 				Document document2 = HandlerCopy.createDocumentBrowse(site,

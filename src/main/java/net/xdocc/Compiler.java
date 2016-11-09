@@ -35,7 +35,7 @@ public class Compiler implements Runnable {
 
 	public Compiler(Site site, Path path, Set<Path> dirtyset, Map<String, Object> model) {
 		COMPILER_COUNTER.incrementAndGet();
-		this.handlers = site.getHandlers();
+		this.handlers = site.handlers();
 		this.siteToCompile = path;
 		this.site = site;
 		this.dirtyset = dirtyset;
@@ -107,7 +107,7 @@ public class Compiler implements Runnable {
 			} 
 		}
 		try {
-			String relativePathToRoot = Utils.relativePathToRoot(site.getSource(),
+			String relativePathToRoot = Utils.relativePathToRoot(site.source(),
 					xPath.getPath());
 			HandlerBean handlerBean = new HandlerBean();
 			handlerBean.setSite(site);
