@@ -1,5 +1,7 @@
 package net.xdocc;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,6 +42,9 @@ import org.mapdb.DBMaker;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ch.qos.logback.core.FileAppender;
+import ch.qos.logback.core.util.StatusPrinter;
+import java.util.concurrent.CountDownLatch;
 
 public class Service {
 
@@ -48,14 +53,10 @@ public class Service {
 	private final ExecutorService executorServiceCompiler = Executors
 			.newCachedThreadPool();
 
-	private final Set<Path> dirtySet = Collections
-			.synchronizedSet(new HashSet<Path>());
-
 	private final Map<Key<Path>, CompileResult> compileResult = Collections
 			.synchronizedMap(new HashMap<Key<Path>, CompileResult>());
 	
-
-	private static Map<String, Set<FileInfos>> cache;
+	/*private static Map<String, Set<FileInfos>> cache;
 
 	private static Map<Site, Map<String, TemplateBean>> cacheTemplates;
 
@@ -65,21 +66,22 @@ public class Service {
 
 	private static File cacheDir;
 
-	private static boolean fileChangeListener = true;
+	private static boolean fileChangeListener = true;*/
 
-
-	private static int compilerCounter = 0;
         
         private final List<RecursiveWatcherService> watchServices = new ArrayList<>();
         
-        @Option(name="watch", required = true, usage="set the directory to watch and recompile on the fly.")
+        @Option(name="-w", required = true, usage="set the directory to watch and recompile on the fly.")
         private String watchDirectory = ".";
         
-        @Option(name="output", required = true, usage="set the directory to store generated files.")
+        @Option(name="-o", required = true, usage="set the directory to store generated files.")
         private String outputDirectory = "/tmp";
         
         @Option(name="-c",usage="set the directory to store the cached data")
         private String cacheDirectory = "/tmp";
+        
+        @Option(name="-l",usage="set the file to store the log output")
+        private String logFile = "xdocc.log";
         
         @Option(name="-r", usage="run only once")
         private boolean runOnce = false;
@@ -88,13 +90,13 @@ public class Service {
         private boolean clearCache = false;
         
 
-	public static void main(String[] args) throws IOException, CmdLineException {
+	public static void main(String... args) throws IOException {
             final Service service = new Service();
             service.addShutdownHook();
             service.doMain(args);
 	}
         
-        public void doMain(String[] args) throws IOException, CmdLineException {
+        public void doMain(String[] args) throws IOException {
             CmdLineParser parser = new CmdLineParser(this);
             
             try {
@@ -102,26 +104,37 @@ public class Service {
 
             } catch( CmdLineException e ) {
                 System.err.println(e.getMessage());
-                System.err.println("java SampleMain [options...] arguments...");
+                System.err.println("xdocc [options...] arguments...");
                 // print the list of available options
                 parser.printUsage(System.err);
                 System.err.println();
                 // print option sample. This is useful some time
-                System.err.println("  Example: java SampleMain"+parser.printExample(OptionHandlerFilter.ALL));
+                System.err.println("  Example: xdocc"+parser.printExample(OptionHandlerFilter.ALL));
                 shutdown();
                 return;
             }
             
+            setupLogging();
+            
+            final CountDownLatch startAfterFirstRun = new CountDownLatch(1);
+            final Site site = new Site(this, Paths.get(watchDirectory), Paths.get(outputDirectory));
             if(!runOnce) {
-                Site site = new Site(this, Paths.get(watchDirectory), Paths.get(outputDirectory));
                 startWatch(site, new FileListener() {
                     @Override
                     public void filesChanged(Site site) {
-                        System.out.println("file changed");
+                        try {
+                            LOG.debug("file changed");
+                            startAfterFirstRun.await();
+                            compile(site);
+                        } catch (Throwable t) {
+                            LOG.error("file changed, but could not compile",t);
+                        }
+                        
                     }
                 });
             }
-            //compile   
+            compile(site);
+            startAfterFirstRun.countDown();
         }
         
         private void addShutdownHook() {
@@ -141,10 +154,43 @@ public class Service {
 		for(RecursiveWatcherService recursiveWatcherService:watchServices) {
                     recursiveWatcherService.shutdown();
                 }
-		executorServiceCompiler.shutdown();
+		executorServiceCompiler.shutdownNow();
 	}
 	
+        private void setupLogging() {
+            LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+            
+            FileAppender fileAppender = new FileAppender();
+            fileAppender.setContext(loggerContext);
+            fileAppender.setName("FILE");
+             // set the file name
+            fileAppender.setFile(logFile);
+            PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+            encoder.setContext(loggerContext);
+            encoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n");
+            encoder.start();
 
+            fileAppender.setEncoder(encoder);
+            fileAppender.start();
+
+            // attach the rolling file appender to the logger of your choice
+            ch.qos.logback.classic.Logger logbackLogger = loggerContext.getLogger("Main");
+            logbackLogger.addAppender(fileAppender);
+
+            // OPTIONAL: print logback internal status messages
+            StatusPrinter.print(loggerContext);
+        }
+        
+        public void compile(Site site) throws IOException {
+            compile(site, site.source(), new HashMap<String, Object>());
+	}
+        
+        public void compile(Site site, Path path, Map<String, Object> model)
+			throws IOException {
+		LOG.debug("compiling: {} / {}" , site, path);
+		
+		executorServiceCompiler.execute(new Compiler(site, path, model));
+	}
 
 	
 
@@ -152,7 +198,7 @@ public class Service {
 
 	
 
-	void setupCache(File cacheDir) {
+	/*void setupCache(File cacheDir) {
 		db = DBMaker.newFileDB(cacheDir).closeOnJvmShutdown().make();
 		cache = db.getHashMap("results");
 		cacheTemplates = Collections
@@ -160,7 +206,7 @@ public class Service {
 		if (clearCache) {
 			cache.clear();
 		}
-	}
+	}*/
 
 	/*private List<Site> initCompile() throws FileNotFoundException, IOException,
 			InterruptedException {
@@ -195,11 +241,7 @@ public class Service {
 	 * @param site
 	 * @throws IOException
 	 */
-	public void compile(Site site) throws IOException {
-		invalidateCache(site);
-		compile(site, site.source(), new HashMap<String, Object>());
-		compilerCounter++;
-	}
+	
 
 	/**
 	 * Call recursively
@@ -208,7 +250,7 @@ public class Service {
 	 * @param path
 	 * @throws IOException
 	 */
-	public void compile(Site site, Path path, Map<String, Object> model)
+	/*public void compile(Site site, Path path, Map<String, Object> model)
 			throws IOException {
 		LOG.debug("compiling: " + site + "/" + path);
 		// Link link = readNavigation(site);
@@ -252,7 +294,7 @@ public class Service {
 			// wait until everything is compiled and exit;
 			shutdown();
 		}
-	}
+	}*/
 
 	Link readNavigation(Site site) throws IOException {
 		return readNavigation(site, new XPath(site, site.source()));
@@ -303,7 +345,7 @@ public class Service {
 
 	
 
-	public boolean isCached(Site site, Key<Path> key) {
+	/*public boolean isCached(Site site, Key<Path> key) {
 		if (cache == null) {
 			return false;
 		}
@@ -348,7 +390,7 @@ public class Service {
 			return true;
 		}
 		return false;
-	}
+	}*/
 
 	public void notifyFor() {
 		synchronized (compileResult) {
@@ -356,7 +398,7 @@ public class Service {
 		}
 	}
 
-	public void addCompileResult(Key<Path> key, CompileResult result) {
+	/*public void addCompileResult(Key<Path> key, CompileResult result) {
 		LOG.info("");
 		synchronized (compileResult) {
 			LOG.info("adding CR " + key);
@@ -367,7 +409,7 @@ public class Service {
 		} else {
 			LOG.info("no file infos: " + key + " added to CR but NOT IN CACHE!");
 		}
-	}
+	}*/
 
 	public CompileResult getCompileResult(Key<Path> key) {
 		synchronized (compileResult) {
@@ -382,7 +424,7 @@ public class Service {
 		}
 	}
 
-	public void addToCache(Key<Path> key, Set<FileInfos> infos) {
+	/*public void addToCache(Key<Path> key, Set<FileInfos> infos) {
 		synchronized (cache) {
 			LOG.info("adding CACHE: " + key + " size FileInfos: "
 					+ infos.size());
@@ -415,7 +457,7 @@ public class Service {
 		if (cacheTemplates != null) {
 			cacheTemplates.put(site, templates);
 		}
-	}
+	}*/
 
 	public void waitFor(Key<Path> key) throws InterruptedException {
 		while (getCompileResult(key) == null) {
@@ -425,7 +467,7 @@ public class Service {
 		}
 	}
 
-	private void invalidateCache(Site site) throws IOException {
+	/*private void invalidateCache(Site site) throws IOException {
 		Set<Key<Path>> dependencies = new HashSet<Key<Path>>();
 
 		// template cache
@@ -470,13 +512,13 @@ public class Service {
 		}
                 //empty navigation
 		site.navigation(null);
-	}
+	}*/
 
 	
 
-	public static void setFileListener(boolean set) {
+	/*public static void setFileListener(boolean set) {
 		fileChangeListener = set;
-	}
+	}*/
 
 	public synchronized void printAll() {
 
@@ -497,7 +539,7 @@ public class Service {
 			}
 		}
 
-		synchronized (cache) {
+		/*synchronized (cache) {
 			// CompileResult
 			LOG.info("------CACHE---------");
 			for (String key : cache.keySet()) {
@@ -512,7 +554,7 @@ public class Service {
 				}
 				LOG.info("");
 			}
-		}
+		}*/
 	}
 
 	

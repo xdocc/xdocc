@@ -101,6 +101,12 @@ public class Utils {
         }
         return sb.toString();
     }
+    
+    public static void deleteDirectories(Path... paths) throws IOException {
+        for(Path path:paths) {
+            deleteDirectory(path);
+        }
+    }
 
     public static void deleteDirectory(Path dir) throws IOException {
         Files.walkFileTree(dir, new FileVisitor<Path>() {

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TestTags {
 
-	private static final Logger log = LoggerFactory.getLogger(TestTags.class);
+	/*private static final Logger log = LoggerFactory.getLogger(TestTags.class);
 
 	private static final String genString = "/tmp/gen/example";
 	private static final String sourceString = "/example|si=50x50|sn=500x500";
@@ -179,6 +179,6 @@ public class TestTags {
 		CompileResult crNormal = service.getCompileResult(crk);
 		Assert.assertNotNull(crNormal);
 		Assert.assertEquals(4, crNormal.getDocument().getDocuments().size());
-	}
+	}*/
 	
 }

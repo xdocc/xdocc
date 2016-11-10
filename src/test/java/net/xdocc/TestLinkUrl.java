@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public class TestLinkUrl {
 
-	private static final Logger log = LoggerFactory.getLogger(TestLinkUrl.class);
+	/*private static final Logger log = LoggerFactory.getLogger(TestLinkUrl.class);
 
 	private static final String genString = "/tmp/gen/example-linkurl";
 	private static final String sourceString = "/example-linkurl";
@@ -85,6 +85,6 @@ public class TestLinkUrl {
 		p = site.getGenerated().resolve("news/test5.html");
 		s = FileUtils.readFileToString(p.toFile());
 		Assert.assertTrue(s.contains("\"../download/read.me\""));
-	}
+	}*/
 	
 }

@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 public class TestParser {
-	@Test
+	/*@Test
 	public void testParserVisible() throws Exception {
 		Site site = new Site(new Service(), "/tmp", "/tmp", null, null);
 		Path path = Paths.get("/tmp/2011-10-10-test");
@@ -221,5 +221,5 @@ public class TestParser {
 		XPath xPath = new XPath(site, path);
 		Assert.assertEquals("tomp2p_412", xPath.getUrl());
 		Assert.assertEquals("TomP2P 4.1.2-preview", xPath.getName());
-	}
+	}*/
 }

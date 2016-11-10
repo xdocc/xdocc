@@ -27,25 +27,26 @@ public class Compiler implements Runnable {
 
 	final private Site site;
 
-	final private Set<Path> dirtyset;
-
 	final private Handler handlerCopy = new HandlerCopy();
 	
 	final private  Map<String, Object> model;
 
-	public Compiler(Site site, Path path, Set<Path> dirtyset, Map<String, Object> model) {
+	public Compiler(Site site, Path path, Map<String, Object> model) {
 		COMPILER_COUNTER.incrementAndGet();
 		this.handlers = site.handlers();
 		this.siteToCompile = path;
 		this.site = site;
-		this.dirtyset = dirtyset;
 		this.model = model;
 	}
 
 	@Override
 	public void run() {
 		try {
-			compile(siteToCompile);
+		
+                    List<XPath> children = Utils.getNonHiddenChildren(site,
+					siteToCompile);
+                    
+                    compile(siteToCompile);
 		} catch (Exception e) {
 			LOG.error("interrupted: " + e);
 		}

@@ -17,12 +17,26 @@ import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestService {
+    
+    @Test
+    public void test() throws IOException {
+        
+        Path src = Files.createTempDirectory("src");
+        Path gen = Files.createTempDirectory("gen");
+        Path log = Files.createTempFile("xdocc",".log");
 
-	private static final Logger LOG = LoggerFactory
+        
+        Service.main("-w "+src.toString(), "-o "+gen.toString(), "-r", "-x", "-l "+log.toString());
+        
+        Utils.deleteDirectories(src, gen);
+    }
+
+	/*private static final Logger LOG = LoggerFactory
 			.getLogger(TestService.class);
 
 	private static final String configDir = "/example-main/config";
@@ -61,7 +75,7 @@ public class TestService {
 	}
 	
 	@Test
-	public void test() throws InterruptedException {
+	public void test() throws InterruptedException, IOException, CmdLineException {
 		Service.main(args);
 		Thread.sleep(5000);
 		Assert.assertTrue(Files.exists(Paths.get(props.getProperty("generated")+"/index.html")));
@@ -82,6 +96,6 @@ public class TestService {
 		Path g = Paths.get(props.getProperty("generated"));
 		FileUtils.deleteDirectory(t.toFile());
 		FileUtils.deleteDirectory(g.toFile());
-	}
+	}*/
 
 }

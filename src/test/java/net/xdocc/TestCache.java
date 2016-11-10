@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 public class TestCache {
 	
-	private static final Logger log = LoggerFactory.getLogger(TestCache.class);
+	/*private static final Logger log = LoggerFactory.getLogger(TestCache.class);
 	
 	private static final String genString = "/tmp/gen/example-cache";
 	private static final String sourceString = "/example-cache";
@@ -83,6 +83,6 @@ public class TestCache {
 		log.info("testcompile done 3");
 		timestap2 = Files.getLastModifiedTime(index).toMillis();
 		Assert.assertNotSame(timestap, timestap2);
-	}
+	}*/
 	
 }

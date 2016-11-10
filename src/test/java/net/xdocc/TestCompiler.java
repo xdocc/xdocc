@@ -22,7 +22,7 @@ import org.junit.Test;
  */
 public class TestCompiler {
 
-	private static final String genString = "/tmp/gen/example";
+	/*private static final String genString = "/tmp/gen/example";
 	private static final String sourceString = "/example|si=50x50|sn=500x500";
 
 	private static Site site;
@@ -82,6 +82,6 @@ public class TestCompiler {
 		index = site.getGenerated().resolve("folder0/index.html");
 		Assert.assertEquals(true, Files.exists(index));
 		System.out.println(site.getNavigation());
-	}
+	}*/
 
 }

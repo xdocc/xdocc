@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public class TestLink {
 
-	private static final Logger log = LoggerFactory.getLogger(TestLink.class);
+	/*private static final Logger log = LoggerFactory.getLogger(TestLink.class);
 
 	private static final String genString = "/tmp/gen/example-link";
 	private static final String sourceString = "/example-link";
@@ -78,6 +78,6 @@ public class TestLink {
 		service.waitFor(crk);
 		CompileResult result = service.getCompileResult(crk);
 		Assert.assertTrue(result.getDocument().getDocuments().size() == 3);
-	}
+	}*/
 	
 }
