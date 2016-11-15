@@ -22,7 +22,7 @@ import net.xdocc.XPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HandlerDirectory implements Handler {
+/*public class HandlerDirectory implements Handler {
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(HandlerDirectory.class);
@@ -297,4 +297,4 @@ public class HandlerDirectory implements Handler {
 		}
 		return document;
 	}
-}
+}*/

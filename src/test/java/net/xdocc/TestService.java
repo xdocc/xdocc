@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import junit.framework.Assert;
 
@@ -23,17 +24,34 @@ import org.slf4j.LoggerFactory;
 
 public class TestService {
     
-    @Test
-    public void test() throws IOException {
-        
-        Path src = Files.createTempDirectory("src");
-        Path gen = Files.createTempDirectory("gen");
-        Path log = Files.createTempFile("xdocc",".log");
+    private static Path gen;
+    private static Path src;
 
+    @BeforeClass
+    public static void setup() throws IOException {
+        src = Files.createTempDirectory("src");
+        gen = Files.createTempDirectory("gen");
+        Files.createDirectories(src.resolve(".templates"));
+    }
+
+    @AfterClass
+    public static void tearDown() throws IOException {
+        //Utils.deleteDirectories(gen, src);
+    }
+    
+    @Test
+    public void testStart() throws IOException, InterruptedException, ExecutionException {
         
-        Service.main("-w "+src.toString(), "-o "+gen.toString(), "-r", "-x", "-l "+log.toString());
-        
-        Utils.deleteDirectories(src, gen);
+        Path log = Files.createTempFile("xdocc",".log");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x", "-l", log.toString());
+    }
+    
+    @Test
+    public void testTxt() throws IOException, InterruptedException, ExecutionException {
+        Utils.createFile(src, "1-test.txt", "this is a text file");
+        Utils.createFile(src, ".templates/text.ftl", "This is a text file \n\n -- available files: ${all}");
+        Path log = Files.createTempFile("xdocc",".log");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x", "-l", log.toString());
     }
 
 	/*private static final Logger LOG = LoggerFactory

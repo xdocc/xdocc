@@ -2,11 +2,16 @@ package net.xdocc;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import net.xdocc.CompileResult.Key;
 import net.xdocc.handlers.Handler;
@@ -16,130 +21,67 @@ import net.xdocc.handlers.HandlerCopy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Compiler implements Runnable {
-	private static final Logger LOG = LoggerFactory.getLogger(Compiler.class);
+public class Compiler  {
 
-	private static final AtomicInteger COMPILER_COUNTER = new AtomicInteger();
+    private static final Logger LOG = LoggerFactory.getLogger(Compiler.class);
 
-	final private List<Handler> handlers;
+    final private List<Handler> handlers;
 
-	final private Path siteToCompile;
+    final private Site site;
 
-	final private Site site;
+    final private ExecutorService executorServiceCompiler;
 
-	final private Handler handlerCopy = new HandlerCopy();
-	
-	final private  Map<String, Object> model;
+    public Compiler(ExecutorService executorServiceCompiler, Site site) {
+        this.executorServiceCompiler = executorServiceCompiler;
+        this.handlers = site.handlers();
+        this.site = site;
+    }
 
-	public Compiler(Site site, Path path, Map<String, Object> model) {
-		COMPILER_COUNTER.incrementAndGet();
-		this.handlers = site.handlers();
-		this.siteToCompile = path;
-		this.site = site;
-		this.model = model;
-	}
+    public CompletableFuture<List<CompileResult>> compile(final Path pointOfView, final Path path) {
+        final CompletableFuture<List<CompileResult>> completableFuture = new CompletableFuture<>();
 
-	@Override
-	public void run() {
-		try {
-		
-                    List<XPath> children = Utils.getNonHiddenChildren(site,
-					siteToCompile);
-                    
-                    compile(siteToCompile);
-		} catch (Exception e) {
-			LOG.error("interrupted: " + e);
-		}
-		if (COMPILER_COUNTER.decrementAndGet() == 0) {
-			try {
-				site.service().compileDone(site);
-			} catch (IOException e) {
-				LOG.error("cannot execute compile done: " + e);
-				e.printStackTrace();
-			}
-		}
+        completableFuture.runAsync(() -> {
 
-	}
+            try {
+                List<XPath> children = Utils.getNonHiddenChildren(site, path);
+                List<CompletableFuture> stream = new ArrayList<>();
+                List<CompileResult> results = new ArrayList<>();
+                
+                for (XPath item : children) {
+                    if (item.isDirectory()) {
+                        stream.add(compile(item.path(), item.path()));
+                    } else {
+                        for (Handler handler : handlers) {
+                            if (handler.canHandle(site, item)) {
+                                results.add(compile(handler, item));
+                            }
+                        }
+                    }
+                }
+                completableFuture.allOf(stream.toArray(new CompletableFuture[0])).thenRunAsync(() -> {
+                    stream.stream().forEach((CompletableFuture v) -> {
+                        results.addAll((List<CompileResult>)v.getNow(Collections.emptyList()));
+                    });
+                    //now we have all files and folders
+                    completableFuture.complete(results);
+                }, executorServiceCompiler);
+            } catch (Throwable t) {
+                completableFuture.completeExceptionally(t);
+            }
 
-	public void compile(Path siteToCompile) throws InterruptedException {
-		if(siteToCompile.getFileName().toString().endsWith("~")) {
-			return;
-		}
-		XPath xPath = new XPath(site, siteToCompile);
-		if (xPath.isHidden()) {
-			return;
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("compile " + siteToCompile);
-		}
-		recursive();
+        }, executorServiceCompiler);
 
-		boolean foundHandler = false;
+        return completableFuture;
+    }
 
-		for (Handler handler : handlers) {
-			if (handler.canHandle(site, xPath)) {
-				compile(handler, xPath);
-				foundHandler = true;
-			}
-		}
+    private CompileResult compile(Handler handler, XPath xPath) throws Exception {
 
-		// compile as last
-		if (!foundHandler) {
-			boolean compile = compile(handlerCopy, xPath);
-			if (compile) {
-				foundHandler = true;
-			}
-		}
-		if (!foundHandler) {
-			LOG.warn("no handler found for " + xPath.getFileName());
-		}
-	}
-
-	private boolean compile(Handler handler, XPath xPath) {
-		Key<Path> crk = new Key<Path>(xPath.path(), xPath.path());
-		CompileResult result = site.service().getCompileResult(crk);
-		if(result != null) {
-			if(site.service().isCached(site, crk)) {
-				for(FileInfos fileInfos : site.service().getFromCache(crk)) {
-					dirtyset.add(fileInfos.getTarget().toPath());
-				}
-				site.service().notifyFor();
-				return true;
-			} 
-		}
-		try {
-			String relativePathToRoot = Utils.relativePathToRoot(site.source(),
-					xPath.path());
-			HandlerBean handlerBean = new HandlerBean();
-			handlerBean.setSite(site);
-			handlerBean.setxPath(xPath);
-			handlerBean.setDirtyset(dirtyset);
-			handlerBean.setModel(model);
-			handlerBean.setRelativePathToRoot(relativePathToRoot);
-			result = handler.compile(handlerBean, true);
-			site.service().addCompileResult(crk, result);
-			site.service().notifyFor();
-			return true;
-		} catch (Throwable t) {
-			LOG.error("could not compile " + siteToCompile, t);
-			site.service().addCompileResult(crk, CompileResult.ERROR);
-		}
-		return false;
-	}
-
-	private void recursive() {
-		try {
-			List<XPath> children = Utils.getNonHiddenChildren(site,
-					siteToCompile);
-			int sizeDocuments = Utils.countVisibleDocmuntes(children);
-			Map<String, Object> model = new HashMap<>();
-			model.put(Document.DOCUMENT_SIZE, sizeDocuments);
-			for (XPath child : children) {
-				site.service().compile(site, child.path(), model);
-			}
-		} catch (IOException e) {
-			LOG.error("could not fetch children - " + e);
-		}
-	}
-
+        String relativePathToRoot = Utils.relativePathToRoot(site.source(),
+                xPath.path());
+        HandlerBean handlerBean = new HandlerBean();
+        handlerBean.setSite(site);
+        handlerBean.setxPath(xPath);
+        handlerBean.setRelativePathToRoot(relativePathToRoot);
+        return handler.compile(handlerBean, true);
+    }
 }

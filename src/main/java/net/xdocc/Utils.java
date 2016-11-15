@@ -465,7 +465,7 @@ public class Utils {
                 return null;
             }
 
-            TemplateBean templateBean = site.service().getTemplateBeans(site).get(name);
+            //TemplateBean templateBean = site.service().getTemplateBeans(site).get(name);
             //templateBean.addDependencies(parentTemplateBean);
 
             return source;

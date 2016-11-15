@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.util.StatusPrinter;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 
 public class Service {
 
@@ -90,13 +91,13 @@ public class Service {
         private boolean clearCache = false;
         
 
-	public static void main(String... args) throws IOException {
+	public static void main(String... args) throws IOException, InterruptedException, ExecutionException {
             final Service service = new Service();
             service.addShutdownHook();
             service.doMain(args);
 	}
         
-        public void doMain(String[] args) throws IOException {
+        public void doMain(String[] args) throws IOException, InterruptedException, ExecutionException {
             CmdLineParser parser = new CmdLineParser(this);
             
             try {
@@ -181,15 +182,17 @@ public class Service {
             StatusPrinter.print(loggerContext);
         }
         
-        public void compile(Site site) throws IOException {
+        public void compile(Site site) throws IOException, InterruptedException, ExecutionException {
             compile(site, site.source(), new HashMap<String, Object>());
 	}
         
         public void compile(Site site, Path path, Map<String, Object> model)
-			throws IOException {
-		LOG.debug("compiling: {} / {}" , site, path);
-		
-		executorServiceCompiler.execute(new Compiler(site, path, model));
+			throws IOException, InterruptedException, ExecutionException {
+            LOG.info("compiling start: {} / {}" , site, path);
+            final long start = System.currentTimeMillis();
+            Compiler c = new Compiler(executorServiceCompiler, site);
+            List<CompileResult> result = c.compile(path, path).get();
+            LOG.info("compiling done in {} ms of {} / {}", (System.currentTimeMillis() - start) , site, path);
 	}
 
 	

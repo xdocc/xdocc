@@ -66,14 +66,14 @@ public class HandlerCopy implements Handler {
 							.getParent());
 					handlerBean.getDirtyset().add(generatedDir2);
 					Key<Path> crk = new Key<Path>(handlerBean.getxPath().path(), handlerBean.getxPath().path());
-					if (!handlerBean.getSite().service().isCached(handlerBean.getSite(), crk)) {
+					
 						Files.copy(handlerBean.getxPath().path(),
 								generatedFile,
 								StandardCopyOption.COPY_ATTRIBUTES,
 								StandardCopyOption.REPLACE_EXISTING,
 								StandardCopyOption.COPY_ATTRIBUTES,
 								LinkOption.NOFOLLOW_LINKS);
-					}
+					
 					handlerBean.getDirtyset().add(generatedFile);
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("copy " + handlerBean.getxPath().path()

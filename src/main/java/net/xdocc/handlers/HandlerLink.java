@@ -92,9 +92,9 @@ public class HandlerLink implements Handler {
 				documents.add(specialCR.getDocument());
 
 				// put specialCR in cache
-				if(isCompiled) {
-					handlerBean.getSite().service().addCompileResult(crkNew, specialCR);
-				}
+				
+				//	handlerBean.getSite().service().addCompileResult(crkNew, specialCR);
+				
 				
 			}
 

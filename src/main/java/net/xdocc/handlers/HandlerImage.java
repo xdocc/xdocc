@@ -53,38 +53,38 @@ public class HandlerImage implements Handler {
 		dirtyset.add(generatedFile);
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
 		dirtyset.add(generatedDir);
-		if (!site.service().isCached(xPath.site(), crk)) {
+		
 			Files.copy(xPath.path(), generatedFile,
 					StandardCopyOption.COPY_ATTRIBUTES,
 					StandardCopyOption.REPLACE_EXISTING,
 					StandardCopyOption.COPY_ATTRIBUTES,
 					LinkOption.NOFOLLOW_LINKS);
-		}
+		
 		dirtyset.add(generatedFile);
 		// create a thumbnail
 		String sizeIcon = xPath.searchProperty("size_icon", "si");
 		Path generatedFileThumb = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_t" + xPath.extensions());
-		if (!site.service().isCached(xPath.site(), crk)) {
+		
 			if (sizeIcon.endsWith("c")) {
 				cropResize(xPath, generatedFileThumb, stripMod(sizeIcon, "c"));
 			} else {
 				resize(xPath, generatedFileThumb, sizeIcon);
 			}
-		}
+		
 		dirtyset.add(generatedFileThumb);
 		// create display size image
 		String sizeNorm = xPath.searchProperty("size_normal", "sn");
 
 		Path generatedFileNorm = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_n" + xPath.extensions());
-		if (!site.service().isCached(xPath.site(), crk)) {
+		
 			if (sizeNorm.endsWith("c")) {
 				cropResize(xPath, generatedFileNorm, stripMod(sizeNorm, "c"));
 			} else {
 				resize(xPath, generatedFileNorm, sizeNorm);
 			}
-		}
+		
 		dirtyset.add(generatedFileNorm);
 
 		// apply text ftl
@@ -130,9 +130,9 @@ public class HandlerImage implements Handler {
 				.createDirectories(generatedFile2.getParent());
 		dirtyset.add(generatedDir2);
 		if (writeToDisk) {
-			if (!site.service().isCached(xPath.site(), crk)) {
+			
 				Utils.write(htmlSite, xPath, generatedFile2);
-			}
+			
 		}
 		return new CompileResult(doc, xPath.path(), handlerBean, this,
 				generatedFile, generatedFileThumb, generatedFileNorm,

@@ -31,10 +31,10 @@ public class CompileResult implements Serializable {
 			null, null);
 	public final static CompileResult ERROR = new CompileResult(null, null,
 			null, null);
-	private final Document document;
-	private final Set<FileInfos> fileInfos;
-	private final HandlerBean handlerBean;
-	private final Handler handler;
+	private  Document document;
+	private  Set<FileInfos> fileInfos;
+	private  HandlerBean handlerBean;
+	private  Handler handler;
 
 	private final Map<Key<Path>, Set<Key<Path>>> dependenciesUp = new HashMap<Key<Path>, Set<Key<Path>>>();
 	private final Map<Key<Path>, Set<Key<Path>>> dependenciesDown = new HashMap<Key<Path>, Set<Key<Path>>>();
