@@ -1,7 +1,5 @@
 package net.xdocc;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,355 +20,104 @@ import java.util.concurrent.ExecutionException;
 
 public class Service {
 
-	private static final Logger LOG = LoggerFactory.getLogger(Service.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Service.class);
 
-	private final ExecutorService executorServiceCompiler = Executors
-			.newCachedThreadPool();
-        
-        private final List<RecursiveWatcherService> watchServices = new ArrayList<>();
-        
-        @Option(name="-w", required = true, usage="set the directory to watch and recompile on the fly.")
-        private String watchDirectory = ".";
-        
-        @Option(name="-o", required = true, usage="set the directory to store generated files.")
-        private String outputDirectory = "/tmp";
-        
-        @Option(name="-c",usage="set the directory to store the cached data")
-        private String cacheDirectory = "/tmp";
-        
-        @Option(name="-r", usage="run only once")
-        private boolean runOnce = false;
-        
-        @Option(name="-x", usage="clear the cache at startup")
-        private boolean clearCache = false;
-        
+    private final ExecutorService executorServiceCompiler = Executors
+            .newCachedThreadPool();
 
-	public static void main(String... args) throws IOException, InterruptedException, ExecutionException {
-            final Service service = new Service();
-            service.addShutdownHook();
-            service.doMain(args);
-	}
-        
-        public void doMain(String[] args) throws IOException, InterruptedException, ExecutionException {
-            CmdLineParser parser = new CmdLineParser(this);
-            
-            try {
-                parser.parseArgument(args);
+    private final List<RecursiveWatcherService> watchServices = new ArrayList<>();
 
-            } catch( CmdLineException e ) {
-                System.err.println(e.getMessage());
-                System.err.println("xdocc [options...] arguments...");
-                // print the list of available options
-                parser.printUsage(System.err);
-                System.err.println();
-                // print option sample. This is useful some time
-                System.err.println("  Example: xdocc"+parser.printExample(OptionHandlerFilter.ALL));
-                shutdown();
-                return;
-            }
-            
-            final CountDownLatch startAfterFirstRun = new CountDownLatch(1);
-            final Site site = new Site(this, Paths.get(watchDirectory), Paths.get(outputDirectory));
-            if(!runOnce) {
-                startWatch(site, new FileListener() {
-                    @Override
-                    public void filesChanged(Site site) {
-                        try {
-                            LOG.debug("file changed");
-                            startAfterFirstRun.await();
-                            compile(site);
-                        } catch (Throwable t) {
-                            LOG.error("file changed, but could not compile",t);
-                        }
-                        
+    @Option(name = "-w", required = true, usage = "set the directory to watch and recompile on the fly.")
+    private String watchDirectory = ".";
+
+    @Option(name = "-o", required = true, usage = "set the directory to store generated files.")
+    private String outputDirectory = "/tmp";
+
+    @Option(name = "-c", usage = "set the directory to store the cached data")
+    private String cacheDirectory = "/tmp";
+
+    @Option(name = "-r", usage = "run only once")
+    private boolean runOnce = false;
+
+    @Option(name = "-x", usage = "clear the cache at startup")
+    private boolean clearCache = false;
+
+    public static void main(String... args) throws IOException, InterruptedException, ExecutionException {
+        final Service service = new Service();
+        service.addShutdownHook();
+        service.doMain(args);
+    }
+
+    public void doMain(String[] args) throws IOException, InterruptedException, ExecutionException {
+        CmdLineParser parser = new CmdLineParser(this);
+
+        try {
+            parser.parseArgument(args);
+
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            System.err.println("xdocc [options...] arguments...");
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println();
+            // print option sample. This is useful some time
+            System.err.println("  Example: xdocc" + parser.printExample(OptionHandlerFilter.ALL));
+            shutdown();
+            return;
+        }
+
+        final CountDownLatch startAfterFirstRun = new CountDownLatch(1);
+        final Site site = new Site(this, Paths.get(watchDirectory), Paths.get(outputDirectory));
+        if (!runOnce) {
+            startWatch(site, new FileListener() {
+                @Override
+                public void filesChanged(Site site) {
+                    try {
+                        LOG.debug("file changed");
+                        startAfterFirstRun.await();
+                        compile(site);
+                    } catch (Throwable t) {
+                        LOG.error("file changed, but could not compile", t);
                     }
-                });
-            }
-            compile(site);
-            startAfterFirstRun.countDown();
-        }
-        
-        private void addShutdownHook() {
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			public void run() {
-				shutdown();
-			}
-		});
-	}
 
-	public void startWatch(Site site, FileListener listener) throws IOException {
-	    RecursiveWatcherService recursiveWatcherService = new RecursiveWatcherService(site, listener);
-            watchServices.add(recursiveWatcherService);
-        }
-        
-        public void shutdown() {
-		for(RecursiveWatcherService recursiveWatcherService:watchServices) {
-                    recursiveWatcherService.shutdown();
                 }
-		executorServiceCompiler.shutdownNow();
-	}
-	
-        
-        
-        public void compile(Site site) throws IOException, InterruptedException, ExecutionException {
-            compile(site, site.source(), new HashMap<String, Object>());
-	}
-        
-        public void compile(Site site, Path path, Map<String, Object> model)
-			throws IOException, InterruptedException, ExecutionException {
-            LOG.info("compiling start: {} / {}" , site, path);
-            final long start = System.currentTimeMillis();
-            Compiler c = new Compiler(executorServiceCompiler, site);
-            c.compile(path, path).get();
-            LOG.info("compiling done in {} ms of {} / {}", (System.currentTimeMillis() - start) , site, path);
-	}
+            });
+        }
+        compile(site);
+        startAfterFirstRun.countDown();
+    }
 
-	
+    private void addShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                shutdown();
+            }
+        });
+    }
 
-	
+    public void startWatch(Site site, FileListener listener) throws IOException {
+        RecursiveWatcherService recursiveWatcherService = new RecursiveWatcherService(site, listener);
+        watchServices.add(recursiveWatcherService);
+    }
 
-	
+    public void shutdown() {
+        for (RecursiveWatcherService recursiveWatcherService : watchServices) {
+            recursiveWatcherService.shutdown();
+        }
+        executorServiceCompiler.shutdownNow();
+    }
 
-	/*void setupCache(File cacheDir) {
-		db = DBMaker.newFileDB(cacheDir).closeOnJvmShutdown().make();
-		cache = db.getHashMap("results");
-		cacheTemplates = Collections
-				.synchronizedMap(new HashMap<Site, Map<String, TemplateBean>>());
-		if (clearCache) {
-			cache.clear();
-		}
-	}*/
+    public void compile(Site site) throws IOException, InterruptedException, ExecutionException {
+        compile(site, site.source(), new HashMap<String, Object>());
+    }
 
-	/*private List<Site> initCompile() throws FileNotFoundException, IOException,
-			InterruptedException {
-		// now we read the config files for each site
-		List<Handler> handlers = Utils.findHandlers();
-		List<Site> sites = createSites(handlers);
+    public void compile(Site site, Path path, Map<String, Object> model)
+            throws IOException, InterruptedException, ExecutionException {
+        LOG.info("compiling start: {} / {}", site, path);
+        final long start = System.currentTimeMillis();
+        Compiler c = new Compiler(executorServiceCompiler, site);
+        c.compile(path, path).get();
+        LOG.info("compiling done in {} ms of {} / {}", (System.currentTimeMillis() - start), site, path);
+    }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("found " + handlers.size() + " handlers and "
-					+ sites.size() + " sites. Going to compile the sites now");
-		}
-
-		for (Site site : sites) {
-			Utils.createDirectory(site);
-			compile(site);
-			Key<Path> crk = new Key<Path>(site.source(), site.source());
-			waitFor(crk);
-			LOG.info("compiling done: " + site);
-			db.commit();
-		}
-
-		return sites;
-	}*/
-
-	
-
-	
-
-	/**
-	 * Initial call
-	 * 
-	 * @param site
-	 * @throws IOException
-	 */
-	
-
-	/**
-	 * Call recursively
-	 * 
-	 * @param site
-	 * @param path
-	 * @throws IOException
-	 */
-	/*public void compile(Site site, Path path, Map<String, Object> model)
-			throws IOException {
-		LOG.debug("compiling: " + site + "/" + path);
-		// Link link = readNavigation(site);
-		// site.setNavigation(link);
-		executorServiceCompiler.execute(new Compiler(site, path, dirtySet,
-				model));
-	}
-
-	public void compileDone(Site site) throws IOException {
-		// compileResult.clear();
-		List<Path> children = Utils.getChildren(site, site.generated());
-		for (Iterator<Path> iterator = children.iterator(); iterator.hasNext();) {
-			Path foundPath = iterator.next();
-			if (dirtySet.contains(foundPath)) {
-				iterator.remove();
-			}
-		}
-		dirtySet.clear();
-		// we can remove now all the ones in children
-		// make sure we are in the right directory
-		for (Path pathToDelete : children) {
-			if (!Files.isDirectory(pathToDelete)) {
-				if (Utils.isChild(pathToDelete, site.generated())) {
-					Files.delete(pathToDelete);
-					LOG.debug("delete " + pathToDelete);
-				}
-			}
-		}
-		if (compilerCounter == 1) {
-			// some templates may be used within a template -> find those and
-			// get the file size and date
-			for (Map.Entry<String, TemplateBean> entry : cacheTemplates.get(
-					site).entrySet()) {
-				if (entry.getValue().isDirty()) {
-					String baseName = FilenameUtils.getBaseName(entry.getKey());
-					site.getTemplate(baseName, "");
-				}
-			}
-		}
-		if (!fileChangeListener) {
-			// wait until everything is compiled and exit;
-			shutdown();
-		}
-	}*/
-
-	
-
-	
-
-	
-
-	/*public boolean isCached(Site site, Key<Path> key) {
-		if (cache == null) {
-			return false;
-		}
-		Set<FileInfos> infos = getFromCache(key);
-		if (infos == null) {
-			return false;
-		}
-		for (FileInfos info : infos) {
-			try {
-				if (info.isFiles(key.getSource())) {
-					// now we have all the files found
-					long sourceSize = Files.size(key.getSource());
-					long targetSize = Files.size(info.getTarget().toPath());
-					long targetTimestamp = Files.getLastModifiedTime(
-							info.getTarget().toPath()).toMillis();
-					long sourceTimestamp = Files.getLastModifiedTime(
-							key.getSource()).toMillis();
-					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp,
-							sourceSize);
-					boolean isTargetDirty = info.isTargetDirty(info.getTarget()
-							.toPath(), targetTimestamp, targetSize);
-					return !isSourceDirty && !isTargetDirty;
-				} else if (info.isDirectories(key.getSource())) {
-
-					// no need to check target, since it will be modified
-					// when a file changes inside
-
-					long sourceTimestamp = Files.getLastModifiedTime(
-							key.getSource()).toMillis();
-					boolean isSourceDirty = info.isSourceDirty(sourceTimestamp);
-					return !isSourceDirty;
-				} else {
-					return false;
-				}
-			} catch (IOException e) {
-				LOG.info("exception in isCached - probably due to file removed event: "
-						+ key);
-				return false;
-			}
-		}
-		if (!key.getSource().toString().equals(key.getTarget())) {
-			return true;
-		}
-		return false;
-	}*/
-
-	
-
-	/*public void addToCache(Key<Path> key, Set<FileInfos> infos) {
-		synchronized (cache) {
-			LOG.info("adding CACHE: " + key + " size FileInfos: "
-					+ infos.size());
-			cache.put(key.toString(), infos);
-		}
-	}
-
-	public Set<FileInfos> getFromCache(Key<Path> key) {
-		synchronized (cache) {
-			return cache.get(key.toString());
-		}
-	}
-
-	public void removeFromCache(Key<Path> key) {
-		synchronized (cache) {
-			cache.remove(key.toString());
-			LOG.info("remove CACHE: " + key);
-		}
-	}
-
-	public synchronized Map<String, TemplateBean> getTemplateBeans(Site site) {
-		if (cacheTemplates == null) {
-			return null;
-		}
-		return cacheTemplates.get(site);
-	}
-
-	public synchronized void addTemplateBeans(Site site,
-			Map<String, TemplateBean> templates) {
-		if (cacheTemplates != null) {
-			cacheTemplates.put(site, templates);
-		}
-	}*/
-
-	
-
-	/*private void invalidateCache(Site site) throws IOException {
-		Set<Key<Path>> dependencies = new HashSet<Key<Path>>();
-
-		// template cache
-		for (Map.Entry<String, TemplateBean> entry : getTemplateBeans(site)
-				.entrySet()) {
-			if (entry.getValue().isDirty()) {
-				LOG.debug("yes, we are dirty: " + entry.getKey());
-				//dependencies.addAll(entry.getValue().getFlatDependencies());
-			}
-		}
-
-		// content cache
-		synchronized (compileResult) {
-			for (Key<Path> key : compileResult.keySet()) {
-				CompileResult cr = compileResult.get(key);
-				if (!Utils.isChild(key.getSource(), site.source())) {
-					continue;
-				}
-				Set<FileInfos> list = cr.getFileInfos();
-				if (list == null) {
-					continue;
-				}
-
-				// if the cache is not valid OR if the template changed
-				if (!isCached(site, key) || dependencies.contains(key)) {
-					dependencies.add(key);
-					Set<Key<Path>> deps = cr.findDependencies(key);
-					if (deps.size() > 0)
-						LOG.info("dependencies for " + key + " :");
-					for (Key<Path> kk : deps) {
-						LOG.info(kk.toString());
-					}
-					dependencies.addAll(deps);
-				}
-			}
-		}
-		for (Key<Path> dependency : dependencies) {
-			LOG.debug("removing dependency from cache " + dependency);
-			removeFromCache(dependency);
-			LOG.debug("removing key from CR " + dependency);
-			removeCompileResult(dependency);
-		}
-                //empty navigation
-		site.navigation(null);
-	}*/
-
-	
-
-	/*public static void setFileListener(boolean set) {
-		fileChangeListener = set;
-	}*/
 }

@@ -37,9 +37,9 @@ public class HandlerImage implements Handler {
 				&& HandlerUtils.knowsExtension(knownExtensions(), xPath);
 	}
 
-	public Document compile(Site site, XPath xPath, 
+	public Document compile(Site site, XPath xPath, Map<String, Object> model2, 
 			ImageAttributes attributes, String relativePathToRoot,
-			HandlerBean handlerBean, boolean writeToDisk)
+			boolean writeToDisk)
 			throws TemplateException, IOException, InterruptedException {
 		
 		// copy the original image
@@ -133,11 +133,12 @@ public class HandlerImage implements Handler {
 	}
 
 	@Override
-	public Document compile(HandlerBean handlerBean, boolean writeToDisk)
+	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+                String relativePathToRoot, boolean writeToDisk)
 			throws Exception {
-		return compile(handlerBean.getSite(), handlerBean.getxPath(),
+		return compile(site, xPath, model,
 				 (ImageAttributes) null,
-				handlerBean.getRelativePathToRoot(), handlerBean, writeToDisk);
+				relativePathToRoot, writeToDisk);
 	}
 
 	@Override

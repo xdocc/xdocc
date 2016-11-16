@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import net.xdocc.Document;
 import net.xdocc.Site;
@@ -27,13 +28,13 @@ public class HandlerLink implements Handler {
 	}
 
 	@Override
-	public Document compile(HandlerBean handlerBean, boolean writeToDisk)
+	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+                String relativePathToRoot, boolean writeToDisk)
 			throws Exception {
 
 		
 		
-		Configuration config = new PropertiesConfiguration(handlerBean
-				.getxPath().path().toFile());
+		Configuration config = new PropertiesConfiguration(xPath.path().toFile());
 
 		List<Object> urls = config.getList("url", new ArrayList<>());
 		int limit = config.getInt("limit", -1);
@@ -41,8 +42,8 @@ public class HandlerLink implements Handler {
 		List<XPath> founds = new ArrayList<>();
 
 		for (Object url : urls) {
-			founds.addAll(Utils.findURL(handlerBean.getSite(),
-					handlerBean.getxPath(), (String) url));
+			founds.addAll(Utils.findURL(site,
+					xPath, (String) url));
 		}
 		if (founds.size() == 0
 				|| (founds.size() > 0 && !founds.get(0).isVisible())) {
@@ -51,10 +52,10 @@ public class HandlerLink implements Handler {
 			List<Document> documents = new ArrayList<>();
 
 			final boolean ascending;
-			if (handlerBean.getxPath().isAutoSort()) {
+			if (xPath.isAutoSort()) {
 				ascending = Utils.guessAutoSort(founds);
 			} else {
-				ascending = handlerBean.getxPath().isAscending();
+				ascending = xPath.isAscending();
 			}
 			Utils.sort2(founds, ascending);
 

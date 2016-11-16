@@ -1,16 +1,13 @@
 package net.xdocc;
 
-import freemarker.template.TemplateException;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
 import net.xdocc.handlers.Handler;
-import net.xdocc.handlers.HandlerBean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,19 +54,17 @@ public class Compiler {
                         results.addAll((List<Document>) v.getNow(Collections.emptyList()));
                     });                 
 
-                    HandlerBean handlerBean = new HandlerBean();
-                    handlerBean.setSite(site);
-                    handlerBean.setxPath(new XPath(site, path));
+                    XPath xPath = new XPath(site, path);
 
-                    Path generatedFile = handlerBean.getxPath().getTargetPath("index.html");
+                    Path generatedFile = xPath.getTargetPath("index.html");
 
                     try {
-                        Document doc = Utils.createDocument(handlerBean.getSite(), 
-                                        handlerBean.getxPath(), handlerBean.getRelativePathToRoot(),
+                        Document doc = Utils.createDocument(site, 
+                                        xPath, "",
                                         null, "list", "directory");
                         doc.setDocuments(results);
-                        Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean
-                                .getRelativePathToRoot(), doc, generatedFile, "multi");
+                        
+                        Utils.writeHTML(site, xPath, "", doc, generatedFile, "multi");
                     } catch (Throwable t) {
                         LOG.error("compiler error", t);
                         completableFuture.completeExceptionally(t);
@@ -92,10 +87,7 @@ public class Compiler {
 
         String relativePathToRoot = Utils.relativePathToRoot(site.source(),
                 xPath.path());
-        HandlerBean handlerBean = new HandlerBean();
-        handlerBean.setSite(site);
-        handlerBean.setxPath(xPath);
-        handlerBean.setRelativePathToRoot(relativePathToRoot);
-        return handler.compile(handlerBean, true);
+       
+        return handler.compile(site, xPath, new HashMap<String, Object>(), relativePathToRoot, true);
     }
 }

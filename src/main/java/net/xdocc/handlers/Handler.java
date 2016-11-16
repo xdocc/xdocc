@@ -1,15 +1,16 @@
 package net.xdocc.handlers;
 
 import java.util.List;
+import java.util.Map;
 
 import net.xdocc.Document;
 import net.xdocc.Site;
 import net.xdocc.XPath;
 
 public interface Handler {
-	public abstract boolean canHandle(Site site, XPath xPath);
+	public boolean canHandle(Site site, XPath xPath);
 
-	public abstract List<String> knownExtensions();
+	public List<String> knownExtensions();
 
 	/**
 	 * 
@@ -18,6 +19,7 @@ public interface Handler {
 	 * @return
 	 * @throws Exception
 	 */
-	public abstract Document compile(HandlerBean handlerBean, boolean writeToDisk) throws Exception;
+	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+                String relativePathToRoot, boolean writeToDisk) throws Exception;
 
 }

@@ -11,6 +11,7 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import net.xdocc.Document;
 import net.xdocc.Site;
@@ -38,21 +39,21 @@ public class HandlerMarkdown implements Handler {
     }
 
     @Override
-    public Document compile(HandlerBean handlerBean, boolean writeToDisk)
+    public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+                String relativePathToRoot, boolean writeToDisk)
             throws Exception {
         try (Writer out = new StringWriter();
-                Reader in = new BufferedReader(new FileReader(handlerBean.getxPath().path()
+                Reader in = new BufferedReader(new FileReader(xPath.path()
                         .toFile()))) {
             transform(in, out);
             String htmlContent = out.toString();
-            Document doc = Utils.createDocument(handlerBean.getSite(), handlerBean.getxPath(),
-                    handlerBean.getRelativePathToRoot(), htmlContent, "markdown", "file");
+            Document doc = Utils.createDocument(site, xPath,
+                    relativePathToRoot, htmlContent, "markdown", "file");
             Path generatedFile = null;
             if (writeToDisk) {
-                generatedFile = handlerBean.getxPath()
-                        .getTargetPath(handlerBean.getxPath().getTargetURL() + ".html");
-                Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean
-                        .getRelativePathToRoot(), doc, generatedFile, "single");
+                generatedFile = xPath
+                        .getTargetPath(xPath.getTargetURL() + ".html");
+                Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile, "single");
             }
             return doc;
         }

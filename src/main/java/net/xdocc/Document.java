@@ -132,13 +132,6 @@ public class Document implements Comparable<Document>, Serializable {
     }
 
     /**
-     * @return The xPath that represents this document
-     */
-    public XPath getXPath() {
-        return source;
-    }
-
-    /**
      * @return The name of the document. Default is xPath.getName()
      */
     public String getName() {

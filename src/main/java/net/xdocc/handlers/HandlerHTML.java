@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 
 import net.xdocc.Document;
@@ -33,23 +34,24 @@ public class HandlerHTML implements Handler {
 	}
 
 	@Override
-	public Document compile(HandlerBean handlerBean, boolean writeToDisk)
+	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+                String relativePathToRoot, boolean writeToDisk)
 			throws Exception {
 		
-		Charset charset = HandlerUtils.detectCharset(handlerBean.getxPath().path());
-		String all = FileUtils.readFileToString(handlerBean.getxPath().path().toFile(), charset);
+		Charset charset = HandlerUtils.detectCharset(xPath.path());
+		String all = FileUtils.readFileToString(xPath.path().toFile(), charset);
 		
 		org.jsoup.nodes.Document docj = Jsoup.parse(all);
 		Elements e = docj.getElementsByTag("body");
 		
 		String htmlContent = e.toString();
-		Document doc = Utils.createDocument(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getRelativePathToRoot(),
+		Document doc = Utils.createDocument(site, xPath, relativePathToRoot,
 				htmlContent, "text", "file");
 		// always create a single page for that
 		Path generatedFile = null;
 		if(writeToDisk) {
-			generatedFile = handlerBean.getxPath().getTargetPath(handlerBean.getxPath().getTargetURL() + ".html");
-			Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getRelativePathToRoot(), doc, generatedFile, "single");
+			generatedFile = xPath.getTargetPath(xPath.getTargetURL() + ".html");
+			Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile, "single");
 		}
 		return doc;
 	}
