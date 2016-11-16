@@ -11,14 +11,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 
-import net.xdocc.CompileResult;
 import net.xdocc.Document;
-import net.xdocc.DocumentGenerator;
 import net.xdocc.Site;
-import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -28,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.template.TemplateException;
+import net.xdocc.Document.DocumentGenerator;
 
 public class HandlerImage implements Handler {
 
@@ -40,19 +37,17 @@ public class HandlerImage implements Handler {
 				&& HandlerUtils.knowsExtension(knownExtensions(), xPath);
 	}
 
-	public CompileResult compile(Site site, XPath xPath, Set<Path> dirtyset,
+	public Document compile(Site site, XPath xPath, 
 			ImageAttributes attributes, String relativePathToRoot,
 			HandlerBean handlerBean, boolean writeToDisk)
 			throws TemplateException, IOException, InterruptedException {
 		
-		final Key<Path> crk = new Key<Path>(handlerBean.getxPath().path(), handlerBean.getxPath().path());
-		
 		// copy the original image
 		Path generatedFile = xPath.getTargetPath(xPath.getTargetURL()
 				+ xPath.extensions());
-		dirtyset.add(generatedFile);
+		
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
-		dirtyset.add(generatedDir);
+		
 		
 			Files.copy(xPath.path(), generatedFile,
 					StandardCopyOption.COPY_ATTRIBUTES,
@@ -60,7 +55,7 @@ public class HandlerImage implements Handler {
 					StandardCopyOption.COPY_ATTRIBUTES,
 					LinkOption.NOFOLLOW_LINKS);
 		
-		dirtyset.add(generatedFile);
+		
 		// create a thumbnail
 		String sizeIcon = xPath.searchProperty("size_icon", "si");
 		Path generatedFileThumb = xPath.getTargetPath(xPath.getTargetURL()
@@ -72,7 +67,7 @@ public class HandlerImage implements Handler {
 				resize(xPath, generatedFileThumb, sizeIcon);
 			}
 		
-		dirtyset.add(generatedFileThumb);
+		
 		// create display size image
 		String sizeNorm = xPath.searchProperty("size_normal", "sn");
 
@@ -85,7 +80,7 @@ public class HandlerImage implements Handler {
 				resize(xPath, generatedFileNorm, sizeNorm);
 			}
 		
-		dirtyset.add(generatedFileNorm);
+		
 
 		// apply text ftl
 		TemplateBean templateText = site.getTemplate("image", xPath.getLayoutSuffix());
@@ -125,25 +120,23 @@ public class HandlerImage implements Handler {
 		// write to disk
 		Path generatedFile2 = xPath.getTargetPath(xPath.getTargetURL()
 				+ ".html");
-		dirtyset.add(generatedFile2);
+		
 		Path generatedDir2 = Files
 				.createDirectories(generatedFile2.getParent());
-		dirtyset.add(generatedDir2);
+		
 		if (writeToDisk) {
 			
 				Utils.write(htmlSite, xPath, generatedFile2);
 			
 		}
-		return new CompileResult(doc, xPath.path(), handlerBean, this,
-				generatedFile, generatedFileThumb, generatedFileNorm,
-				generatedFile2);
+		return doc;
 	}
 
 	@Override
-	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
+	public Document compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
 		return compile(handlerBean.getSite(), handlerBean.getxPath(),
-				handlerBean.getDirtyset(), (ImageAttributes) null,
+				 (ImageAttributes) null,
 				handlerBean.getRelativePathToRoot(), handlerBean, writeToDisk);
 	}
 

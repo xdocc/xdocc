@@ -51,6 +51,13 @@ public class XPath implements Comparable<XPath> {
 
     @Getter
     private final String filename;
+    
+    @Getter
+    private final List<String> extensionList = new ArrayList<>(2);
+    
+    @Getter
+    private final Map<String, String> properties = new HashMap<>();
+    
 
     @Getter
     @Setter
@@ -65,9 +72,6 @@ public class XPath implements Comparable<XPath> {
     private String extensions;
 
     @Getter
-    final private List<String> extensionList = new ArrayList<>(2);
-
-    @Getter
     @Setter
     private String name = "";
 
@@ -75,9 +79,7 @@ public class XPath implements Comparable<XPath> {
     @Setter
     private String url;
 
-    @Getter
-    @Setter
-    private Map<String, String> properties = new HashMap<>();
+    
 
     @Getter
     @Setter

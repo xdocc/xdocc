@@ -1,57 +1,48 @@
 package net.xdocc;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 import junit.framework.Assert;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.kohsuke.args4j.CmdLineException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestService {
     
     private static Path gen;
     private static Path src;
 
-    @BeforeClass
-    public static void setup() throws IOException {
+    @Before
+    public void setup() throws IOException {
         src = Files.createTempDirectory("src");
         gen = Files.createTempDirectory("gen");
         Files.createDirectories(src.resolve(".templates"));
     }
 
-    @AfterClass
-    public static void tearDown() throws IOException {
-        //Utils.deleteDirectories(gen, src);
+    @After
+    public void tearDown() throws IOException {
+        //Utils.deleteDirectories(gen, src, log);
     }
     
     @Test
     public void testStart() throws IOException, InterruptedException, ExecutionException {
-        
-        Path log = Files.createTempFile("xdocc",".log");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x", "-l", log.toString());
+        Utils.createFile(src, ".templates/list.ftl", "");
+        Utils.createFile(src, ".templates/page.ftl", "");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
     }
     
     @Test
     public void testTxt() throws IOException, InterruptedException, ExecutionException {
         Utils.createFile(src, "1-test.txt", "this is a text file");
-        Utils.createFile(src, ".templates/text.ftl", "This is a text file \n\n -- available files: ${all}");
-        Path log = Files.createTempFile("xdocc",".log");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x", "-l", log.toString());
+        Utils.createFile(src, ".templates/text.ftl", "This is a text file \n\n -- available variables: ${debug}");
+        Utils.createFile(src, ".templates/page.ftl", "<html><body>This is a page template <br><br> -- available variables: ${debug}</body></html>");
+        Utils.createFile(src, ".templates/list.ftl", "This is a list file \n\n -- available variables: ${debug}");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertTrue(Files.size(gen.resolve("test.html"))>0);
     }
 
 	/*private static final Logger LOG = LoggerFactory

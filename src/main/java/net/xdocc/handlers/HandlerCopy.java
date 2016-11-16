@@ -12,12 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.xdocc.CompileResult;
+
 import net.xdocc.Document;
-import net.xdocc.DocumentGenerator;
+import net.xdocc.Document.DocumentGenerator;
 import net.xdocc.Service;
 import net.xdocc.Site;
-import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.XPath;
 
@@ -41,7 +40,7 @@ public class HandlerCopy implements Handler {
 	}
 
 	@Override
-	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk) {
+	public Document compile(HandlerBean handlerBean, boolean writeToDisk) {
 		Map<String, Object> model = new HashMap<>(handlerBean.getModel());
 		final Path generatedFile;
 		if (handlerBean.getxPath().isVisible()) {
@@ -57,15 +56,15 @@ public class HandlerCopy implements Handler {
 			if (writeToDisk) {
 				if (Files.isDirectory(handlerBean.getxPath().path())) {
 					Path generatedDir2 = Files.createDirectories(generatedFile);
-					handlerBean.getDirtyset().add(generatedDir2);
+					
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("copy / create directory: " + generatedFile);
 					}
 				} else {
 					Path generatedDir2 = Files.createDirectories(generatedFile
 							.getParent());
-					handlerBean.getDirtyset().add(generatedDir2);
-					Key<Path> crk = new Key<Path>(handlerBean.getxPath().path(), handlerBean.getxPath().path());
+					
+					
 					
 						Files.copy(handlerBean.getxPath().path(),
 								generatedFile,
@@ -74,7 +73,7 @@ public class HandlerCopy implements Handler {
 								StandardCopyOption.COPY_ATTRIBUTES,
 								LinkOption.NOFOLLOW_LINKS);
 					
-					handlerBean.getDirtyset().add(generatedFile);
+					
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("copy " + handlerBean.getxPath().path()
 								+ " to " + generatedFile);
@@ -88,27 +87,25 @@ public class HandlerCopy implements Handler {
 				Document document = createDocumentBrowse(handlerBean.getSite(),
 						handlerBean.getxPath(),
 						handlerBean.getRelativePathToRoot(), model);
-				return new CompileResult(document, handlerBean.getxPath()
-						.path(), handlerBean, this, generatedFile);
+                                return document;
+				
 			} else if (handlerBean.getxPath().isVisible()) {
 				// we have a file with an unknown extension, but we want to have
 				// it visible
 				Document document = createDocumentFile(handlerBean.getSite(),
 						handlerBean.getxPath(),
 						handlerBean.getRelativePathToRoot(), model);
-				return new CompileResult(document, handlerBean.getxPath()
-						.path(), handlerBean, this, generatedFile);
+				return document;
 			}
 		} catch (IOException e) {
 			LOG.error("Copy handler faild, cannot copy from "
 					+ handlerBean.getxPath().path() + " to " + generatedFile
 					+ " - " + e);
 		}
-		CompileResult cr = new CompileResult(null, handlerBean.getxPath().path(),
-				handlerBean, this, generatedFile);
+		
 		
 				
-		return cr;
+		return null;
 	}
 
 	@Override

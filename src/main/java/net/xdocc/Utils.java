@@ -27,7 +27,6 @@ import java.util.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.xdocc.CompileResult.Key;
 import net.xdocc.Site.TemplateBean;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
@@ -416,8 +415,7 @@ public class Utils {
             templateText
                     .template()
                     .getConfiguration()
-                    .setDirectoryForTemplateLoading(
-                            site.templatePath().toFile());
+                    .setDirectoryForTemplateLoading(site.templatePath().toFile());
             templateText.template().getConfiguration()
                     .setCacheStorage(new NullCacheStorage());
             templateText
@@ -738,7 +736,7 @@ public class Utils {
     public static String postApplyTemplate(String html,
             Map<String, Object> model, String... string) {
         for (String key : string) {
-            if (!model.containsKey(key)) {
+            if (!model.containsKey(key) || model.get(key) == null) {
                 continue;
             }
             // TODO: regexp would be better
@@ -793,7 +791,7 @@ public class Utils {
             String type) throws IOException {
         TemplateBean templateText = site.getTemplate(template, xPath.getLayoutSuffix());
         // create the document
-        DocumentGenerator documentGenerator = new DocumentGenerator(site,
+        Document.DocumentGenerator documentGenerator = new Document.DocumentGenerator(site,
                 templateText);
         String documentURL = xPath.getTargetURL() + ".html";
         Document doc = new Document(xPath, documentGenerator, documentURL, type);
@@ -803,41 +801,36 @@ public class Utils {
         return doc;
     }
 
-    public static void writeHTML(Site site, XPath xPath, Set<Path> dirtyset,
+    public static void writeHTML(Site site, XPath xPath, 
             String relativePathToRoot, Document doc, Path generatedFile,
             String type) throws IOException, TemplateException {
-        writeHTML(site, xPath, dirtyset, relativePathToRoot, doc,
+        writeHTML(site, xPath, relativePathToRoot, doc,
                 generatedFile, type, new HashMap<String, Object>());
     }
 
-    public static void writeHTML(Site site, XPath xPath, Set<Path> dirtyset,
+    public static void writeHTML(Site site, XPath xPath, 
             String relativePathToRoot, Document doc, Path generatedFile,
             String type, Map<String, Object> modelSite) throws IOException,
             TemplateException {
         TemplateBean templateSite = site.getTemplate(
                 "page", xPath.getLayoutSuffix());
+        
+        Link current = Utils.find(xPath.getParent(), site.globalNavigation());
+        List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
+        
         modelSite.put(Document.PATH, relativePathToRoot);
         modelSite.put(Document.DOCUMENT, doc);
         modelSite.put(Document.TYPE, type);
         modelSite.put(Document.TEMPLATE, "page");
-        Link current = Utils.find(xPath.getParent(), site.navigation());
-        List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
         modelSite.put(Document.CURRENT, current);
-        modelSite.put(Document.NAVIGATION,
-                Utils.setSelected(pathToRoot, site.navigation()));
+        modelSite.put(Document.NAVIGATION, Utils.setSelected(pathToRoot, site.globalNavigation()));
         modelSite.put(Document.BREADCRUMB, pathToRoot);
 
         String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 
         htmlSite = Utils.postApplyTemplate(htmlSite, modelSite, "path");
-        dirtyset.add(generatedFile);
         Path generatedDir = Files.createDirectories(generatedFile.getParent());
-        dirtyset.add(generatedDir);
-
-        //if (!site.service().isCached(xPath.getSite(), crk)) {
         Utils.write(htmlSite, xPath, generatedFile);
-
-        //}
     }
 
     public static String[] paging(XPath xPath, int pages) {
@@ -870,35 +863,6 @@ public class Utils {
         return result;
     }
 
-    /**
-     * Search for file handlers of type 
-     * @return 
-     */
-    public static List<Handler> findHandlers() {
-        Reflections reflections = new Reflections("net.xdocc");
-        Set<Class<? extends Handler>> subTypes = reflections.getSubTypesOf(Handler.class);
-        final List<Handler> handlers = new ArrayList<>();
-        boolean foundHandlerCopy = false;
-        for (Class<? extends Handler> clazz : subTypes) {
-            if (clazz.equals(HandlerCopy.class)) {
-                foundHandlerCopy = true;
-            } else {
-                try {
-                    handlers.add(clazz.newInstance());
-                } catch (InstantiationException | IllegalAccessException e) {
-                    LOG.error("failed to initialize handler {}", clazz.toString(), e);
-                }
-            }
-        }
-        //copy needs to go last, otherwise we will match all files and directories
-        if(foundHandlerCopy) {
-            try {
-                    handlers.add(HandlerCopy.class.newInstance());
-                } catch (InstantiationException | IllegalAccessException e) {
-                    LOG.error("failed to initialize handler {}", HandlerCopy.class.toString(), e);
-                }
-        }
-        return handlers;
-    }
+    
 
 }

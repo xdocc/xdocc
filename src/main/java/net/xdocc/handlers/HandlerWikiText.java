@@ -13,12 +13,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import net.xdocc.CompileResult;
-import net.xdocc.CompileResult.Key;
+
 import net.xdocc.Document;
-import net.xdocc.DocumentGenerator;
+import net.xdocc.Document.DocumentGenerator;
 import net.xdocc.Site;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
@@ -62,13 +60,13 @@ public class HandlerWikiText implements Handler {
 	}
 
 	@Override
-	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
+	public Document compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
 		
 		String path = handlerBean.getRelativePathToRoot();
 
 		// edit for link special
-		Key<Path> crk = new Key<Path>(handlerBean.getxPath().path(),	handlerBean.getxPath().path());
+		
 		
 		// apply text ftl
 		TemplateBean templateText = handlerBean.getSite().getTemplate(
@@ -78,7 +76,7 @@ public class HandlerWikiText implements Handler {
 		// create the document
 		DocumentGenerator documentGenerator = new WikiTextDocumentGenerator(
 				templateText, handlerBean.getSite(), handlerBean.getxPath(),
-				handlerBean.getDirtyset(), handlerBean, writeToDisk);
+				 handlerBean, writeToDisk);
 		Document doc = new Document(handlerBean.getxPath(), documentGenerator,
 				handlerBean.getxPath().getTargetURL() + ".html", "file");
 		doc.setPreview(handlerBean.getxPath().isSummary());
@@ -98,14 +96,13 @@ public class HandlerWikiText implements Handler {
 		if (writeToDisk) {
 			
 			generatedFile = handlerBean.getxPath().getTargetPath(handlerBean.getxPath().getTargetURL() + ".html");
-			handlerBean.getDirtyset().add(generatedFile);
+			
 			Path generatedDir = Files.createDirectories(generatedFile
 					.getParent());
-			handlerBean.getDirtyset().add(generatedDir);
+			
 			Utils.write(htmlSite, handlerBean.getxPath(), generatedFile);
 		}
-		return new CompileResult(doc, handlerBean.getxPath().path(),
-				handlerBean, this, generatedFile);
+		return doc;
 
 	}
 
@@ -135,17 +132,15 @@ public class HandlerWikiText implements Handler {
 
 	private static class XdoccHtmlDocumentBuilder extends HtmlDocumentBuilder {
 		final private Site site;
-		final private Set<Path> dirtyset;
 		final private XPath current;
 		final private HandlerBean handlerBean;
 		final private boolean writeToDisk;
 
 		public XdoccHtmlDocumentBuilder(Writer out, Site site,
-				Set<Path> dirtyset, XPath current, HandlerBean handlerBean,
+				XPath current, HandlerBean handlerBean,
 				boolean writeToDisk) {
 			super(out);
 			this.site = site;
-			this.dirtyset = dirtyset;
 			this.current = current;
 			this.handlerBean = handlerBean;
 			this.writeToDisk = writeToDisk;
@@ -189,21 +184,20 @@ public class HandlerWikiText implements Handler {
 					XPath found = founds.get(0);
 					String relativePathToRoot = Utils.relativePathToRoot(
 							site.source(), found.path());
-					CompileResult compileResult = handlerImage.compile(site,
-							found, dirtyset, (ImageAttributes) attributes,
+					Document doc = handlerImage.compile(site,
+							found,  (ImageAttributes) attributes,
 							relativePathToRoot, handlerBean, writeToDisk);
 					String base = getBase() == null ? null : getBase()
 							.toString();
 					if (StringUtils.isEmpty(base)) {
-						compileResult.getDocument().applyPath1(path);
+						doc.applyPath1(path);
 						// TODO:enable
 					} else {
-						compileResult.getDocument().applyPath1(
+						doc.applyPath1(
 								base + "/" + path);
 						// TODO:enable
 					}
-					super.charactersUnescaped(compileResult.getDocument()
-							.getGenerate());
+					super.charactersUnescaped(doc.getGenerate());
 				}
 			} catch (Exception e) {
 				LOG.error("cannot create xdocc image " + e);
@@ -253,24 +247,22 @@ public class HandlerWikiText implements Handler {
 		private static final long serialVersionUID = -6008311072604987744L;
 		final private Site site;
 		final private XPath xPath;
-		final private Set<Path> dirtyset;
 		final private HandlerBean handlerBean;
 		final private boolean writeToDisk;
 
 		public WikiTextDocumentGenerator(TemplateBean templateText, Site site,
-				XPath xPath, Set<Path> dirtyset, HandlerBean handlerBean,
+				XPath xPath, HandlerBean handlerBean,
 				boolean writeToDisk) {
 			super(site, templateText, handlerBean.getModel());
 			this.site = site;
 			this.xPath = xPath;
-			this.dirtyset = dirtyset;
 			this.handlerBean = handlerBean;
 			this.writeToDisk = writeToDisk;
 		}
 
 		public String generate() {
 			try {
-				fillHTML(site, xPath, dirtyset, "BLABAL", handlerBean,
+				fillHTML(site, xPath, "BLABAL", handlerBean,
 						writeToDisk);
 				return Utils.applyTemplate(site, templateBean(), model());
 			} catch (IOException | TemplateException e) {
@@ -284,12 +276,12 @@ public class HandlerWikiText implements Handler {
 
 		}
 
-		private void fillHTML(Site site, XPath xPath, Set<Path> dirtyset,
+		private void fillHTML(Site site, XPath xPath, 
 				String linkRel, HandlerBean handlerBean, boolean writeToDisk)
 				throws IOException {
 			StringWriter writer = new StringWriter();
 			HtmlDocumentBuilder builder = new XdoccHtmlDocumentBuilder(writer,
-					site, dirtyset, xPath, handlerBean, writeToDisk);
+					site, xPath, handlerBean, writeToDisk);
 
 			try {
 				if (model().containsKey(Document.RELATIVE)) {

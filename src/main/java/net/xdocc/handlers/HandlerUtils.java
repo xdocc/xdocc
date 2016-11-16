@@ -85,11 +85,11 @@ public class HandlerUtils {
 				xPath.path());
 		Map<String, Object> model = new HashMap<>();
 		model.put(Document.DOCUMENT, document);
-		Link current = Utils.find(xPath.getParent(), site.navigation());
+		Link current = Utils.find(xPath.getParent(), site.globalNavigation());
 		List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
 		model.put(Document.CURRENT, current);
 		model.put(Document.BREADCRUMB, pathToRoot);
-		model.put(Document.NAVIGATION, site.navigation());
+		model.put(Document.NAVIGATION, site.globalNavigation());
 		model.put(Document.PATH, relativePathToRoot);
 		return model;
 	}

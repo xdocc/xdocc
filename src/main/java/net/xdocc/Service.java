@@ -2,48 +2,21 @@ package net.xdocc;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-
-import net.xdocc.CompileResult.Key;
-import net.xdocc.Site.TemplateBean;
-import net.xdocc.handlers.Handler;
-import net.xdocc.handlers.HandlerCopy;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionHandlerFilter;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ch.qos.logback.core.FileAppender;
-import ch.qos.logback.core.util.StatusPrinter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
@@ -53,22 +26,6 @@ public class Service {
 
 	private final ExecutorService executorServiceCompiler = Executors
 			.newCachedThreadPool();
-
-	private final Map<Key<Path>, CompileResult> compileResult = Collections
-			.synchronizedMap(new HashMap<Key<Path>, CompileResult>());
-	
-	/*private static Map<String, Set<FileInfos>> cache;
-
-	private static Map<Site, Map<String, TemplateBean>> cacheTemplates;
-
-	private static DB db;
-
-	private static File configDir;
-
-	private static File cacheDir;
-
-	private static boolean fileChangeListener = true;*/
-
         
         private final List<RecursiveWatcherService> watchServices = new ArrayList<>();
         
@@ -80,9 +37,6 @@ public class Service {
         
         @Option(name="-c",usage="set the directory to store the cached data")
         private String cacheDirectory = "/tmp";
-        
-        @Option(name="-l",usage="set the file to store the log output")
-        private String logFile = "xdocc.log";
         
         @Option(name="-r", usage="run only once")
         private boolean runOnce = false;
@@ -114,8 +68,6 @@ public class Service {
                 shutdown();
                 return;
             }
-            
-            setupLogging();
             
             final CountDownLatch startAfterFirstRun = new CountDownLatch(1);
             final Site site = new Site(this, Paths.get(watchDirectory), Paths.get(outputDirectory));
@@ -158,29 +110,7 @@ public class Service {
 		executorServiceCompiler.shutdownNow();
 	}
 	
-        private void setupLogging() {
-            LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-            
-            FileAppender fileAppender = new FileAppender();
-            fileAppender.setContext(loggerContext);
-            fileAppender.setName("FILE");
-             // set the file name
-            fileAppender.setFile(logFile);
-            PatternLayoutEncoder encoder = new PatternLayoutEncoder();
-            encoder.setContext(loggerContext);
-            encoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n");
-            encoder.start();
-
-            fileAppender.setEncoder(encoder);
-            fileAppender.start();
-
-            // attach the rolling file appender to the logger of your choice
-            ch.qos.logback.classic.Logger logbackLogger = loggerContext.getLogger("Main");
-            logbackLogger.addAppender(fileAppender);
-
-            // OPTIONAL: print logback internal status messages
-            StatusPrinter.print(loggerContext);
-        }
+        
         
         public void compile(Site site) throws IOException, InterruptedException, ExecutionException {
             compile(site, site.source(), new HashMap<String, Object>());
@@ -191,7 +121,7 @@ public class Service {
             LOG.info("compiling start: {} / {}" , site, path);
             final long start = System.currentTimeMillis();
             Compiler c = new Compiler(executorServiceCompiler, site);
-            List<CompileResult> result = c.compile(path, path).get();
+            c.compile(path, path).get();
             LOG.info("compiling done in {} ms of {} / {}", (System.currentTimeMillis() - start) , site, path);
 	}
 
@@ -299,50 +229,7 @@ public class Service {
 		}
 	}*/
 
-	Link readNavigation(Site site) throws IOException {
-		return readNavigation(site, new XPath(site, site.source()));
-	}
-
-	public Link readNavigation(Site site, XPath source) throws IOException {
-		Link root = new Link(source, null);
-		List<XPath> children = Utils.getNonHiddenChildren(site,
-				source.path());
-		final boolean ascending;
-		if (source.isAutoSort()) {
-			ascending = Utils.guessAutoSort(children);
-		} else {
-			ascending = source.isAscending();
-		}
-		Utils.sort2(children, ascending);
-		for (XPath xPath : children) {
-			if (xPath.isNavigation()) {
-				Link link = new Link(xPath, root);
-				root.addChildren(link);
-				readNavigationRec(site, link, xPath.path());
-			}
-		}
-		return root;
-	}
-
-	void readNavigationRec(Site site, Link parent, Path parentPath)
-			throws IOException {
-		List<XPath> children = Utils.getNonHiddenChildren(site, parentPath);
-
-		final boolean ascending;
-		if (parent.getTarget().isAutoSort()) {
-			ascending = Utils.guessAutoSort(children);
-		} else {
-			ascending = parent.getTarget().isAscending();
-		}
-		Utils.sort2(children, ascending);
-		for (XPath xPath : children) {
-			if (xPath.isNavigation()) {
-				Link link = new Link(xPath, parent);
-				parent.addChildren(link);
-				readNavigationRec(site, link, xPath.path());
-			}
-		}
-	}
+	
 
 	
 
@@ -395,37 +282,7 @@ public class Service {
 		return false;
 	}*/
 
-	public void notifyFor() {
-		synchronized (compileResult) {
-			compileResult.notifyAll();
-		}
-	}
-
-	/*public void addCompileResult(Key<Path> key, CompileResult result) {
-		LOG.info("");
-		synchronized (compileResult) {
-			LOG.info("adding CR " + key);
-			compileResult.put(key, result);
-		}
-		if (result.getFileInfos() != null) {
-			addToCache(key, result.getFileInfos());
-		} else {
-			LOG.info("no file infos: " + key + " added to CR but NOT IN CACHE!");
-		}
-	}*/
-
-	public CompileResult getCompileResult(Key<Path> key) {
-		synchronized (compileResult) {
-			return compileResult.get(key);
-		}
-	}
-
-	public void removeCompileResult(Key<Path> key) {
-		synchronized (compileResult) {
-			compileResult.remove(key);
-			LOG.info("remove CR: " + key.getSource() + " " + key);
-		}
-	}
+	
 
 	/*public void addToCache(Key<Path> key, Set<FileInfos> infos) {
 		synchronized (cache) {
@@ -462,13 +319,7 @@ public class Service {
 		}
 	}*/
 
-	public void waitFor(Key<Path> key) throws InterruptedException {
-		while (getCompileResult(key) == null) {
-			synchronized (compileResult) {
-				compileResult.wait();
-			}
-		}
-	}
+	
 
 	/*private void invalidateCache(Site site) throws IOException {
 		Set<Key<Path>> dependencies = new HashSet<Key<Path>>();
@@ -522,43 +373,4 @@ public class Service {
 	/*public static void setFileListener(boolean set) {
 		fileChangeListener = set;
 	}*/
-
-	public synchronized void printAll() {
-
-		synchronized (compileResult) {
-			// CompileResult
-			LOG.info("------CR---------");
-			for (Key<Path> key : compileResult.keySet()) {
-				CompileResult cr = getCompileResult(key);
-				LOG.info(key.toString());
-				for (FileInfos inf : cr.getFileInfos()) {
-					LOG.info("- fileInfos " + inf.getTarget().toString());
-					LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-							+ inf.getSourceTimestamp());
-					LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-							+ inf.getTargetTimestamp());
-				}
-				LOG.info("");
-			}
-		}
-
-		/*synchronized (cache) {
-			// CompileResult
-			LOG.info("------CACHE---------");
-			for (String key : cache.keySet()) {
-				LOG.info(key);
-				Set<FileInfos> infos = cache.get(key);
-				for (FileInfos inf : infos) {
-					LOG.info("- fileInfo: " + inf.getTarget().toString());
-					LOG.info(" -- sSize = " + inf.getSourceSize() + " sTime = "
-							+ inf.getSourceTimestamp());
-					LOG.info(" -- tSize = " + inf.getTargetSize() + " tTime = "
-							+ inf.getTargetTimestamp());
-				}
-				LOG.info("");
-			}
-		}*/
-	}
-
-	
 }

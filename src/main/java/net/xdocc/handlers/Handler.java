@@ -2,7 +2,7 @@ package net.xdocc.handlers;
 
 import java.util.List;
 
-import net.xdocc.CompileResult;
+import net.xdocc.Document;
 import net.xdocc.Site;
 import net.xdocc.XPath;
 
@@ -18,6 +18,6 @@ public interface Handler {
 	 * @return
 	 * @throws Exception
 	 */
-	public abstract CompileResult compile(HandlerBean handlerBean, boolean writeToDisk) throws Exception;
+	public abstract Document compile(HandlerBean handlerBean, boolean writeToDisk) throws Exception;
 
 }

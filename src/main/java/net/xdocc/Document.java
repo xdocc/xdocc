@@ -1,5 +1,6 @@
 package net.xdocc;
 
+import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -10,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
@@ -17,602 +20,607 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This document class represents the content of the document. It is used on the
- * one hand to create the document using the model and template from freemarker.
- * On the other hand it can be passed to a freemarker template. Thus, the model
- * should match the methods.
- * 
+ * This document class represents the content of the document. It is used on the one hand to create the
+ * document using the model and template from freemarker. On the other hand it can be passed to a freemarker
+ * template. Thus, the model should match the methods.
+ *
  * Available variables are: - name - url - content - date - nr - filename
- * 
+ *
  * @author Thomas Bocek
- * 
+ *
  */
 public class Document implements Comparable<Document>, Serializable {
-	
-	// model constants
-	public static final String NAME = "name";
-	public static final String URL = "url";
-	public static final String RELATIVE = "relative";
-	public static final String DATE = "date";
-	public static final String FILENAME = "filename";
-	public static final String NR = "nr";
-	public static final String HIGHLIGHT = "highlight";
-	public static final String PATH = "path";
-	public static final String FILESIZE = "filesize";
-	public static final String DEPTH = "depth";
-	public static final String PAGE_URLS = "page_urls";
-	public static final String CURRENT_PAGE = "current_page";
-	public static final String CONTENT = "content";
-	public static final String TYPE = "type";
-	public static final String DOCUMENTS = "documents";
-	public static final String DOCUMENT_SIZE = "document_size";
-	public static final String LAYOUT = "layout";
-	public static final String TEMPLATE = "template";
-	public static final String HIGHLIGHT_URL = "highlightUrl";
-	public static final String LEVEL = "highlightUrl";
-	public static final String PREVIEW = "preview";
-	public static final String COMPLETE_DOCUMENT = "complete_document";
 
-	// Page (HandlerUtils.fillPage())
-	public static final String DOCUMENT = "document";
-	public static final String CURRENT = "current";
-	public static final String BREADCRUMB = "breadcrumb";
-	public static final String NAVIGATION = "navigation";
-	
-	// HandlerImage
-	public static final String GROUP = "group";
-	public static final String CSS_CLASS = "css_class";
-	public static final String IMAGE_NORMAL = "image_normal";
-	public static final String IMAGE_THUMB = "image_thumb";
-	
-	// HandlerWikiText
-	public static final String HANDLER = "handler";
+    // model constants
+    public static final String NAME = "name";
+    public static final String URL = "url";
+    public static final String RELATIVE = "relative";
+    public static final String DATE = "date";
+    public static final String FILENAME = "filename";
+    public static final String NR = "nr";
+    public static final String HIGHLIGHT = "highlight";
+    public static final String PATH = "path";
+    public static final String FILESIZE = "filesize";
+    public static final String DEPTH = "depth";
+    public static final String PAGE_URLS = "page_urls";
+    public static final String CURRENT_PAGE = "current_page";
+    public static final String CONTENT = "content";
+    public static final String TYPE = "type";
+    public static final String DOCUMENTS = "documents";
+    public static final String DOCUMENT_SIZE = "document_size";
+    public static final String LAYOUT = "layout";
+    public static final String TEMPLATE = "template";
+    public static final String HIGHLIGHT_URL = "highlightUrl";
+    public static final String LEVEL = "highlightUrl";
+    public static final String PREVIEW = "preview";
+    public static final String COMPLETE_DOCUMENT = "complete_document";
 
-	// HandlerDirectory
-	public static final String PAGE_NR = "page_nr";
-	public static final String LOCAL_NAVIGATION = "local_navigation";
+    // Page (HandlerUtils.fillPage())
+    public static final String DOCUMENT = "document";
+    public static final String CURRENT = "current";
+    public static final String BREADCRUMB = "breadcrumb";
+    public static final String NAVIGATION = "navigation";
 
-	// Utils
-	public static final String DEBUG = "debug";
+    // HandlerImage
+    public static final String GROUP = "group";
+    public static final String CSS_CLASS = "css_class";
+    public static final String IMAGE_NORMAL = "image_normal";
+    public static final String IMAGE_THUMB = "image_thumb";
 
-	
-	
-	private static final Logger LOG = LoggerFactory.getLogger(Document.class);
-	private static final long serialVersionUID = 136066054966377823L;
-	private final DocumentGenerator documentGenerator;
-	private final Map<String, String> paths = new HashMap<String, String>();
-	private final XPath source;
-	private final String url;
+    // HandlerWikiText
+    public static final String HANDLER = "handler";
 
+    // HandlerDirectory
+    public static final String PAGE_NR = "page_nr";
+    public static final String LOCAL_NAVIGATION = "local_navigation";
 
-	/**
-	 * Set the document. The name will be set to xPath.getName() as default.
-	 * 
-	 * @param xPath
-	 *            The parsed path of the document. This is either a single file
-	 *            or a directory in case of a collection of documents.
-	 * @param documentGenerator
-	 *            The generator is lazy generating. Thus, paths can be adapted
-	 *            until getContent() is called.
-	 * @param url
-	 *            The full URL from the root to this xPath. To be used with
-	 *            relativePathToRoot
-	 * @param relativePathToRoot
-	 *            Set the relative path back to root. The path will look
-	 *            something like this ../../
-	 */
-	public Document(XPath xPath, DocumentGenerator documentGenerator,
-			String url, String type) {
-		this.documentGenerator = documentGenerator;
-		this.source = xPath;
-		this.url = url;
-		setName(xPath.name());
-		setDate(xPath.date());
-		setFilename(xPath.getFileName());
-		setNr(xPath.nr());
-		setHighlight(xPath.isHighlight());
-		initFilesize(xPath);
-		// now set the paths
-		addPath("url", url);
-		addPath("highlightUrl", url);
-		// applyPath1(relativePathToRoot);
-		// setPath(relativePathToRoot);
-		setPreview(false);
-		setType(type);
-		setLayout(xPath.getLayoutSuffix());
-	}
+    // Utils
+    public static final String DEBUG = "debug";
 
-	/**
-	 * @param xPath
-	 *            Sets the filesize of xPath
-	 */
-	private void initFilesize(XPath xPath) {
-		if (!xPath.isDirectory()) {
-			try {
-				setFilesize(Files.size(xPath.path()));
-			} catch (IOException e) {
-				setFilesize(-1);
-				LOG.debug("cannot get the file size (probably file renamed): "+xPath.path());
-			}
-		}
-	}
+    private static final Logger LOG = LoggerFactory.getLogger(Document.class);
+    private static final long serialVersionUID = 136066054966377823L;
+    
+    private final DocumentGenerator documentGenerator;
+    private final Map<String, String> paths = new HashMap<String, String>();
+    private final XPath source;
+    private final String url;
 
-	/**
-	 * @return The xPath that represents this document
-	 */
-	public XPath getXPath() {
-		return source;
-	}
+    /**
+     * Set the document. The name will be set to xPath.getName() as default.
+     *
+     * @param xPath The parsed path of the document. This is either a single file or a directory in case of a
+     * collection of documents.
+     * @param documentGenerator The generator is lazy generating. Thus, paths can be adapted until
+     * getContent() is called.
+     * @param url The full URL from the root to this xPath. To be used with relativePathToRoot
+     * @param relativePathToRoot Set the relative path back to root. The path will look something like this
+     * ../../
+     */
+    public Document(XPath xPath, DocumentGenerator documentGenerator,
+            String url, String type) {
+        this.documentGenerator = documentGenerator;
+        this.source = xPath;
+        this.url = url;
+        setName(xPath.name());
+        setDate(xPath.date());
+        setFilename(xPath.getFileName());
+        setNr(xPath.nr());
+        setHighlight(xPath.isHighlight());
+        initFilesize(xPath);
+        // now set the paths
+        addPath("url", url);
+        addPath("highlightUrl", url);
+        // applyPath1(relativePathToRoot);
+        // setPath(relativePathToRoot);
+        setPreview(false);
+        setType(type);
+        setLayout(xPath.getLayoutSuffix());
+    }
 
-	/**
-	 * @return The name of the document. Default is xPath.getName()
-	 */
-	public String getName() {
-		return (String) documentGenerator.model().get(NAME);
-	}
+    /**
+     * @param xPath Sets the filesize of xPath
+     */
+    private void initFilesize(XPath xPath) {
+        if (!xPath.isDirectory()) {
+            try {
+                setFilesize(Files.size(xPath.path()));
+            } catch (IOException e) {
+                setFilesize(-1);
+                LOG.debug("cannot get the file size (probably file renamed): " + xPath.path());
+            }
+        }
+    }
 
-	/**
-	 * @param name
-	 *            The name of the document. Can be overwritten. Default is
-	 *            xPath.getName()
-	 * @return this class
-	 */
-	public Document setName(String name) {
-		documentGenerator.model().put(NAME, name);
-		return this;
-	}
+    /**
+     * @return The xPath that represents this document
+     */
+    public XPath getXPath() {
+        return source;
+    }
 
-	/**
-	 * @return The URL is always set using addPath() and modified by
-	 *         applyPath().
-	 */
-	public String getUrl() {
-		return (String) documentGenerator.model().get(URL);
-	}
+    /**
+     * @return The name of the document. Default is xPath.getName()
+     */
+    public String getName() {
+        return (String) documentGenerator.model().get(NAME);
+    }
 
-	/**
-	 * @return relative path from the link handler.
-	 */
-	public String getRelative() {
-		return (String) documentGenerator.model().get(RELATIVE);
-	}
+    /**
+     * @param name The name of the document. Can be overwritten. Default is xPath.getName()
+     * @return this class
+     */
+    public Document setName(String name) {
+        documentGenerator.model().put(NAME, name);
+        return this;
+    }
 
-	/**
-	 * @param relative
-	 *            Set the relative path in the link handler
-	 * @return this class
-	 */
-	 public Document setRelative(String relative) {
-		 documentGenerator.model().put(RELATIVE, relative);
-		 return this;
-	 }
+    /**
+     * @return The URL is always set using addPath() and modified by applyPath().
+     */
+    public String getUrl() {
+        return (String) documentGenerator.model().get(URL);
+    }
 
-	/**
-	 * @return The date of the xPath. Default is xPath.getDate()
-	 */
-	public Date getDate() {
-		return (Date) documentGenerator.model().get(DATE);
-	}
+    /**
+     * @return relative path from the link handler.
+     */
+    public String getRelative() {
+        return (String) documentGenerator.model().get(RELATIVE);
+    }
 
-	/**
-	 * @param date
-	 *            The date of the xPath. Can be overwritten. Default is
-	 *            xPath.getDate()
-	 * @return this class
-	 */
-	public Document setDate(Date date) {
-		documentGenerator.model().put(DATE, date);
-		return this;
-	}
+    /**
+     * @param relative Set the relative path in the link handler
+     * @return this class
+     */
+    public Document setRelative(String relative) {
+        documentGenerator.model().put(RELATIVE, relative);
+        return this;
+    }
 
-	/**
-	 * @return The filename of xPath. Default is xPath.getFileName()
-	 */
-	public String getFilename() {
-		return (String) documentGenerator.model().get(FILENAME);
-	}
+    /**
+     * @return The date of the xPath. Default is xPath.getDate()
+     */
+    public Date getDate() {
+        return (Date) documentGenerator.model().get(DATE);
+    }
 
-	/**
-	 * @param filename
-	 *            The filename of xPath. Default is xPath.getFileName()
-	 * @return this class
-	 */
-	public Document setFilename(String filename) {
-		documentGenerator.model().put(FILENAME, filename);
-		return this;
-	}
+    /**
+     * @param date The date of the xPath. Can be overwritten. Default is xPath.getDate()
+     * @return this class
+     */
+    public Document setDate(Date date) {
+        documentGenerator.model().put(DATE, date);
+        return this;
+    }
 
-	/**
-	 * @return The number of the document. Default is xPath.getNr().
-	 */
-	public long getNr() {
-		return (long) documentGenerator.model().get(NR);
-	}
+    /**
+     * @return The filename of xPath. Default is xPath.getFileName()
+     */
+    public String getFilename() {
+        return (String) documentGenerator.model().get(FILENAME);
+    }
 
-	/**
-	 * @param nr
-	 *            The number of the document. Default is xPath.getNr().
-	 * @return this class
-	 */
-	public Document setNr(long nr) {
-		documentGenerator.model().put(NR, nr);
-		return this;
-	}
+    /**
+     * @param filename The filename of xPath. Default is xPath.getFileName()
+     * @return this class
+     */
+    public Document setFilename(String filename) {
+        documentGenerator.model().put(FILENAME, filename);
+        return this;
+    }
 
-	/**
-	 * @return Return if document marked as highlight. Default is
-	 *         xPath.isHighlight()
-	 */
-	public boolean getHighlight() {
-		return BooleanUtils.isTrue((Boolean) documentGenerator.model().get(HIGHLIGHT));
-	}
+    /**
+     * @return The number of the document. Default is xPath.getNr().
+     */
+    public long getNr() {
+        return (long) documentGenerator.model().get(NR);
+    }
 
-	/**
-	 * @param highlight
-	 *            Set if document marked as highlight. Default is
-	 *            xPath.isHighlight()
-	 * @param this class
-	 */
-	public Document setHighlight(boolean highlight) {
-		documentGenerator.model().put(HIGHLIGHT, highlight);
-		return this;
-	}
+    /**
+     * @param nr The number of the document. Default is xPath.getNr().
+     * @return this class
+     */
+    public Document setNr(long nr) {
+        documentGenerator.model().put(NR, nr);
+        return this;
+    }
 
-	/**
-	 * @return The relative path to root
-	 */
-	public String getPath() {
-		return (String) documentGenerator.model().get(PATH);
-	}
+    /**
+     * @return Return if document marked as highlight. Default is xPath.isHighlight()
+     */
+    public boolean getHighlight() {
+        return BooleanUtils.isTrue((Boolean) documentGenerator.model().get(HIGHLIGHT));
+    }
 
-	/**
-	 * @param path
-	 *            Set the relative path to root
-	 * @return this class
-	 */
-	public Document setPath(String path) {
-		documentGenerator.model().put(PATH, path);
-		return this;
-	}
+    /**
+     * @param highlight Set if document marked as highlight. Default is xPath.isHighlight()
+     * @param this class
+     */
+    public Document setHighlight(boolean highlight) {
+        documentGenerator.model().put(HIGHLIGHT, highlight);
+        return this;
+    }
 
-	/**
-	 * 
-	 * @return The depth, i.e. the number of directories back to root
-	 */
-	public Integer getDepth() {
-		return (Integer) documentGenerator.model().get(DEPTH);
-	}
+    /**
+     * @return The relative path to root
+     */
+    public String getPath() {
+        return (String) documentGenerator.model().get(PATH);
+    }
 
-	/**
-	 * 
-	 * @param depth
-	 *            Set the number of directories back to root
-	 * @return
-	 */
-	public Document setDepth(Integer depth) {
-		documentGenerator.model().put(DEPTH, depth);
-		return this;
-	}
+    /**
+     * @param path Set the relative path to root
+     * @return this class
+     */
+    public Document setPath(String path) {
+        documentGenerator.model().put(PATH, path);
+        return this;
+    }
 
-	/**
-	 * @return the file size if xPath is a file, or 0 if its a directory or
-	 *         empty file.
-	 */
-	public long getSize() {
-		Long val = (Long) documentGenerator.model().get(FILESIZE);
-		return val == null ? 0 : val;
-	}
+    /**
+     *
+     * @return The depth, i.e. the number of directories back to root
+     */
+    public Integer getDepth() {
+        return (Integer) documentGenerator.model().get(DEPTH);
+    }
 
-	/**
-	 * @param size
-	 *            Set the file size if xPath is a file
-	 * @return this class
-	 */
-	public Document setFilesize(long filesize) {
-		documentGenerator.model().put(FILESIZE, filesize);
-		return this;
-	}
+    /**
+     *
+     * @param depth Set the number of directories back to root
+     * @return
+     */
+    public Document setDepth(Integer depth) {
+        documentGenerator.model().put(DEPTH, depth);
+        return this;
+    }
 
-	/**
-	 * Lazy loading of the content that will be generated on the fly.
-	 * 
-	 * @return The content that applies the model to the freemarker template
-	 */
-	public String getGenerate() {
-		return documentGenerator.generate();
-	}
+    /**
+     * @return the file size if xPath is a file, or 0 if its a directory or empty file.
+     */
+    public long getSize() {
+        Long val = (Long) documentGenerator.model().get(FILESIZE);
+        return val == null ? 0 : val;
+    }
 
-	/**
-	 * @return a list of documents if present in the model or null
-	 */
-	public List<Document> getDocuments() {
-		@SuppressWarnings("unchecked")
-		List<Document> documents = (List<Document>) documentGenerator
-				.model().get(DOCUMENTS);
-		if (documents == null) {
-			return Collections.emptyList();
-		}
-		return documents;
-	}
+    /**
+     * @param size Set the file size if xPath is a file
+     * @return this class
+     */
+    public Document setFilesize(long filesize) {
+        documentGenerator.model().put(FILESIZE, filesize);
+        return this;
+    }
 
-	/**
-	 * @param documents
-	 *            The list of documents in a collection
-	 * @return this class
-	 */
-	public Document setDocuments(List<Document> documents) {
-		documentGenerator.model().put(DOCUMENTS, documents);
-		documentGenerator.model().put(DOCUMENT_SIZE, documents.size());
-		return this;
-	}
+    /**
+     * Lazy loading of the content that will be generated on the fly.
+     *
+     * @return The content that applies the model to the freemarker template
+     */
+    public String getGenerate() {
+        return documentGenerator.generate();
+    }
 
-	/**
-	 * Set the data for paging. This is the the URLs for the other pages and the
-	 * current site
-	 * 
-	 * @param pageURLs
-	 * @param current
-	 */
-	public void setPaging(List<String> pageURLs, Integer current) {
-		documentGenerator.model().put(PAGE_URLS, pageURLs);
-		documentGenerator.model().put(CURRENT_PAGE, current);
+    /**
+     * @return a list of documents if present in the model or null
+     */
+    public List<Document> getDocuments() {
+        @SuppressWarnings("unchecked")
+        List<Document> documents = (List<Document>) documentGenerator
+                .model().get(DOCUMENTS);
+        if (documents == null) {
+            return Collections.emptyList();
+        }
+        return documents;
+    }
 
-	}
-	
-	@SuppressWarnings("unchecked")
-	public List<String> getPageURLs() {
-		return (List<String>) documentGenerator.model().get(PAGE_URLS);
-	}
-	
-	public Integer getCurrent() {
-		return (Integer) documentGenerator.model().get(CURRENT_PAGE);
+    /**
+     * @param documents The list of documents in a collection
+     * @return this class
+     */
+    public Document setDocuments(List<Document> documents) {
+        documentGenerator.model().put(DOCUMENTS, documents);
+        documentGenerator.model().put(DOCUMENT_SIZE, documents.size());
+        return this;
+    }
 
-	}
+    /**
+     * Set the data for paging. This is the the URLs for the other pages and the current site
+     *
+     * @param pageURLs
+     * @param current
+     */
+    public void setPaging(List<String> pageURLs, Integer current) {
+        documentGenerator.model().put(PAGE_URLS, pageURLs);
+        documentGenerator.model().put(CURRENT_PAGE, current);
 
-	/**
-	 * @return The content
-	 */
-	public String getContent() {
-		return (String) documentGenerator.model().get(CONTENT);
-	}
+    }
 
-	/**
-	 * @param path
-	 *            Set the content
-	 * @return this class
-	 */
-	public Document setContent(String content) {
-		documentGenerator.model().put(CONTENT, content);
-		return this;
-	}
+    @SuppressWarnings("unchecked")
+    public List<String> getPageURLs() {
+        return (List<String>) documentGenerator.model().get(PAGE_URLS);
+    }
 
-	/**
-	 * @return The type
-	 */
-	public String getType() {
-		return (String) documentGenerator.model().get(TYPE);
-	}
+    public Integer getCurrent() {
+        return (Integer) documentGenerator.model().get(CURRENT_PAGE);
 
-	/**
-	 * @param path
-	 *            Set the type
-	 * @return this class
-	 */
-	public Document setType(String type) {
-		documentGenerator.model().put(TYPE, type);
-		return this;
-	}
+    }
 
-	/**
-	 * @return The template
-	 */
-	public String getTemplate() {
-		return (String) documentGenerator.model().get(TEMPLATE);
-	}
+    /**
+     * @return The content
+     */
+    public String getContent() {
+        return (String) documentGenerator.model().get(CONTENT);
+    }
 
-	/**
-	 * @param path
-	 *            Set the template
-	 * @return this class
-	 */
-	public Document setTemplate(String template) {
-		documentGenerator.model().put(TEMPLATE, template);
-		return this;
-	}
+    /**
+     * @param path Set the content
+     * @return this class
+     */
+    public Document setContent(String content) {
+        documentGenerator.model().put(CONTENT, content);
+        return this;
+    }
 
-	/**
-	 * @return The layout
-	 */
-	public String getLayout() {
-		return (String) documentGenerator.model().get(LAYOUT);
-	}
+    /**
+     * @return The type
+     */
+    public String getType() {
+        return (String) documentGenerator.model().get(TYPE);
+    }
 
-	/**
-	 * @param path
-	 *            Set the layout
-	 * @return this class
-	 */
-	public Document setLayout(String layout) {
-		documentGenerator.model().put(LAYOUT, layout);
-		return this;
-	}
+    /**
+     * @param path Set the type
+     * @return this class
+     */
+    public Document setType(String type) {
+        documentGenerator.model().put(TYPE, type);
+        return this;
+    }
 
-	/**
-	 * Print out all the available keys and a preview of the content
-	 * 
-	 * @return The debug string in a HTML format
-	 */
-	public String getDebug() {
-		return Utils.getDebug(documentGenerator.model());
-	}
+    /**
+     * @return The template
+     */
+    public String getTemplate() {
+        return (String) documentGenerator.model().get(TEMPLATE);
+    }
 
-	/**
-	 * Creates a copy and sets the level of the copy. If it has document inside
-	 * a document, the level increases
-	 * 
-	 * @param level
-	 *            The level of the document
-	 * @return this class
-	 */
-	public Document copy(int level) {
-		DocumentGenerator gen = documentGenerator.copy();
-		Document document = new Document(source, gen, url, getType());
-		document.paths.putAll(new HashMap<>(paths));
-		document.setLevel(level);
-		// document name may have changed, also other parameters
-		document.setPreview(getPreview());
-		document.setName(getName());
-		document.setHighlight(getHighlight());
-		document.setDate(getDate());
-		document.setType(getType());
-		document.setDepth(getDepth());
-		document.setPaging(getPageURLs(), getCurrent());
-		document.setRelative(getRelative());
-		return document;
-	}
+    /**
+     * @param path Set the template
+     * @return this class
+     */
+    public Document setTemplate(String template) {
+        documentGenerator.model().put(TEMPLATE, template);
+        return this;
+    }
 
-	public Document copy() {
-		return copy(getLevel());
-	}
+    /**
+     * @return The layout
+     */
+    public String getLayout() {
+        return (String) documentGenerator.model().get(LAYOUT);
+    }
 
-	/**
-	 * @param level
-	 *            Set the level of this document
-	 * @return this class
-	 */
-	public Document setLevel(int level) {
-		documentGenerator.model().put(LEVEL, level);
-		return this;
-	}
+    /**
+     * @param path Set the layout
+     * @return this class
+     */
+    public Document setLayout(String layout) {
+        documentGenerator.model().put(LAYOUT, layout);
+        return this;
+    }
 
-	/**
-	 * @return The level of this document
-	 */
-	public int getLevel() {
-		Integer int0 = (Integer) documentGenerator.model().get(LEVEL);
-		return int0 == null ? 0 : int0;
-	}
+    /**
+     * Print out all the available keys and a preview of the content
+     *
+     * @return The debug string in a HTML format
+     */
+    public String getDebug() {
+        return Utils.getDebug(documentGenerator.model());
+    }
 
-	public void setOriginalUrl(String originalUrl) {
-		paths.put(URL, originalUrl);
-	}
+    /**
+     * Creates a copy and sets the level of the copy. If it has document inside a document, the level
+     * increases
+     *
+     * @param level The level of the document
+     * @return this class
+     */
+    public Document copy(int level) {
+        DocumentGenerator gen = documentGenerator.copy();
+        Document document = new Document(source, gen, url, getType());
+        document.paths.putAll(new HashMap<>(paths));
+        document.setLevel(level);
+        // document name may have changed, also other parameters
+        document.setPreview(getPreview());
+        document.setName(getName());
+        document.setHighlight(getHighlight());
+        document.setDate(getDate());
+        document.setType(getType());
+        document.setDepth(getDepth());
+        document.setPaging(getPageURLs(), getCurrent());
+        document.setRelative(getRelative());
+        return document;
+    }
 
-	public void setHighlightUrl(String highlightUrl) {
-		paths.put(HIGHLIGHT_URL, highlightUrl);
-	}
+    public Document copy() {
+        return copy(getLevel());
+    }
 
-	public String getHighlightUrl() {
-		return paths.get(HIGHLIGHT_URL);
-	}
+    /**
+     * @param level Set the level of this document
+     * @return this class
+     */
+    public Document setLevel(int level) {
+        documentGenerator.model().put(LEVEL, level);
+        return this;
+    }
 
-	public Boolean getPreview() {
-		return BooleanUtils.isTrue((Boolean) documentGenerator.model().get(
-				PREVIEW));
-	}
+    /**
+     * @return The level of this document
+     */
+    public int getLevel() {
+        Integer int0 = (Integer) documentGenerator.model().get(LEVEL);
+        return int0 == null ? 0 : int0;
+    }
 
-	public void setPreview(boolean preview) {
-		documentGenerator.model().put(PREVIEW, preview);
-	}
+    public void setOriginalUrl(String originalUrl) {
+        paths.put(URL, originalUrl);
+    }
 
-	/**
-	 * Applies a new path to all documents and sub documents.
-	 * 
-	 * @param path
-	 *            The path to apply
-	 */
-	public Document applyPath1(String path) {
+    public void setHighlightUrl(String highlightUrl) {
+        paths.put(HIGHLIGHT_URL, highlightUrl);
+    }
 
-		applyPath(path, new HashSet<Document>());
-		return this;
-	}
+    public String getHighlightUrl() {
+        return paths.get(HIGHLIGHT_URL);
+    }
 
-	/**
-	 * To avoid a stack overflow, we need to know which document we already
-	 * visited.
-	 * 
-	 * @param path
-	 *            The path to apply
-	 * @param seen
-	 *            The documents we have already seen.
-	 */
-	private void applyPath(String path, Set<Document> seen) {
-		if (seen.contains(this)) {
-			// we have already processed this.
-			return;
-		}
-		seen.add(this);
-		setPath(path);
-		setDepth(StringUtils.countMatches(path, "../"));
-		for (Map.Entry<String, String> entry : paths.entrySet()) {
-			documentGenerator.model().put(entry.getKey(),
-					path + entry.getValue());
-			documentGenerator.model().put(entry.getKey() + "_orig",
-					entry.getValue());
-		}
+    public Boolean getPreview() {
+        return BooleanUtils.isTrue((Boolean) documentGenerator.model().get(
+                PREVIEW));
+    }
 
-		if (getDocuments() != null) {
-			for (Document doc : getDocuments()) {
-				doc.applyPath(path, seen);
-			}
-		}
-		if (getCompleteDocument() != null) {
-			getCompleteDocument().applyPath(path, seen);
-		}
-	}
+    public void setPreview(boolean preview) {
+        documentGenerator.model().put(PREVIEW, preview);
+    }
 
-	public void addPath(String key, String value) {
-		paths.put(key, value);
-	}
+    /**
+     * Applies a new path to all documents and sub documents.
+     *
+     * @param path The path to apply
+     */
+    public Document applyPath1(String path) {
 
-	@Override
-	public int compareTo(Document o) {
-		return source.compareTo(o.source);
-	}
+        applyPath(path, new HashSet<Document>());
+        return this;
+    }
 
-	@Override
-	public int hashCode() {
-		return source.hashCode();
-	}
+    /**
+     * To avoid a stack overflow, we need to know which document we already visited.
+     *
+     * @param path The path to apply
+     * @param seen The documents we have already seen.
+     */
+    private void applyPath(String path, Set<Document> seen) {
+        if (seen.contains(this)) {
+            // we have already processed this.
+            return;
+        }
+        seen.add(this);
+        setPath(path);
+        setDepth(StringUtils.countMatches(path, "../"));
+        for (Map.Entry<String, String> entry : paths.entrySet()) {
+            documentGenerator.model().put(entry.getKey(),
+                    path + entry.getValue());
+            documentGenerator.model().put(entry.getKey() + "_orig",
+                    entry.getValue());
+        }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof Document)) {
-			return false;
-		}
-		Document o = (Document) obj;
-		return compareTo(o) == 0;
-	}
+        if (getDocuments() != null) {
+            for (Document doc : getDocuments()) {
+                doc.applyPath(path, seen);
+            }
+        }
+        if (getCompleteDocument() != null) {
+            getCompleteDocument().applyPath(path, seen);
+        }
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder("doc:");
-		if (getName() != null) {
-			sb.append("n:");
-			sb.append(getName());
-		}
-		if (getFilename() != null) {
-			sb.append(",f:");
-			sb.append(getFilename());
-		}
-		return sb.toString();
-	}
+    public void addPath(String key, String value) {
+        paths.put(key, value);
+    }
 
-	/**
-	 * @param documentFull
-	 *            Set the full document. If this is set, preview is always true.
-	 * @return this class
-	 */
-	public Document setCompleteDocument(Document documentFull) {
-		documentGenerator.model().put(COMPLETE_DOCUMENT, documentFull);
-		return this;
+    @Override
+    public int compareTo(Document o) {
+        return source.compareTo(o.source);
+    }
 
-	}
+    @Override
+    public int hashCode() {
+        return source.hashCode();
+    }
 
-	/**
-	 * @return The the full document. If this is set, preview is always true.
-	 */
-	public Document getCompleteDocument() {
-		return (Document) documentGenerator.model().get(COMPLETE_DOCUMENT);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Document)) {
+            return false;
+        }
+        Document o = (Document) obj;
+        return compareTo(o) == 0;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("doc:");
+        if (getName() != null) {
+            sb.append("n:");
+            sb.append(getName());
+        }
+        if (getFilename() != null) {
+            sb.append(",f:");
+            sb.append(getFilename());
+        }
+        return sb.toString();
+    }
+
+    /**
+     * @param documentFull Set the full document. If this is set, preview is always true.
+     * @return this class
+     */
+    public Document setCompleteDocument(Document documentFull) {
+        documentGenerator.model().put(COMPLETE_DOCUMENT, documentFull);
+        return this;
+
+    }
+
+    /**
+     * @return The the full document. If this is set, preview is always true.
+     */
+    public Document getCompleteDocument() {
+        return (Document) documentGenerator.model().get(COMPLETE_DOCUMENT);
+    }
+
+    @Accessors(chain = true, fluent = true)
+    public static class DocumentGenerator implements Serializable {
+
+        private static final Logger LOG = LoggerFactory
+                .getLogger(DocumentGenerator.class);
+        private static final long serialVersionUID = -8512427831292951263L;
+
+        @Getter
+        final private Site.TemplateBean templateBean;
+
+        @Getter
+        final private Map<String, Object> model;
+        final private Site site;
+
+        public DocumentGenerator(Site site, Site.TemplateBean templateBean) {
+            this.site = site;
+            this.templateBean = templateBean;
+            this.model = new HashMap<String, Object>();
+        }
+
+        public DocumentGenerator(Site site, Site.TemplateBean templateBean, Map<String, Object> model) {
+            this(site, templateBean);
+            this.model.putAll(model);
+        }
+
+        public String generate() {
+            try {
+                return Utils.applyTemplate(site, templateBean, model);
+            } catch (TemplateException | IOException e) {
+                LOG.warn("cannot generate document {}. Model is {}",
+                        templateBean.file().getFileName(), model, e);
+                return null;
+            }
+        }
+
+        public DocumentGenerator copy() {
+            DocumentGenerator documentGenerator = new DocumentGenerator(site, templateBean, model);
+            return documentGenerator;
+        }
+
+    }
 
 }

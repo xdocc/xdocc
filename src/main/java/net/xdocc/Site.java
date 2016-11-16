@@ -1,23 +1,15 @@
 package net.xdocc;
 
-import com.sun.istack.internal.NotNull;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import net.xdocc.CompileResult.Key;
 import net.xdocc.handlers.Handler;
 
 import org.slf4j.Logger;
@@ -28,10 +20,13 @@ import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
 import java.nio.file.DirectoryStream;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import net.xdocc.handlers.HandlerCopy;
+import org.reflections.Reflections;
 
 @Accessors(chain = true, fluent = true)
 public class Site {
@@ -55,17 +50,17 @@ public class Site {
 
     @Getter @Setter
     private Configuration freemakerEngine;
-    
+
     @Getter @Setter
-    private Link navigation;
+    private Link globalNavigation;
 
     @Getter @Setter
     private Path templatePath;
 
     final private Map<String, TemplateBean> templates = new HashMap<>();
-    
+
     public Site(Service service, Path source, Path generated) throws IOException {
-        this(service, source, generated, Utils.findHandlers(), new Properties());
+        this(service, source, generated, findHandlers(), new Properties());
     }
 
     public Site(Service service, Path source, Path generated,
@@ -78,6 +73,7 @@ public class Site {
         this.templatePath = this.source.resolve(".templates");
         freemakerEngine = createTemplateEngine(templatePath);
         loadTemplates(templatePath);
+        this.globalNavigation = loadGlobalNavigation();
     }
 
     public TemplateBean getTemplate(final String name, final String suffix)
@@ -89,8 +85,7 @@ public class Site {
             if (templateBean == null || templateBean.file() == null) {
                 throw new FileNotFoundException("Template " + name
                         + ".ftl not found, there should be a file called "
-                        + (source + "/" + name + ".ftl" + " / " + (name
-                        + ".ftl" + suffix)));
+                        + (source + "/.templates/" + name + suffix + ".ftl"));
             }
         }
 
@@ -123,7 +118,10 @@ public class Site {
 
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(templatePath)) {
             for (Path p : ds) {
-                if (!Files.isRegularFile(p) || !p.endsWith(".ftl")) {
+                if (!Files.isRegularFile(p)) {
+                    continue;
+                }
+                if (!p.toString().toLowerCase().endsWith(".ftl")) {
                     continue;
                 }
                 TemplateBean templateBean = loadTemplate(p);
@@ -150,6 +148,50 @@ public class Site {
                 .filesize(filesize);
 
         return templateBean;
+    }
+
+    private Link loadGlobalNavigation() throws IOException {
+        return loadGlobalNavigation(new XPath(this, source()));
+    }
+
+    public Link loadGlobalNavigation(XPath source) throws IOException {
+        Link root = new Link(source, null);
+        List<XPath> children = Utils.getNonHiddenChildren(this, source.path());
+        final boolean ascending;
+        if (source.isAutoSort()) {
+            ascending = Utils.guessAutoSort(children);
+        } else {
+            ascending = source.isAscending();
+        }
+        Utils.sort2(children, ascending);
+        for (XPath xPath : children) {
+            if (xPath.isNavigation()) {
+                Link link = new Link(xPath, root);
+                root.addChildren(link);
+                loadGlobalNavigation(this, link, xPath.path());
+            }
+        }
+        return root;
+    }
+
+    private void loadGlobalNavigation(Site site, Link parent, Path parentPath)
+            throws IOException {
+        List<XPath> children = Utils.getNonHiddenChildren(site, parentPath);
+
+        final boolean ascending;
+        if (parent.getTarget().isAutoSort()) {
+            ascending = Utils.guessAutoSort(children);
+        } else {
+            ascending = parent.getTarget().isAscending();
+        }
+        Utils.sort2(children, ascending);
+        for (XPath xPath : children) {
+            if (xPath.isNavigation()) {
+                Link link = new Link(xPath, parent);
+                parent.addChildren(link);
+                loadGlobalNavigation(site, link, xPath.path());
+            }
+        }
     }
 
     public static class TemplateBean {
@@ -204,5 +246,36 @@ public class Site {
         sb.append(", gen=");
         sb.append(generated);
         return sb.toString();
+    }
+    
+    /**
+     * Search for file handlers of type 
+     * @return 
+     */
+    private static List<Handler> findHandlers() {
+        Reflections reflections = new Reflections("net.xdocc");
+        Set<Class<? extends Handler>> subTypes = reflections.getSubTypesOf(Handler.class);
+        final List<Handler> handlers = new ArrayList<>();
+        boolean foundHandlerCopy = false;
+        for (Class<? extends Handler> clazz : subTypes) {
+            if (clazz.equals(HandlerCopy.class)) {
+                foundHandlerCopy = true;
+            } else {
+                try {
+                    handlers.add(clazz.newInstance());
+                } catch (InstantiationException | IllegalAccessException e) {
+                    LOG.error("failed to initialize handler {}", clazz.toString(), e);
+                }
+            }
+        }
+        //copy needs to go last, otherwise we will match all files and directories
+        if(foundHandlerCopy) {
+            try {
+                    handlers.add(HandlerCopy.class.newInstance());
+                } catch (InstantiationException | IllegalAccessException e) {
+                    LOG.error("failed to initialize handler {}", HandlerCopy.class.toString(), e);
+                }
+        }
+        return handlers;
     }
 }

@@ -1,23 +1,5 @@
 package net.xdocc;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import junit.framework.Assert;
-import net.xdocc.CompileResult.Key;
-
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TestCache {
 	
 	/*private static final Logger log = LoggerFactory.getLogger(TestCache.class);

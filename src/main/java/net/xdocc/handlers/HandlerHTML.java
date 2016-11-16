@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-import net.xdocc.CompileResult;
+
 import net.xdocc.Document;
 import net.xdocc.Site;
 import net.xdocc.Utils;
@@ -33,7 +33,7 @@ public class HandlerHTML implements Handler {
 	}
 
 	@Override
-	public CompileResult compile(HandlerBean handlerBean, boolean writeToDisk)
+	public Document compile(HandlerBean handlerBean, boolean writeToDisk)
 			throws Exception {
 		
 		Charset charset = HandlerUtils.detectCharset(handlerBean.getxPath().path());
@@ -49,8 +49,8 @@ public class HandlerHTML implements Handler {
 		Path generatedFile = null;
 		if(writeToDisk) {
 			generatedFile = handlerBean.getxPath().getTargetPath(handlerBean.getxPath().getTargetURL() + ".html");
-			Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getDirtyset(), handlerBean.getRelativePathToRoot(), doc, generatedFile, "single");
+			Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(), handlerBean.getRelativePathToRoot(), doc, generatedFile, "single");
 		}
-		return new CompileResult(doc, handlerBean.getxPath().path(), handlerBean, this, generatedFile);
+		return doc;
 	}
 }

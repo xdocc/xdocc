@@ -10,7 +10,6 @@ import net.xdocc.XPath;
 public class HandlerBean {
 	private Site site;
 	private XPath xPath;
-	private Set<Path> dirtyset;
 	private Map<String, Object> model;
 	private String relativePathToRoot;
 	private boolean forceCompile;
@@ -27,12 +26,7 @@ public class HandlerBean {
 	public void setxPath(XPath xPath) {
 		this.xPath = xPath;
 	}
-	public Set<Path> getDirtyset() {
-		return dirtyset;
-	}
-	public void setDirtyset(Set<Path> dirtyset) {
-		this.dirtyset = dirtyset;
-	}
+	
 	public Map<String, Object> getModel() {
 		return model;
 	}
