@@ -151,10 +151,10 @@ public class Site {
     }
 
     private Link loadGlobalNavigation() throws IOException {
-        return loadGlobalNavigation(new XPath(this, source()));
+        return loadNavigation(new XPath(this, source()));
     }
 
-    public Link loadGlobalNavigation(XPath source) throws IOException {
+    public Link loadNavigation(XPath source) throws IOException {
         Link root = new Link(source, null);
         List<XPath> children = Utils.getNonHiddenChildren(this, source.path());
         final boolean ascending;
@@ -168,13 +168,13 @@ public class Site {
             if (xPath.isNavigation()) {
                 Link link = new Link(xPath, root);
                 root.addChildren(link);
-                loadGlobalNavigation(this, link, xPath.path());
+                loadNavigation(this, link, xPath.path());
             }
         }
         return root;
     }
 
-    private void loadGlobalNavigation(Site site, Link parent, Path parentPath)
+    private void loadNavigation(Site site, Link parent, Path parentPath)
             throws IOException {
         List<XPath> children = Utils.getNonHiddenChildren(site, parentPath);
 
@@ -189,7 +189,7 @@ public class Site {
             if (xPath.isNavigation()) {
                 Link link = new Link(xPath, parent);
                 parent.addChildren(link);
-                loadGlobalNavigation(site, link, xPath.path());
+                loadNavigation(site, link, xPath.path());
             }
         }
     }
