@@ -69,7 +69,7 @@ public class Service {
         final CountDownLatch startAfterFirstRun = new CountDownLatch(1);
         final Site site = new Site(this, Paths.get(watchDirectory), Paths.get(outputDirectory));
         if (!runOnce) {
-            startWatch(site, new FileListener() {
+            startWatch(site, new RecursiveWatcherService.Listener() {
                 @Override
                 public void filesChanged(Site site) {
                     try {
@@ -95,7 +95,7 @@ public class Service {
         });
     }
 
-    public void startWatch(Site site, FileListener listener) throws IOException {
+    public void startWatch(Site site, RecursiveWatcherService.Listener listener) throws IOException {
         RecursiveWatcherService recursiveWatcherService = new RecursiveWatcherService(site, listener);
         watchServices.add(recursiveWatcherService);
     }

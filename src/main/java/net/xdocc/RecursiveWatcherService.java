@@ -5,13 +5,11 @@
  */
 package net.xdocc;
 
-import net.xdocc.FileListener;
 import com.sun.nio.file.SensitivityWatchEventModifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -34,7 +32,6 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import net.xdocc.Site;
 
 public class RecursiveWatcherService {
 
@@ -43,11 +40,11 @@ public class RecursiveWatcherService {
     private final WatchService watcher;
     private final ExecutorService executor;
     private final Site site;
-    private final FileListener listener;
+    private final Listener listener;
     private final BlockingQueue<Boolean> queue = new LinkedBlockingQueue<>();
     private volatile boolean running = true;
 
-    public RecursiveWatcherService(Site site, FileListener listener) throws IOException {
+    public RecursiveWatcherService(Site site, Listener listener) throws IOException {
         this.site = site;
         this.listener = listener;
         watcher = FileSystems.getDefault().newWatchService();
@@ -146,5 +143,9 @@ public class RecursiveWatcherService {
                 listener.filesChanged(site);
             }
         });
+    }
+    
+    public interface Listener {
+        void filesChanged(Site site);
     }
 }
