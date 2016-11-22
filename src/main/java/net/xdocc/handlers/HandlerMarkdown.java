@@ -40,7 +40,7 @@ public class HandlerMarkdown implements Handler {
 
     @Override
     public Document compile(Site site, XPath xPath, Map<String, Object> model, 
-                String relativePathToRoot, boolean writeToDisk)
+                String relativePathToRoot)
             throws Exception {
         try (Writer out = new StringWriter();
                 Reader in = new BufferedReader(new FileReader(xPath.path()
@@ -48,12 +48,12 @@ public class HandlerMarkdown implements Handler {
             transform(in, out);
             String htmlContent = out.toString();
             Document doc = Utils.createDocument(site, xPath,
-                    relativePathToRoot, htmlContent, "markdown", "file");
+                    relativePathToRoot, htmlContent, "markdown");
             Path generatedFile = null;
-            if (writeToDisk) {
+            if (xPath.getParent().isItemWritten()) {
                 generatedFile = xPath
                         .getTargetPath(xPath.getTargetURL() + ".html");
-                Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile, "single");
+                Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile);
             }
             return doc;
         }

@@ -61,7 +61,7 @@ public class HandlerWikiText implements Handler {
 
 	@Override
 	public Document compile(Site site, XPath xPath, Map<String, Object> model2, 
-                String relativePathToRoot, boolean writeToDisk)
+                String relativePathToRoot)
 			throws Exception {
 		
 		String path = relativePathToRoot;
@@ -76,9 +76,9 @@ public class HandlerWikiText implements Handler {
 		// String htmlText = Utils.applyTemplate( templateText, model );
 		// create the document
 		DocumentGenerator documentGenerator = new WikiTextDocumentGenerator(
-				templateText, site, xPath, model2, relativePathToRoot, writeToDisk);
+				templateText, site, xPath, model2, relativePathToRoot);
 		Document doc = new Document(xPath, documentGenerator,
-				xPath.getTargetURL() + ".html", "file");
+				xPath.getTargetURL() + ".html");
 		doc.setPreview(xPath.isSummary());
 		doc.setTemplate("wikitext");
 		doc.applyPath1(path);
@@ -86,12 +86,11 @@ public class HandlerWikiText implements Handler {
 		TemplateBean templateSite = site.getTemplate(
 				"page", xPath.getLayoutSuffix());
 		Map<String, Object> model = HandlerUtils.fillPage(site, xPath, doc);
-		model.put(Document.TYPE, "document");
 
 		String htmlSite = Utils.applyTemplate(site, templateSite, model);
 		Path generatedFile = null;
 		// write to disk
-		if (writeToDisk) {
+		if (xPath.getParent().isItemWritten()) {
 			
 			generatedFile = xPath.getTargetPath(xPath.getTargetURL() + ".html");
 			
@@ -133,17 +132,14 @@ public class HandlerWikiText implements Handler {
 		final private XPath current;
                 final private Map<String, Object> model;
                 final private String relativePathToRoot;
-		final private boolean writeToDisk;
 
 		public XdoccHtmlDocumentBuilder(Writer out, Site site,
-				XPath current, Map<String, Object> model, String relativePathToRoot,
-				boolean writeToDisk) {
+				XPath current, Map<String, Object> model, String relativePathToRoot) {
 			super(out);
 			this.site = site;
 			this.current = current;
                         this.model = model;
                         this.relativePathToRoot = relativePathToRoot;
-			this.writeToDisk = writeToDisk;
 		}
 
 		@Override
@@ -186,7 +182,7 @@ public class HandlerWikiText implements Handler {
 							site.source(), found.path());
 					
                                         Document doc = handlerImage.compile(site, found, model, (ImageAttributes) attributes,
-                                                relativePathToRoot, writeToDisk);
+                                                relativePathToRoot);
                                         
 					String base = getBase() == null ? null : getBase()
 							.toString();
@@ -250,22 +246,19 @@ public class HandlerWikiText implements Handler {
 		final private XPath xPath;
                 final private Map<String, Object> model;
                 final private String relativePathToRoot;
-		final private boolean writeToDisk;
 
 		public WikiTextDocumentGenerator(TemplateBean templateText, Site site,
-				XPath xPath, Map<String, Object> model, String relativePathToRoot,
-				boolean writeToDisk) {
+				XPath xPath, Map<String, Object> model, String relativePathToRoot) {
 			super(site, templateText, model);
 			this.site = site;
 			this.xPath = xPath;
                         this.model = model;
                         this.relativePathToRoot = relativePathToRoot;
-			this.writeToDisk = writeToDisk;
 		}
 
 		public String generate() {
 			try {
-				fillHTML(site, xPath, "BLABAL", writeToDisk);
+				fillHTML(site, xPath, "BLABAL");
 				return Utils.applyTemplate(site, templateBean(), model());
 			} catch (IOException | TemplateException e) {
 				if (LOG.isWarnEnabled()) {
@@ -279,11 +272,11 @@ public class HandlerWikiText implements Handler {
 		}
 
 		private void fillHTML(Site site, XPath xPath, 
-				String linkRel, boolean writeToDisk)
+				String linkRel)
 				throws IOException {
 			StringWriter writer = new StringWriter();
 			HtmlDocumentBuilder builder = new XdoccHtmlDocumentBuilder(writer,
-					site, xPath, model, relativePathToRoot, writeToDisk);
+					site, xPath, model, relativePathToRoot);
 
 			try {
 				if (model().containsKey(Document.RELATIVE)) {

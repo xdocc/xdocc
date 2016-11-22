@@ -25,14 +25,15 @@ public class TestService {
 
     @After
     public void tearDown() throws IOException {
-        //Utils.deleteDirectories(gen, src, log);
+        Utils.deleteDirectories(gen, src);
     }
     
     @Test
     public void testStart() throws IOException, InterruptedException, ExecutionException {
         Utils.createFile(src, ".templates/list.ftl", "");
-        Utils.createFile(src, ".templates/page.ftl", "");
+        Utils.createFile(src, ".templates/page.ftl", " ");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertTrue(Files.size(gen.resolve("index.html"))>0);
     }
     
     @Test
@@ -43,5 +44,18 @@ public class TestService {
         Utils.createFile(src, ".templates/list.ftl", "This is a list file \n\n -- available variables: ${debug}");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertTrue(Files.size(gen.resolve("test.html"))>0);
+        Assert.assertTrue(Files.size(gen.resolve("index.html"))>0);
+    }
+    
+    @Test
+    public void testPage() throws IOException, InterruptedException, ExecutionException {
+        Utils.createFile(src, "1-test.txt", "this is a text file");
+        Utils.createFile(src, ".xdocc", "page=true");
+        Utils.createFile(src, ".templates/text.ftl", "This is a text file \n\n -- available variables: ${debug}");
+        Utils.createFile(src, ".templates/page.ftl", "<html><body>This is a page template <br><br> -- available variables: ${debug}</body></html>");
+        Utils.createFile(src, ".templates/list.ftl", "This is a list file \n\n -- available variables: ${debug}");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertFalse(Files.exists(gen.resolve("test.html")));
+        Assert.assertTrue(Files.size(gen.resolve("index.html"))>0);
     }
 }

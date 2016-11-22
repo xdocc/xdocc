@@ -45,7 +45,7 @@ public class Document implements Comparable<Document>, Serializable {
     public static final String PAGE_URLS = "page_urls";
     public static final String CURRENT_PAGE = "current_page";
     public static final String CONTENT = "content";
-    public static final String TYPE = "type";
+    //public static final String TYPE = "type";
     public static final String DOCUMENTS = "documents";
     public static final String DOCUMENT_SIZE = "document_size";
     public static final String LAYOUT = "layout";
@@ -97,7 +97,7 @@ public class Document implements Comparable<Document>, Serializable {
      * ../../
      */
     public Document(XPath xPath, DocumentGenerator documentGenerator,
-            String url, String type) {
+            String url) {
         this.documentGenerator = documentGenerator;
         this.source = xPath;
         this.url = url;
@@ -113,7 +113,7 @@ public class Document implements Comparable<Document>, Serializable {
         // applyPath1(relativePathToRoot);
         // setPath(relativePathToRoot);
         setPreview(false);
-        setType(type);
+        //setType(type);
         setLayout(xPath.getLayoutSuffix());
     }
 
@@ -358,18 +358,18 @@ public class Document implements Comparable<Document>, Serializable {
     /**
      * @return The type
      */
-    public String getType() {
+    /*public String getType() {
         return (String) documentGenerator.model().get(TYPE);
-    }
+    }*/
 
     /**
      * @param path Set the type
      * @return this class
      */
-    public Document setType(String type) {
+    /*public Document setType(String type) {
         documentGenerator.model().put(TYPE, type);
         return this;
-    }
+    }*/
 
     /**
      * @return The template
@@ -421,7 +421,8 @@ public class Document implements Comparable<Document>, Serializable {
      */
     public Document copy(int level) {
         DocumentGenerator gen = documentGenerator.copy();
-        Document document = new Document(source, gen, url, getType());
+        //Document document = new Document(source, gen, url, getType());
+        Document document = new Document(source, gen, url);
         document.paths.putAll(new HashMap<>(paths));
         document.setLevel(level);
         // document name may have changed, also other parameters
@@ -429,7 +430,7 @@ public class Document implements Comparable<Document>, Serializable {
         document.setName(getName());
         document.setHighlight(getHighlight());
         document.setDate(getDate());
-        document.setType(getType());
+        //document.setType(getType());
         document.setDepth(getDepth());
         document.setPaging(getPageURLs(), getCurrent());
         document.setRelative(getRelative());

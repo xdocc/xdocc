@@ -8,18 +8,7 @@ import net.xdocc.Site;
 import net.xdocc.XPath;
 
 public interface Handler {
-	public boolean canHandle(Site site, XPath xPath);
-
-	public List<String> knownExtensions();
-
-	/**
-	 * 
-	 * @param site
-	 * @param siteToCompile
-	 * @return
-	 * @throws Exception
-	 */
-	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
-                String relativePathToRoot, boolean writeToDisk) throws Exception;
-
+	boolean canHandle(Site site, XPath xPath);
+        List<String> knownExtensions();
+        Document compile(Site site, XPath xPath, Map<String, Object> model, String relativePathToRoot) throws Exception;
 }

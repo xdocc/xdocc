@@ -38,8 +38,7 @@ public class HandlerImage implements Handler {
 	}
 
 	public Document compile(Site site, XPath xPath, Map<String, Object> model2, 
-			ImageAttributes attributes, String relativePathToRoot,
-			boolean writeToDisk)
+			ImageAttributes attributes, String relativePathToRoot)
 			throws TemplateException, IOException, InterruptedException {
 		
 		// copy the original image
@@ -57,7 +56,11 @@ public class HandlerImage implements Handler {
 		
 		
 		// create a thumbnail
-		String sizeIcon = xPath.searchProperty("size_icon", "si");
+                
+		String sizeIcon = xPath.getRecursiveProperty("size_icon", "si");
+                if(sizeIcon == null) {
+                    sizeIcon = "250x250^c";
+                }
 		Path generatedFileThumb = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_t" + xPath.extensions());
 		
@@ -69,8 +72,10 @@ public class HandlerImage implements Handler {
 		
 		
 		// create display size image
-		String sizeNorm = xPath.searchProperty("size_normal", "sn");
-
+		String sizeNorm = xPath.getRecursiveProperty("size_normal", "sn");
+                if(sizeIcon == null) {
+                    sizeIcon = "800x600^";
+                }
 		Path generatedFileNorm = xPath.getTargetPath(xPath.getTargetURL()
 				+ "_n" + xPath.extensions());
 		
@@ -102,8 +107,7 @@ public class HandlerImage implements Handler {
 			model.put(Document.CSS_CLASS, "image");
 		}
 
-		Document doc = new Document(xPath, gen, xPath.getTargetURL() + ".html",
-				"file");
+		Document doc = new Document(xPath, gen, xPath.getTargetURL() + ".html");
 		doc.addPath(Document.IMAGE_NORMAL,
 				xPath.getTargetURL() + "_n" + xPath.extensions());
 		doc.addPath(Document.IMAGE_THUMB,
@@ -115,7 +119,6 @@ public class HandlerImage implements Handler {
 		// create the site to layout ftl
 		TemplateBean templateSite = site.getTemplate("page", xPath.getLayoutSuffix());
 		Map<String, Object> modelSite = HandlerUtils.fillPage(site, xPath, doc);
-		modelSite.put(Document.TYPE, "file");
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 		// write to disk
 		Path generatedFile2 = xPath.getTargetPath(xPath.getTargetURL()
@@ -124,7 +127,7 @@ public class HandlerImage implements Handler {
 		Path generatedDir2 = Files
 				.createDirectories(generatedFile2.getParent());
 		
-		if (writeToDisk) {
+		if (xPath.getParent().isItemWritten()) {
 			
 				Utils.write(htmlSite, xPath, generatedFile2);
 			
@@ -134,11 +137,9 @@ public class HandlerImage implements Handler {
 
 	@Override
 	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
-                String relativePathToRoot, boolean writeToDisk)
+                String relativePathToRoot)
 			throws Exception {
-		return compile(site, xPath, model,
-				 (ImageAttributes) null,
-				relativePathToRoot, writeToDisk);
+		return compile(site, xPath, model,(ImageAttributes) null,relativePathToRoot);
 	}
 
 	@Override

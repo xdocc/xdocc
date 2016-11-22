@@ -29,7 +29,7 @@ public class HandlerLink implements Handler {
 
 	@Override
 	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
-                String relativePathToRoot, boolean writeToDisk)
+                String relativePathToRoot)
 			throws Exception {
 
 		

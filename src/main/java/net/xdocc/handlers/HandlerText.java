@@ -25,20 +25,20 @@ public class HandlerText implements Handler {
 
 	@Override
 	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
-                String relativePathToRoot, boolean writeToDisk)
+                String relativePathToRoot)
 			throws Exception {
 		Charset charset = HandlerUtils.detectCharset(xPath.path());
 		List<String> lines = Files.readAllLines(xPath.path(), charset);
 		String htmlContent = convertHTML(lines);
 		Document doc = 
 				Utils.createDocument(site, xPath, relativePathToRoot,
-				htmlContent, "text", "file");
+				htmlContent, "text");
 		// always create a single page for that
 		Path generatedFile = null;
-		if (writeToDisk) {
+		if (xPath.getParent().isItemWritten()) {
 			generatedFile = xPath
 					.getTargetPath(xPath.getTargetURL() + ".html");
-			Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile, "single");
+			Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile);
 		}
 		return doc;
 	}

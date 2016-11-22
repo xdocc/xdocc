@@ -45,6 +45,7 @@ public class Compiler {
                         for (Handler handler : handlers) {
                             if (handler.canHandle(site, item)) {
                                 results.add(compile(handler, item));
+                                break;
                             }
                         }
                     }
@@ -59,12 +60,10 @@ public class Compiler {
                     Path generatedFile = xPath.getTargetPath("index.html");
 
                     try {
-                        Document doc = Utils.createDocument(site, 
-                                        xPath, "",
-                                        null, "list", "directory");
+                        Document doc = Utils.createDocument(site, xPath, "", null, "list");
                         doc.setDocuments(results);
                         
-                        Utils.writeHTML(site, xPath, "", doc, generatedFile, "multi");
+                        Utils.writeHTML(site, xPath, "", doc, generatedFile);
                     } catch (Throwable t) {
                         LOG.error("compiler error", t);
                         completableFuture.completeExceptionally(t);
@@ -88,6 +87,6 @@ public class Compiler {
         String relativePathToRoot = Utils.relativePathToRoot(site.source(),
                 xPath.path());
        
-        return handler.compile(site, xPath, new HashMap<String, Object>(), relativePathToRoot, true);
+        return handler.compile(site, xPath, new HashMap<String, Object>(), relativePathToRoot);
     }
 }

@@ -787,14 +787,13 @@ public class Utils {
     }
 
     public static Document createDocument(Site site, XPath xPath,
-            String relativePathToRoot, String htmlContent, String template,
-            String type) throws IOException {
+            String relativePathToRoot, String htmlContent, String template) throws IOException {
         TemplateBean templateText = site.getTemplate(template, xPath.getLayoutSuffix());
         // create the document
         Document.DocumentGenerator documentGenerator = new Document.DocumentGenerator(site,
                 templateText);
         String documentURL = xPath.getTargetURL() + ".html";
-        Document doc = new Document(xPath, documentGenerator, documentURL, type);
+        Document doc = new Document(xPath, documentGenerator, documentURL);
         doc.setContent(htmlContent);
         doc.setTemplate(template);
         doc.applyPath1(relativePathToRoot);
@@ -802,16 +801,10 @@ public class Utils {
     }
 
     public static void writeHTML(Site site, XPath xPath, 
-            String relativePathToRoot, Document doc, Path generatedFile,
-            String type) throws IOException, TemplateException {
-        writeHTML(site, xPath, relativePathToRoot, doc,
-                generatedFile, type, new HashMap<String, Object>());
-    }
-
-    public static void writeHTML(Site site, XPath xPath, 
-            String relativePathToRoot, Document doc, Path generatedFile,
-            String type, Map<String, Object> modelSite) throws IOException,
-            TemplateException {
+            String relativePathToRoot, Document doc, Path generatedFile) throws IOException, TemplateException {
+        
+        Map<String, Object> modelSite = new HashMap<String, Object>();
+        
         TemplateBean templateSite = site.getTemplate(
                 "page", xPath.getLayoutSuffix());
         
@@ -820,7 +813,6 @@ public class Utils {
         
         modelSite.put(Document.PATH, relativePathToRoot);
         modelSite.put(Document.DOCUMENT, doc);
-        modelSite.put(Document.TYPE, type);
         modelSite.put(Document.TEMPLATE, "page");
         modelSite.put(Document.CURRENT, current);
         modelSite.put(Document.NAVIGATION, Utils.setSelected(pathToRoot, site.globalNavigation()));

@@ -3,6 +3,7 @@ package net.xdocc;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -12,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -123,14 +125,30 @@ public class XPath implements Comparable<XPath> {
             try {
                 String content = FileUtils.readFileToString(frontmatter
                         .toFile());
-                Yaml yaml = new Yaml();
-                Map<String, Object> map = (Map<String, Object>) yaml
+                try {
+                    Yaml yaml = new Yaml();
+                    Map<String, Object> map = (Map<String, Object>) yaml
                         .load(content);
-                for (Map.Entry<String, Object> entry : map.entrySet()) {
-                    properties.put(entry.getKey(), entry.getValue().toString());
+                    for (Map.Entry<String, Object> entry : map.entrySet()) {
+                        properties.put(entry.getKey(), entry.getValue().toString());
+                    }
+                    return;
+                } catch (Exception e) {
+                    LOG.debug("cannot parse frontmatter", e);
+                }
+                //try a regular property file
+                try {
+                    final Properties p = new Properties();
+                    p.load(new StringReader(content));
+                    for (final String name: p.stringPropertyNames()) {
+                        properties.put(name, p.getProperty(name));
+                    }
+                    return;
+                } catch (Exception e) {
+                    LOG.debug("cannot parse property file", e);
                 }
             } catch (IOException e) {
-                LOG.error("cannot parse frontmatter", e);
+                LOG.debug("cannot parse frontmatter", e);
             }
         }
     }
@@ -311,12 +329,7 @@ public class XPath implements Comparable<XPath> {
                     }
                 } else if (!key.equalsIgnoreCase("")) {
                     // tag [b] is the same as [l99=browse,c]
-                    if (key.equals("b") || key.equals("browse")) {
-                        properties.put("l99", "browse");
-                        properties.put("c", null);
-                    } else {
-                        properties.put(key, null);
-                    }
+                    properties.put(key, null);
                 }
                 if (nextPipeIndex >= 0) {
                     offset = nextPipeIndex;
@@ -328,7 +341,7 @@ public class XPath implements Comparable<XPath> {
 
             return true;
         } catch (Exception e) {
-            LOG.info("name: " + name + " not valid, returning false parse()");
+            LOG.info("name: {} not valid, returning false parse()", name, e);
             return false;
         }
     }
@@ -563,39 +576,66 @@ public class XPath implements Comparable<XPath> {
         return resultArray;
     }
 
+    //rendering of directory by extension
     public boolean isSummary() {
-        return containsExtension("sum") || containsExtension("s");
+        return containsExtension("sum") || hasProperty("sum"); 
+        //item always rendered, shows a short summary, title + abstract up to n words, or marker, 
+        // or highlight and link
     }
 
-    public boolean isPage() { // default
-        return containsExtension("page") || containsExtension("p");
+    public boolean isPage() {
+        return containsExtension("page") || hasProperty("page"); 
+        //items not rendered, only directory page, no link
     }
-
-    public boolean isNavigation() {
-        return containsExtension("nav") || containsExtension("n");
+    
+    public boolean isLinkPage() { // default
+        return containsExtension("linkpage") || containsExtension("link") ||
+                hasProperty("linkpage") || hasProperty("link");
+        //no short form as this is default
+        //item always rendered, including directory page, and link
     }
-
+    
     public boolean isList() {
-        return containsExtension("list") || containsExtension("l");
+        return containsExtension("list") || hasProperty("list");
+        //item always rendered, shows a short summary, title and link
+    }
+    
+    
+    public boolean isRaw() { //all files are visible, but not compiled, layout set to browse
+        return hasRecursiveProperty("raw") || hasRecursiveExtension("raw");
+        //items not rendered, but link to the real file
+        //special handling as its recursive
+    }
+    
+    public boolean isItemWritten() {
+        return !isRaw() && !isPage();
+    }
+
+    //ordering extensions, can be combined with the rendering or with other ordering extensions
+    //from above -> sum_nav, s_n, list_high_nav
+    public boolean isNavigation() {
+        return containsExtension("nav") || hasProperty("nav");
     }
 
     public boolean isHighlight() {
-        return hasProperty("highlight") || hasProperty("h");
+        return hasProperty("highlight") || hasProperty("high") || 
+                containsExtension("highlight") || containsExtension("high");
     }
-
-    public boolean isRaw() {
-        XPath parent = getParent();
-        if (extensionList != null && extensionList.contains("raw")) {
-            return true;
-        }
-        while (parent != null) {
-            if (parent.extensionList != null && parent.extensionList.contains("raw")) {
-                return true;
-            }
-            parent = parent.getParent();
-        }
-        return false;
+    
+    //visibility is recursive
+    public boolean isAllVisible() { //all files are visible
+        return hasRecursiveProperty("visible","vis") || hasRecursiveExtension("visible","vis");
     }
+    
+    public boolean isNoneVisible() { //nothing is visible
+        return hasRecursiveProperty("none") || hasRecursiveExtension("none");
+    }
+    
+    public boolean isRegularVisible() { //default 1-test -> is visible, rest not
+        return hasRecursiveProperty("regular", "reg") || hasRecursiveExtension("regular", "reg");
+    }
+    
+      
 
     public String resolveTargetURL(String string) {
         if (getTargetURL().isEmpty()) {
@@ -653,7 +693,7 @@ public class XPath implements Comparable<XPath> {
      * @param names
      * @return
      */
-    public String searchProperty(String... names) {
+    public String getRecursiveProperty(String... names) {
         XPath current = this;
         do {
             String property = current.getProperty(names);
@@ -662,15 +702,37 @@ public class XPath implements Comparable<XPath> {
             }
         } while ((current = current.getParent()) != null);
 
-        for (String name : names) {
-            if (name.equals("sn") || name.equals("size_normal")) {
-                return "800x600^";
-            }
-            if (name.equals("si") || name.equals("size_icon")) {
-                return "250x250^c";
-            }
-        }
+        
         return null;
     }
+    
+     public boolean hasRecursiveProperty(String... names) {
+        XPath current = this;
+        do {
+            String property = current.getProperty(names);
+            if (current.hasProperty(names)) {
+                return true;
+            }
+        } while ((current = current.getParent()) != null);
 
+        return false;
+    }
+    
+     public boolean hasRecursiveExtension(String... names) {
+        XPath parent = getParent();
+        for(String name:names) {
+            if (extensionList != null && extensionList.contains(name)) {
+                return true;
+            }
+        }
+        for(String name:names) {
+            while (parent != null) {
+                if (parent.extensionList != null && parent.extensionList.contains(name)) {
+                    return true;
+                }
+                parent = parent.getParent();
+            }
+        }
+        return false;
+    }
 }
