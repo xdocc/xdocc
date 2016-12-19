@@ -83,7 +83,6 @@ public class HandlerCopy implements Handler {
 				.toMillis());
 		document.setDate(lastModified);
 		document.setTemplate("file");
-		document.applyPath1(path);
 		return document;
 	}
 
@@ -99,7 +98,6 @@ public class HandlerCopy implements Handler {
 		document.setDate(lastModified);
 		document.setName(xPath.getFileName());
 		document.setTemplate("browse");
-		document.applyPath1(path);
 		return document;
 	}
 

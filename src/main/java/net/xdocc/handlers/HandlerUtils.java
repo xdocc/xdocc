@@ -70,12 +70,12 @@ public class HandlerUtils {
 	public static Map<String, Object> fillModel(String documentName,
 			String documentURL, Date documentDate, long documentNr,
 			String documentFilename, String htmlContent, Map<String, Object> model) {
-		model.put(Document.NAME, documentName);
-		model.put(Document.URL, documentURL);
+		model.put(XPath.NAME, documentName);
+		model.put(XPath.URL, documentURL);
 		model.put(Document.CONTENT, htmlContent);
-		model.put(Document.DATE, documentDate);
-		model.put(Document.NR, documentNr);
-		model.put(Document.FILENAME, documentFilename);
+		model.put(XPath.DATE, documentDate);
+		model.put(XPath.NR, documentNr);
+		model.put(XPath.FILENAME, documentFilename);
 		return model;
 	}
 
@@ -90,7 +90,7 @@ public class HandlerUtils {
 		model.put(Document.CURRENT, current);
 		model.put(Document.BREADCRUMB, pathToRoot);
 		model.put(Document.NAVIGATION, site.globalNavigation());
-		model.put(Document.PATH, relativePathToRoot);
+		model.put(XPath.PATH, relativePathToRoot);
 		return model;
 	}
 	
@@ -105,13 +105,7 @@ public class HandlerUtils {
 				document.setDocuments(copy(document.getDocuments(), level + 1, pathToRoot));
 			}
 			final Document docCopy;
-			if(Boolean.TRUE.equals(document.getPreview())) {
-				docCopy = document.copy(level + 1);
-				retVal.add(docCopy);
-			} else {
-				docCopy = document.copy(level);
-				retVal.add(docCopy);
-			}
+			
 		}
 		return retVal;
 	}

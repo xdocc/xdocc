@@ -108,11 +108,12 @@ public class HandlerImage implements Handler {
 		}
 
 		Document doc = new Document(xPath, gen, xPath.getTargetURL() + ".html");
-		doc.addPath(Document.IMAGE_NORMAL,
-				xPath.getTargetURL() + "_n" + xPath.extensions());
-		doc.addPath(Document.IMAGE_THUMB,
-				xPath.getTargetURL() + "_t" + xPath.extensions());
-		doc.applyPath1(relativePathToRoot);
+		//TODO: store somewhere
+                //doc.addPath(Document.IMAGE_NORMAL,
+		//		xPath.getTargetURL() + "_n" + xPath.extensions());
+		//doc.addPath(Document.IMAGE_THUMB,
+		//      	xPath.getTargetURL() + "_t" + xPath.extensions());
+		
 		// TODO:enable
 		doc.setTemplate("image");
 		//

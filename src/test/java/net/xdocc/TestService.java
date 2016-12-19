@@ -5,9 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
-import junit.framework.Assert;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,6 +56,18 @@ public class TestService {
         Utils.createFile(src, ".templates/list.ftl", "This is a list file \n\n -- available variables: ${debug}");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertFalse(Files.exists(gen.resolve("test.html")));
+        Assert.assertTrue(Files.size(gen.resolve("index.html"))>0);
+    }
+    
+    @Test
+    public void testDocument() throws IOException, InterruptedException, ExecutionException {
+        Utils.createFile(src, "1-test.txt", "this is a text file");
+        Utils.createFile(src, ".xdocc", "page=true");
+        Utils.createFile(src, ".templates/text.ftl", "This is a text file \n\n -- |${content}|");
+        Utils.createFile(src, ".templates/list.ftl", "list file \n\n -- <#list documents as document>[${document.content}]</#list>");
+        Utils.createFile(src, ".templates/page.ftl", "<html><body>This is a page template <br><br> -- available variables: (${document.content})</body></html>");
+        
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertTrue(Files.size(gen.resolve("index.html"))>0);
     }
 }

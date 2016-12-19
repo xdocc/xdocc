@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Getter;
@@ -47,12 +49,23 @@ public class XPath implements Comparable<XPath> {
 
     @Getter
     private final Path path;
+    //relative path!
+    public static final String PATH = "path";
 
     @Getter
     private final Site site;
 
     @Getter
     private final String filename;
+    public static final String FILENAME = "filename";
+    
+    @Getter
+    private final long filesize;
+    public static final String FILESIZE = "filesize";
+    
+    @Getter
+    private final long filescount;
+    public static final String FILESCOUNT = "filescount";
     
     @Getter
     private final List<String> extensionList = new ArrayList<>(2);
@@ -64,10 +77,12 @@ public class XPath implements Comparable<XPath> {
     @Getter
     @Setter
     private Date date;
+    public static final String DATE = "date";
 
     @Getter
     @Setter
     private long nr;
+    public static final String NR = "nr";
 
     @Getter
     @Setter
@@ -76,16 +91,17 @@ public class XPath implements Comparable<XPath> {
     @Getter
     @Setter
     private String name = "";
+    public static final String NAME = "name";
 
     @Getter
     @Setter
     private String url;
-
-    
+    public static final String URL = "url";
 
     @Getter
     @Setter
     private boolean visible;
+    public static final String VISIBLE = "visible";
 
     /**
      * Creates a xPath object from a path. The path will be parsed and information will be extracted.
@@ -101,11 +117,15 @@ public class XPath implements Comparable<XPath> {
         }
         this.path = path;
         this.site = site;
+        
+        this.filesize = getFileSize();
         this.filename = getFileName();
+        this.filescount = getFilesCount();
         String extensionFilteredFileName = findKnownExtensions(site, filename);
         if (extensionList.size() > 0 || Files.isDirectory(path)) {
             this.visible = parse(extensionFilteredFileName, site.source().equals(path));
         } else {
+            this.url = filename;
             this.visible = false;
         }
         if (Files.isRegularFile(path)) {
@@ -143,7 +163,6 @@ public class XPath implements Comparable<XPath> {
                     for (final String name: p.stringPropertyNames()) {
                         properties.put(name, p.getProperty(name));
                     }
-                    return;
                 } catch (Exception e) {
                     LOG.debug("cannot parse property file", e);
                 }
@@ -384,13 +403,7 @@ public class XPath implements Comparable<XPath> {
     /**
      * @return The file name
      */
-    public String getFileName() {
-        if (path.getFileName() == null) {
-            LOG.error("[" + path + "], cannot deal with an empty path");
-            throw new RuntimeException("cannot deal with an empty path");
-        }
-        return path.getFileName().toString();
-    }
+    
 
     public String getTargetURLFilename() {
         String[] paths = Utils.createURLSplit(site.source(), this);
@@ -454,21 +467,6 @@ public class XPath implements Comparable<XPath> {
         }
 
         return visible;
-    }
-
-    /**
-     * @return The url of this file, if no url was provided, then the crc32 of the filename is used
-     */
-    public String url() {
-        // non-visible files -> url = filename
-        if (!isVisible()) {
-            return getFileName();
-        }
-        if (url == null || url.equals("")) {
-            return getFileName().replace(extensions, "");
-        } else {
-            return url;
-        }
     }
 
     public boolean isAscending() {
@@ -734,5 +732,43 @@ public class XPath implements Comparable<XPath> {
             }
         }
         return false;
+    }
+
+    private long getFileSize() {
+        try {
+            if (!Files.isDirectory(path)) {
+                return Files.size(path);
+            } else {
+                return 0;
+            }
+        } catch (IOException ex) {
+            LOG.error("[" + path + "], file size not able to determine");
+            return -1;
+        }
+    }
+    
+    private long getFilesCount() {
+        try {
+            if (Files.isDirectory(path)) {
+                return Files.walk(path).count();
+            } else {
+                return 1;
+            }
+        } catch (IOException ex) {
+            LOG.error("[" + path + "], file size not able to determine");
+            return -1;
+        }
+    }
+    
+    public String getFileName() {
+        if (path.getFileName() == null) {
+            LOG.error("[" + path + "], cannot deal with an empty path");
+            throw new RuntimeException("cannot deal with an empty path");
+        }
+        return path.getFileName().toString();
+    }
+
+    public String relativePath(Site site) {
+        return Utils.relativePathToRoot(site.source(), path);
     }
 }

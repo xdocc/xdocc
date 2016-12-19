@@ -79,9 +79,7 @@ public class HandlerWikiText implements Handler {
 				templateText, site, xPath, model2, relativePathToRoot);
 		Document doc = new Document(xPath, documentGenerator,
 				xPath.getTargetURL() + ".html");
-		doc.setPreview(xPath.isSummary());
 		doc.setTemplate("wikitext");
-		doc.applyPath1(path);
 		// create the site to layout ftl
 		TemplateBean templateSite = site.getTemplate(
 				"page", xPath.getLayoutSuffix());
@@ -187,11 +185,9 @@ public class HandlerWikiText implements Handler {
 					String base = getBase() == null ? null : getBase()
 							.toString();
 					if (StringUtils.isEmpty(base)) {
-						doc.applyPath1(path);
 						// TODO:enable
 					} else {
-						doc.applyPath1(
-								base + "/" + path);
+						
 						// TODO:enable
 					}
 					super.charactersUnescaped(doc.getGenerate());

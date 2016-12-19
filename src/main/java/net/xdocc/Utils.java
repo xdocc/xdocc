@@ -21,7 +21,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.slf4j.Logger;
@@ -31,9 +30,6 @@ import net.xdocc.Site.TemplateBean;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
-import net.xdocc.handlers.Handler;
-import net.xdocc.handlers.HandlerCopy;
-import org.reflections.Reflections;
 
 public class Utils {
 
@@ -471,16 +467,9 @@ public class Utils {
 
     }
 
-    public static List<Document> filter(List<Document> documents, int level) {
+    public static List<Document> filter(List<Document> documents) {
         List<Document> retVal = new ArrayList<>();
         List<Document> toPreview = new ArrayList<>();
-        for (Document document : documents) {
-            if (document.getLevel() < level) {
-                retVal.add(document);
-            } else if (document.getLevel() == level) {
-                toPreview.add(document);
-            }
-        }
         if (toPreview.size() > 0) {
             Document document = searchHighlight(toPreview);
             retVal.add(document);
@@ -796,7 +785,6 @@ public class Utils {
         Document doc = new Document(xPath, documentGenerator, documentURL);
         doc.setContent(htmlContent);
         doc.setTemplate(template);
-        doc.applyPath1(relativePathToRoot);
         return doc;
     }
 
@@ -811,7 +799,7 @@ public class Utils {
         Link current = Utils.find(xPath.getParent(), site.globalNavigation());
         List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
         
-        modelSite.put(Document.PATH, relativePathToRoot);
+        modelSite.put(XPath.PATH, relativePathToRoot);
         modelSite.put(Document.DOCUMENT, doc);
         modelSite.put(Document.TEMPLATE, "page");
         modelSite.put(Document.CURRENT, current);
