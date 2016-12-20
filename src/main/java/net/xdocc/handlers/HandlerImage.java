@@ -93,7 +93,7 @@ public class HandlerImage implements Handler {
 		String documentURL = xPath.getTargetURL() + xPath.extensions();
 		Date documentDate = xPath.date();
 		long documentNr = xPath.nr();
-		String documentFilename = xPath.getFileName();
+		String documentFilename = xPath.fileName();
 		DocumentGenerator gen = new DocumentGenerator(site, templateText);
 		Map<String, Object> model = gen.model();
 

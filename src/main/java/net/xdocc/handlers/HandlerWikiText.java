@@ -288,31 +288,31 @@ public class HandlerWikiText implements Handler {
 			builder.setEmitAsDocument(false);
 			String type = null;
 			for (String ext : TEXTILE_EXT) {
-				if (xPath.getExtensionList().contains(ext)) {
+				if (xPath.extensionList().contains(ext)) {
 					parser = new MarkupParser(new TextileLanguage());
 					type = "textile";
 				}
 			}
 			for (String ext : MEDIA_WIKI_EXT) {
-				if (xPath.getExtensionList().contains(ext)) {
+				if (xPath.extensionList().contains(ext)) {
 					parser = new MarkupParser(new MediaWikiLanguage());
 					type = "mediawiki";
 				}
 			}
 			for (String ext : TRAC_WIKI_EXT) {
-				if (xPath.getExtensionList().contains(ext)) {
+				if (xPath.extensionList().contains(ext)) {
 					parser = new MarkupParser(new TracWikiLanguage());
 					type = "tracwiki";
 				}
 			}
 			for (String ext : T_WIKI_EXT) {
-				if (xPath.getExtensionList().contains(ext)) {
+				if (xPath.extensionList().contains(ext)) {
 					parser = new MarkupParser(new TWikiLanguage());
 					type = "twiki";
 				}
 			}
 			for (String ext : CONFLUENCE_EXT) {
-				if (xPath.getExtensionList().contains(ext)) {
+				if (xPath.extensionList().contains(ext)) {
 					parser = new MarkupParser(new ConfluenceLanguage());
 					type = "confluence";
 				}

@@ -22,7 +22,7 @@ public class Link {
 	public Link(XPath target, Link parent) {
 		this.target = target;
 		this.URL = target.getTargetURL();
-		this.name = target.name() == null ? target.getFileName() : target
+		this.name = target.name() == null ? target.fileName() : target
 				.name();
 		this.parent = parent;
 		this.properties = target.properties();

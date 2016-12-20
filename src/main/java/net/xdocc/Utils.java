@@ -787,21 +787,33 @@ public class Utils {
         doc.setTemplate(template);
         return doc;
     }
-
-    public static void writeHTML(Site site, XPath xPath, 
-            String relativePathToRoot, Document doc, Path generatedFile) throws IOException, TemplateException {
+    
+    public static XList createList(Site site, XPath xPath) throws IOException {
+        TemplateBean templateText = site.getTemplate("list", xPath.getLayoutSuffix());
+        // create the document
+        Document.DocumentGenerator documentGenerator = new Document.DocumentGenerator(site,
+                templateText);
+        String documentURL = xPath.getTargetURL() + ".html";
+        XList doc = new XList(xPath, documentGenerator, documentURL);
+        doc.setTemplate("list");
+        return doc;
+    }
+    
+    public static void writeListHTML(Site site, XPath xPath, 
+            String relativePathToRoot, XList doc, Path generatedFile) throws IOException, TemplateException {
         
         Map<String, Object> modelSite = new HashMap<String, Object>();
         
+        String template = doc.getTemplate();
         TemplateBean templateSite = site.getTemplate(
-                "page", xPath.getLayoutSuffix());
+                template, xPath.getLayoutSuffix());
         
         Link current = Utils.find(xPath.getParent(), site.globalNavigation());
         List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
         
         modelSite.put(XPath.PATH, relativePathToRoot);
-        modelSite.put(Document.DOCUMENT, doc);
-        modelSite.put(Document.TEMPLATE, "page");
+        modelSite.put(XList.LIST, doc.getList());
+        modelSite.put(Document.TEMPLATE, template);
         modelSite.put(Document.CURRENT, current);
         modelSite.put(Document.NAVIGATION, Utils.setSelected(pathToRoot, site.globalNavigation()));
         modelSite.put(Document.BREADCRUMB, pathToRoot);
@@ -809,6 +821,14 @@ public class Utils {
         String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 
         htmlSite = Utils.postApplyTemplate(htmlSite, modelSite, "path");
+        Path generatedDir = Files.createDirectories(generatedFile.getParent());
+        Utils.write(htmlSite, xPath, generatedFile);
+    }
+
+    public static void writeHTML(Site site, XPath xPath, 
+            String relativePathToRoot, Document doc, Path generatedFile) throws IOException, TemplateException {
+        
+        String htmlSite = doc.getGenerate();
         Path generatedDir = Files.createDirectories(generatedFile.getParent());
         Utils.write(htmlSite, xPath, generatedFile);
     }

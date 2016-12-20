@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Getter;
@@ -32,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 @Accessors(chain = true, fluent = true)
-public class XPath implements Comparable<XPath> {
+final public class XPath implements Comparable<XPath> {
 
     private static final Logger LOG = LoggerFactory.getLogger(XPath.class);
 
@@ -49,30 +47,17 @@ public class XPath implements Comparable<XPath> {
 
     @Getter
     private final Path path;
-    //relative path!
-    public static final String PATH = "path";
 
     @Getter
-    private final Site site;
-
-    @Getter
-    private final String filename;
-    public static final String FILENAME = "filename";
-    
-    @Getter
-    private final long filesize;
-    public static final String FILESIZE = "filesize";
-    
-    @Getter
-    private final long filescount;
-    public static final String FILESCOUNT = "filescount";
+    private final Site site; 
     
     @Getter
     private final List<String> extensionList = new ArrayList<>(2);
+    public static final String EXTENSION_LIST = "extensionlist";
     
     @Getter
     private final Map<String, String> properties = new HashMap<>();
-    
+    public static final String PROPERTIES = "properties";
 
     @Getter
     @Setter
@@ -87,6 +72,7 @@ public class XPath implements Comparable<XPath> {
     @Getter
     @Setter
     private String extensions;
+    public static final String EXTENSIONS = "extensions";
 
     @Getter
     @Setter
@@ -98,10 +84,8 @@ public class XPath implements Comparable<XPath> {
     private String url;
     public static final String URL = "url";
 
-    @Getter
-    @Setter
+    
     private boolean visible;
-    public static final String VISIBLE = "visible";
 
     /**
      * Creates a xPath object from a path. The path will be parsed and information will be extracted.
@@ -118,14 +102,11 @@ public class XPath implements Comparable<XPath> {
         this.path = path;
         this.site = site;
         
-        this.filesize = getFileSize();
-        this.filename = getFileName();
-        this.filescount = getFilesCount();
-        String extensionFilteredFileName = findKnownExtensions(site, filename);
+        String extensionFilteredFileName = findKnownExtensions(site, fileName());
         if (extensionList.size() > 0 || Files.isDirectory(path)) {
             this.visible = parse(extensionFilteredFileName, site.source().equals(path));
         } else {
-            this.url = filename;
+            this.url = fileName();
             this.visible = false;
         }
         if (Files.isRegularFile(path)) {
@@ -371,43 +352,25 @@ public class XPath implements Comparable<XPath> {
         }
         return value;
     }
-
-    public List<String> getExtensionList() {
-        return extensionList;
-    }
-
+    
     @Override
     public String toString() {
         return path.toString();
     }
-
-    /**
-     * @return True if the file should been compiled, e.g. compile from textile to html
-     */
-    public boolean isCompile() {
-        return !isHidden() && isVisible() && !isRaw();
-    }
-
-    /**
-     * @return True if a file is hidden and only visible in the source folder
-     */
-    public boolean isHidden() {
-        if (getFileName().endsWith("~")) {
-            return true;
-        } else if (getFileName().startsWith(".")) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @return The file name
-     */
     
+    public String fileName() {
+        if (path.getFileName() == null) {
+            LOG.error("[" + path + "], cannot deal with an empty path");
+            throw new RuntimeException("cannot deal with an empty path");
+        }
+        return path.getFileName().toString();
+    }
+    public static final String FILENAME = "filename";
 
+    
     public String getTargetURLFilename() {
         String[] paths = Utils.createURLSplit(site.source(), this);
-        paths[paths.length - 1] = getFileName();
+        paths[paths.length - 1] = fileName();
         String url = Utils.createURL(paths);
         return url;
     }
@@ -448,18 +411,43 @@ public class XPath implements Comparable<XPath> {
     public boolean containsExtension(String extension) {
         return extensionList != null && extensionList.contains(extension);
     }
-
-    public boolean isDirectory() {
-        return Files.isDirectory(path);
-    }
-
+    
     public XPath getParent() {
         if (!Utils.isChild(path.getParent(), site.source())) {
             return null;
         }
         return new XPath(site, path.getParent());
     }
+    
+    /**
+     * @return True if the file should been compiled, e.g. compile from textile to html
+     */
+    public boolean isCompile() {
+        return !isHidden() && isVisible() && !isRaw();
+    }
+    public static final String IS_COMPILE = "iscompile";
 
+    
+    /**
+     * @return True if a file is hidden and only visible in the source folder
+     */
+    public boolean isHidden() {
+        if (fileName().endsWith("~")) {
+            return true;
+        } else if (fileName().startsWith(".")) {
+            return true;
+        }
+        return false;
+    }
+    public static final String IS_HIDDEN = "ishidden";
+
+    
+    public boolean isDirectory() {
+        return Files.isDirectory(path);
+    }
+    public static final String IS_DIRECTORY = "isdirectory";
+
+    
     public boolean isVisible() {
         // first check if property "copy" is somewhere
         if (isRaw()) {
@@ -468,22 +456,29 @@ public class XPath implements Comparable<XPath> {
 
         return visible;
     }
+    public static final String IS_VISIBLE = "isvisible";
 
     public boolean isAscending() {
         return properties != null
                 && (properties.containsKey("ascending") || properties
                 .containsKey("asc"));
     }
+    public static final String IS_ASCENDING = "isascending";
 
+    
     public boolean isDescending() {
         return properties != null
                 && (properties.containsKey("descending") || properties
                 .containsKey("desc"));
     }
+    public static final String IS_DESCENDING = "isdescending";
+    
 
     public boolean isAutoSort() {
         return !isDescending() && !isAscending();
     }
+    public static final String IS_AUTOSORT = "isautosort";
+    
 
     public String getLayoutSuffix() {
         XPath parent = this;
@@ -517,14 +512,7 @@ public class XPath implements Comparable<XPath> {
         }
         return "";
     }
-
-    public String getSizeIcon() {
-        return getProperty("si", "size_icon");
-    }
-
-    public String getSizeNormal() {
-        return getProperty("sn", "size_normal");
-    }
+    public static final String LAYOUT = "layout";
 
     private boolean hasProperty(String... tagNames) {
         if (properties != null) {
@@ -580,23 +568,21 @@ public class XPath implements Comparable<XPath> {
         //item always rendered, shows a short summary, title + abstract up to n words, or marker, 
         // or highlight and link
     }
+    public static final String IS_SUMMARY = "issummary";
+    
 
     public boolean isPage() {
         return containsExtension("page") || hasProperty("page"); 
         //items not rendered, only directory page, no link
     }
-    
-    public boolean isLinkPage() { // default
-        return containsExtension("linkpage") || containsExtension("link") ||
-                hasProperty("linkpage") || hasProperty("link");
-        //no short form as this is default
-        //item always rendered, including directory page, and link
-    }
+    public static final String IS_PAGE = "ispage";
+   
     
     public boolean isList() {
         return containsExtension("list") || hasProperty("list");
         //item always rendered, shows a short summary, title and link
     }
+    public static final String IS_LIST = "islist";
     
     
     public boolean isRaw() { //all files are visible, but not compiled, layout set to browse
@@ -604,34 +590,59 @@ public class XPath implements Comparable<XPath> {
         //items not rendered, but link to the real file
         //special handling as its recursive
     }
+    public static final String IS_RAW = "israw";
+    
+     public boolean isLinkPage() { // default
+        return !isSummary() && !isPage() && !isList() &&  !isRaw();
+        //no short form as this is default
+        //item always rendered, including directory page, and link
+    }
+    public static final String IS_LINK_PAGE = "islinkpage";
     
     public boolean isItemWritten() {
         return !isRaw() && !isPage();
     }
+    public static final String IS_WRITE = "iswrite";
+    
 
     //ordering extensions, can be combined with the rendering or with other ordering extensions
     //from above -> sum_nav, s_n, list_high_nav
     public boolean isNavigation() {
         return containsExtension("nav") || hasProperty("nav");
     }
+    public static final String IS_NAVIGATION = "isnavigation";
+    
 
     public boolean isHighlight() {
         return hasProperty("highlight") || hasProperty("high") || 
                 containsExtension("highlight") || containsExtension("high");
     }
+    public static final String IS_HIGHLIGHT = "ishighlight";
+    
+    //dealing with recursion: a directory that is promoted, will be a like a content page for the parent
+    //if no item is highlighted, then all content is promoted. Default is not promoted
+    public boolean isPromoted() {
+        return containsExtension("promoted") || containsExtension("prom");
+    }
+    public static final String IS_PROMOTED = "ispromoted";
     
     //visibility is recursive
-    public boolean isAllVisible() { //all files are visible
+    public boolean isAllVisible() { //all non hidden files are visible (also those without 1-blabla)
         return hasRecursiveProperty("visible","vis") || hasRecursiveExtension("visible","vis");
     }
+    public static final String IS_ALL_VISIBLE = "isallvisible";
+     
     
     public boolean isNoneVisible() { //nothing is visible
         return hasRecursiveProperty("none") || hasRecursiveExtension("none");
     }
+    public static final String IS_NONE_VISIBLE = "isnonevisible";
+    
     
     public boolean isRegularVisible() { //default 1-test -> is visible, rest not
-        return hasRecursiveProperty("regular", "reg") || hasRecursiveExtension("regular", "reg");
+        return !isAllVisible() && !isNoneVisible();
     }
+    public static final String IS_REGULAR_VISIBLE = "isregularvisible";
     
       
 
@@ -655,8 +666,8 @@ public class XPath implements Comparable<XPath> {
                 return diff > 0 ? 1 : -1;
             }
         }
-        if (getFileName() != null && o2.getFileName() != null) {
-            diff = getFileName().compareTo(o2.getFileName());
+        if (fileName() != null && o2.fileName() != null) {
+            diff = fileName().compareTo(o2.fileName());
             if (diff != 0) {
                 return diff > 0 ? 1 : -1;
             }
@@ -672,6 +683,8 @@ public class XPath implements Comparable<XPath> {
     public boolean isRoot() {
         return path().equals(site.source());
     }
+    public static final String IS_ROOT = "isroot";
+    
 
     public int getPageSize() {
         String pagesString = getProperty("p", "pages");
@@ -684,6 +697,7 @@ public class XPath implements Comparable<XPath> {
             return 0;
         }
     }
+    public static final String PAGES = "pages";
 
     /**
      * Search a property the hierarchy up, starting at "this"
@@ -707,7 +721,6 @@ public class XPath implements Comparable<XPath> {
      public boolean hasRecursiveProperty(String... names) {
         XPath current = this;
         do {
-            String property = current.getProperty(names);
             if (current.hasProperty(names)) {
                 return true;
             }
@@ -734,7 +747,7 @@ public class XPath implements Comparable<XPath> {
         return false;
     }
 
-    private long getFileSize() {
+    public long fileSize() {
         try {
             if (!Files.isDirectory(path)) {
                 return Files.size(path);
@@ -746,8 +759,9 @@ public class XPath implements Comparable<XPath> {
             return -1;
         }
     }
+    public static final String FILESIZE = "filesize";
     
-    private long getFilesCount() {
+    public long filesCount() {
         try {
             if (Files.isDirectory(path)) {
                 return Files.walk(path).count();
@@ -759,16 +773,13 @@ public class XPath implements Comparable<XPath> {
             return -1;
         }
     }
+    public static final String FILESCOUNT = "filescount";
     
-    public String getFileName() {
-        if (path.getFileName() == null) {
-            LOG.error("[" + path + "], cannot deal with an empty path");
-            throw new RuntimeException("cannot deal with an empty path");
-        }
-        return path.getFileName().toString();
-    }
+    
 
     public String relativePath(Site site) {
         return Utils.relativePathToRoot(site.source(), path);
     }
+    //relative path!
+    public static final String PATH = "path";
 }

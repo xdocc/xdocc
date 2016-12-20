@@ -3,19 +3,15 @@ package net.xdocc;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
 import org.apache.commons.lang.BooleanUtils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +37,10 @@ public class Document implements Comparable<Document>, Serializable {
     public static final String CURRENT_PAGE = "current_page";
     public static final String CONTENT = "content";
     // shared 
-    public static final String LAYOUT = "layout";
     public static final String TEMPLATE = "template";
     public static final String HIGHLIGHT_URL = "highlightUrl";
     
-    // list
-    public static final String DOCUMENTS = "documents";
-    public static final String DOCUMENT_SIZE = "document_size";
+    
     
     // page
     public static final String DOCUMENT = "document";
@@ -87,8 +80,6 @@ public class Document implements Comparable<Document>, Serializable {
      * @param documentGenerator The generator is lazy generating. Thus, paths can be adapted until
      * getContent() is called.
      * @param url The full URL from the root to this xPath. To be used with relativePathToRoot
-     * @param relativePathToRoot Set the relative path back to root. The path will look something like this
-     * ../../
      */
     public Document(XPath xPath, DocumentGenerator documentGenerator,
             String url) {
@@ -98,6 +89,10 @@ public class Document implements Comparable<Document>, Serializable {
         initXPath();
     }
     
+    DocumentGenerator documentGenerator() {
+        return documentGenerator;
+    }
+    
     private void initXPath() {
         documentGenerator.model().put(XPath.NAME, source.name());
         documentGenerator.model().put(XPath.URL, source.url());
@@ -105,11 +100,36 @@ public class Document implements Comparable<Document>, Serializable {
         documentGenerator.model().put(XPath.NR, source.nr());
         documentGenerator.model().put(XPath.PATH, source.relativePath(documentGenerator.site));
         
-        documentGenerator.model().put(XPath.FILENAME, source.filename());
-        documentGenerator.model().put(XPath.FILESCOUNT, source.filescount());
-        documentGenerator.model().put(XPath.FILESIZE, source.filesize());
-       
-        documentGenerator.model().put(XPath.VISIBLE, source.isVisible());
+        documentGenerator.model().put(XPath.FILENAME, source.fileName());
+        documentGenerator.model().put(XPath.FILESCOUNT, source.filesCount());
+        documentGenerator.model().put(XPath.FILESIZE, source.fileSize());
+        documentGenerator.model().put(XPath.EXTENSIONS, source.extensions());
+        documentGenerator.model().put(XPath.EXTENSION_LIST, source.extensionList());
+        documentGenerator.model().put(XPath.PROPERTIES, source.properties());
+        documentGenerator.model().put(XPath.PAGES, source.getPageSize());
+        documentGenerator.model().put(XPath.LAYOUT, source.getLayoutSuffix());
+        //
+        documentGenerator.model().put(XPath.IS_ALL_VISIBLE, source.isAllVisible());
+        documentGenerator.model().put(XPath.IS_ASCENDING, source.isAscending());
+        documentGenerator.model().put(XPath.IS_AUTOSORT, source.isAutoSort());
+        documentGenerator.model().put(XPath.IS_COMPILE, source.isCompile());
+        documentGenerator.model().put(XPath.IS_DESCENDING, source.isDescending());
+        documentGenerator.model().put(XPath.IS_DIRECTORY, source.isDirectory());
+        documentGenerator.model().put(XPath.IS_HIDDEN, source.isHidden());
+        documentGenerator.model().put(XPath.IS_HIGHLIGHT, source.isHighlight());
+        documentGenerator.model().put(XPath.IS_LINK_PAGE, source.isLinkPage());
+        documentGenerator.model().put(XPath.IS_LIST, source.isList());
+        documentGenerator.model().put(XPath.IS_NAVIGATION, source.isNavigation());
+        documentGenerator.model().put(XPath.IS_NONE_VISIBLE, source.isNoneVisible());
+        documentGenerator.model().put(XPath.IS_PAGE, source.isPage());
+        documentGenerator.model().put(XPath.IS_PROMOTED, source.isPromoted());
+        documentGenerator.model().put(XPath.IS_RAW, source.isRaw());
+        documentGenerator.model().put(XPath.IS_REGULAR_VISIBLE, source.isRegularVisible());
+        documentGenerator.model().put(XPath.IS_ROOT, source.isRoot());
+        documentGenerator.model().put(XPath.IS_SUMMARY, source.isSummary());
+        documentGenerator.model().put(XPath.IS_VISIBLE, source.isVisible());
+        documentGenerator.model().put(XPath.IS_WRITE, source.isItemWritten());
+        
     }
 
     public String getName() {
@@ -157,30 +177,30 @@ public class Document implements Comparable<Document>, Serializable {
         return this;
     }
     
-    public String getFilename() {
+    public String getFileName() {
         return (String) documentGenerator.model().get(XPath.FILENAME);
     }
 
-    public Document setFilename(String filename) {
-        documentGenerator.model().put(XPath.FILENAME, filename);
+    public Document setFileName(String fileName) {
+        documentGenerator.model().put(XPath.FILENAME, fileName);
         return this;
     }
     
-    public String getFilesize() {
+    public String getFileSize() {
         return (String) documentGenerator.model().get(XPath.FILESIZE);
     }
 
-    public Document setFilesize(String filesize) {
-        documentGenerator.model().put(XPath.FILESIZE, filesize);
+    public Document setFileSize(String fileSize) {
+        documentGenerator.model().put(XPath.FILESIZE, fileSize);
         return this;
     }
     
-    public String getFilescount() {
+    public String getFilesCount() {
         return (String) documentGenerator.model().get(XPath.FILESCOUNT);
     }
 
-    public Document setFilename(long filescount) {
-        documentGenerator.model().put(XPath.FILESCOUNT, filescount);
+    public Document setFilesCount(long filesCount) {
+        documentGenerator.model().put(XPath.FILESCOUNT, filesCount);
         return this;
     }
 
@@ -208,19 +228,19 @@ public class Document implements Comparable<Document>, Serializable {
      *
      * @return The depth, i.e. the number of directories back to root
      */
-    public Integer getDepth() {
+    /*public Integer getDepth() {
         return (Integer) documentGenerator.model().get(DEPTH);
-    }
+    }*/
 
     /**
      *
      * @param depth Set the number of directories back to root
      * @return
      */
-    public Document setDepth(Integer depth) {
+    /*public Document setDepth(Integer depth) {
         documentGenerator.model().put(DEPTH, depth);
         return this;
-    }
+    }*/
 
     /**
      * Lazy loading of the content that will be generated on the fly.
@@ -229,51 +249,6 @@ public class Document implements Comparable<Document>, Serializable {
      */
     public String getGenerate() {
         return documentGenerator.generate();
-    }
-
-    /**
-     * @return a list of documents if present in the model or null
-     */
-    public List<Document> getDocuments() {
-        @SuppressWarnings("unchecked")
-        List<Document> documents = (List<Document>) documentGenerator
-                .model().get(DOCUMENTS);
-        if (documents == null) {
-            return Collections.emptyList();
-        }
-        return documents;
-    }
-
-    /**
-     * @param documents The list of documents in a collection
-     * @return this class
-     */
-    public Document setDocuments(List<Document> documents) {
-        documentGenerator.model().put(DOCUMENTS, documents);
-        documentGenerator.model().put(DOCUMENT_SIZE, documents.size());
-        return this;
-    }
-
-    /**
-     * Set the data for paging. This is the the URLs for the other pages and the current site
-     *
-     * @param pageURLs
-     * @param current
-     */
-    public void setPaging(List<String> pageURLs, Integer current) {
-        documentGenerator.model().put(PAGE_URLS, pageURLs);
-        documentGenerator.model().put(CURRENT_PAGE, current);
-
-    }
-
-    @SuppressWarnings("unchecked")
-    public List<String> getPageURLs() {
-        return (List<String>) documentGenerator.model().get(PAGE_URLS);
-    }
-
-    public Integer getCurrent() {
-        return (Integer) documentGenerator.model().get(CURRENT_PAGE);
-
     }
 
     /**
@@ -328,7 +303,7 @@ public class Document implements Comparable<Document>, Serializable {
      * @return The layout
      */
     public String getLayout() {
-        return (String) documentGenerator.model().get(LAYOUT);
+        return (String) documentGenerator.model().get(XPath.LAYOUT);
     }
 
     /**
@@ -336,7 +311,7 @@ public class Document implements Comparable<Document>, Serializable {
      * @return this class
      */
     public Document setLayout(String layout) {
-        documentGenerator.model().put(LAYOUT, layout);
+        documentGenerator.model().put(XPath.LAYOUT, layout);
         return this;
     }
 
@@ -375,9 +350,9 @@ public class Document implements Comparable<Document>, Serializable {
             sb.append("n:");
             sb.append(getName());
         }
-        if (getFilename() != null) {
+        if (getFileName() != null) {
             sb.append(",f:");
-            sb.append(getFilename());
+            sb.append(getFileName());
         }
         return sb.toString();
     }

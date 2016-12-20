@@ -60,10 +60,10 @@ public class Compiler {
                     Path generatedFile = xPath.getTargetPath("index.html");
 
                     try {
-                        Document doc = Utils.createDocument(site, xPath, "", null, "list");
-                        doc.setDocuments(results);
+                        XList doc = Utils.createList(site, xPath);
+                        doc.setList(results);
                         
-                        Utils.writeHTML(site, xPath, "", doc, generatedFile);
+                        Utils.writeListHTML(site, xPath, "", doc, generatedFile);
                     } catch (Throwable t) {
                         LOG.error("compiler error", t);
                         completableFuture.completeExceptionally(t);

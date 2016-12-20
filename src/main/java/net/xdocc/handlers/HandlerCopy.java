@@ -35,7 +35,7 @@ public class HandlerCopy implements Handler {
 		Map<String, Object> model = new HashMap<>(model2);
 		final Path generatedFile;
 		if (xPath.isVisible()) {
-			String filename = xPath.getFileName();
+			String filename = xPath.fileName();
 			String extension = filename.substring(filename.lastIndexOf("."));
 			generatedFile = xPath.getTargetPath(
 					xPath.getTargetURL()+extension);
@@ -96,7 +96,7 @@ public class HandlerCopy implements Handler {
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
 				.toMillis());
 		document.setDate(lastModified);
-		document.setName(xPath.getFileName());
+		document.setName(xPath.fileName());
 		document.setTemplate("browse");
 		return document;
 	}

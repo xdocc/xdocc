@@ -94,7 +94,7 @@ public class HandlerUtils {
 		return model;
 	}
 	
-	public static List<Document> copy (List<Document> documents, String pathToRoot) {
+	/*public static List<Document> copy (List<Document> documents, String pathToRoot) {
 		return copy(documents, 1, pathToRoot);
 	}
 	
@@ -108,5 +108,5 @@ public class HandlerUtils {
 			
 		}
 		return retVal;
-	}
+	}*/
 }
