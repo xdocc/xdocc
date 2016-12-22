@@ -57,7 +57,7 @@ public class Compiler {
 
                     XPath xPath = new XPath(site, path);
 
-                    Path generatedFile = xPath.getTargetPath("index.html");
+                    Path generatedFile = xPath.resolveTargetFromPath("index.html");
 
                     try {
                         XList doc = Utils.createList(site, xPath);

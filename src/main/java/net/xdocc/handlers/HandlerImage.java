@@ -42,7 +42,7 @@ public class HandlerImage implements Handler {
 			throws TemplateException, IOException, InterruptedException {
 		
 		// copy the original image
-		Path generatedFile = xPath.getTargetPath(xPath.getTargetURL()
+		Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
 				+ xPath.extensions());
 		
 		Path generatedDir = Files.createDirectories(generatedFile.getParent());
@@ -61,7 +61,7 @@ public class HandlerImage implements Handler {
                 if(sizeIcon == null) {
                     sizeIcon = "250x250^c";
                 }
-		Path generatedFileThumb = xPath.getTargetPath(xPath.getTargetURL()
+		Path generatedFileThumb = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
 				+ "_t" + xPath.extensions());
 		
 			if (sizeIcon.endsWith("c")) {
@@ -76,7 +76,7 @@ public class HandlerImage implements Handler {
                 if(sizeIcon == null) {
                     sizeIcon = "800x600^";
                 }
-		Path generatedFileNorm = xPath.getTargetPath(xPath.getTargetURL()
+		Path generatedFileNorm = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
 				+ "_n" + xPath.extensions());
 		
 			if (sizeNorm.endsWith("c")) {
@@ -122,7 +122,7 @@ public class HandlerImage implements Handler {
 		Map<String, Object> modelSite = HandlerUtils.fillPage(site, xPath, doc);
 		String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 		// write to disk
-		Path generatedFile2 = xPath.getTargetPath(xPath.getTargetURL()
+		Path generatedFile2 = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
 				+ ".html");
 		
 		Path generatedDir2 = Files

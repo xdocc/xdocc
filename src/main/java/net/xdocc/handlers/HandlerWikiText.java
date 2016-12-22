@@ -90,7 +90,7 @@ public class HandlerWikiText implements Handler {
 		// write to disk
 		if (xPath.getParent().isItemWritten()) {
 			
-			generatedFile = xPath.getTargetPath(xPath.getTargetURL() + ".html");
+			generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
 			
 			Path generatedDir = Files.createDirectories(generatedFile
 					.getParent());

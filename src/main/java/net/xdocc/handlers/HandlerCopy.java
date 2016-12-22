@@ -37,10 +37,10 @@ public class HandlerCopy implements Handler {
 		if (xPath.isVisible()) {
 			String filename = xPath.fileName();
 			String extension = filename.substring(filename.lastIndexOf("."));
-			generatedFile = xPath.getTargetPath(
+			generatedFile = xPath.resolveTargetFromBasePath(
 					xPath.getTargetURL()+extension);
 		} else {
-			generatedFile = xPath.getTargetPath(
+			generatedFile = xPath.resolveTargetFromBasePath(
 					xPath.getTargetURLFilename());
 		}
 		try {

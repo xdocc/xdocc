@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -399,9 +400,18 @@ final public class XPath implements Comparable<XPath> {
     /**
      * @return The path of the file in the web folder for files that have been compiled
      */
-    public Path getTargetPath(String url) {
+    public Path resolveTargetFromBasePath(String url) {
         Path tmp = site.generated().resolve(url);
         return tmp;
+    }
+    
+    public Path resolveTargetFromPath(String url) {
+        Path target = Paths.get(getTargetURL());
+        if(Files.isDirectory(path)) {
+            return site.generated().resolve(target.resolve(url));
+        } else {
+            return site.generated().resolve(target.getParent().resolve(url));
+        }
     }
 
     /**
@@ -514,11 +524,12 @@ final public class XPath implements Comparable<XPath> {
     }
     public static final String LAYOUT = "layout";
 
-    private boolean hasProperty(String... tagNames) {
+    private boolean isPropertyTrue(String... tagNames) {
         if (properties != null) {
             for (String tag : tagNames) {
                 if (properties.containsKey(tag)) {
-                    return true;
+                    String value = properties.get(tag);
+                    return !"false".equalsIgnoreCase(value);
                 }
             }
         }
@@ -564,7 +575,7 @@ final public class XPath implements Comparable<XPath> {
 
     //rendering of directory by extension
     public boolean isSummary() {
-        return containsExtension("sum") || hasProperty("sum"); 
+        return containsExtension("sum") || isPropertyTrue("sum");
         //item always rendered, shows a short summary, title + abstract up to n words, or marker, 
         // or highlight and link
     }
@@ -572,14 +583,14 @@ final public class XPath implements Comparable<XPath> {
     
 
     public boolean isPage() {
-        return containsExtension("page") || hasProperty("page"); 
+        return containsExtension("page") || isPropertyTrue("page"); 
         //items not rendered, only directory page, no link
     }
     public static final String IS_PAGE = "ispage";
    
     
     public boolean isList() {
-        return containsExtension("list") || hasProperty("list");
+        return containsExtension("list") || isPropertyTrue("list");
         //item always rendered, shows a short summary, title and link
     }
     public static final String IS_LIST = "islist";
@@ -608,13 +619,13 @@ final public class XPath implements Comparable<XPath> {
     //ordering extensions, can be combined with the rendering or with other ordering extensions
     //from above -> sum_nav, s_n, list_high_nav
     public boolean isNavigation() {
-        return containsExtension("nav") || hasProperty("nav");
+        return containsExtension("nav") || isPropertyTrue("nav");
     }
     public static final String IS_NAVIGATION = "isnavigation";
     
 
     public boolean isHighlight() {
-        return hasProperty("highlight") || hasProperty("high") || 
+        return isPropertyTrue("highlight") || isPropertyTrue("high") || 
                 containsExtension("highlight") || containsExtension("high");
     }
     public static final String IS_HIGHLIGHT = "ishighlight";
@@ -622,7 +633,8 @@ final public class XPath implements Comparable<XPath> {
     //dealing with recursion: a directory that is promoted, will be a like a content page for the parent
     //if no item is highlighted, then all content is promoted. Default is not promoted
     public boolean isPromoted() {
-        return containsExtension("promoted") || containsExtension("prom");
+        return isPropertyTrue("promoted") || isPropertyTrue("prom") || 
+                containsExtension("promoted") || containsExtension("prom");
     }
     public static final String IS_PROMOTED = "ispromoted";
     
@@ -721,7 +733,7 @@ final public class XPath implements Comparable<XPath> {
      public boolean hasRecursiveProperty(String... names) {
         XPath current = this;
         do {
-            if (current.hasProperty(names)) {
+            if (current.isPropertyTrue(names)) {
                 return true;
             }
         } while ((current = current.getParent()) != null);

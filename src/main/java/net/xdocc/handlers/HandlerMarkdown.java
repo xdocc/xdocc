@@ -52,7 +52,7 @@ public class HandlerMarkdown implements Handler {
             Path generatedFile = null;
             if (xPath.getParent().isItemWritten()) {
                 generatedFile = xPath
-                        .getTargetPath(xPath.getTargetURL() + ".html");
+                        .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
                 Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile);
             }
             return doc;

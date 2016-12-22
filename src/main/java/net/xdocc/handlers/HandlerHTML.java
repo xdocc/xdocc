@@ -50,7 +50,7 @@ public class HandlerHTML implements Handler {
 		// always create a single page for that
 		Path generatedFile = null;
 		if(xPath.getParent().isItemWritten()) {
-			generatedFile = xPath.getTargetPath(xPath.getTargetURL() + ".html");
+			generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
 			Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile);
 		}
 		return doc;

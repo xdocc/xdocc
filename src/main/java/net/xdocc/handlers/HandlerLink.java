@@ -89,7 +89,7 @@ public class HandlerLink implements Handler {
 			
 			Path generatedFile = null;
 			if (writeToDisk) {
-				generatedFile = handlerBean.getxPath().getTargetPath(
+				generatedFile = handlerBean.getxPath().resolveTargetFromBasePath(
 						handlerBean.getxPath().getTargetURL() + ".html");
 				Utils.writeHTML(handlerBean.getSite(), handlerBean.getxPath(),
 						handlerBean.getRelativePathToRoot(), doc,
