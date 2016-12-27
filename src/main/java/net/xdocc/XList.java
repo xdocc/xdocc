@@ -7,30 +7,30 @@ package net.xdocc;
 
 import java.util.Collections;
 import java.util.List;
-import static net.xdocc.Document.CURRENT_PAGE;
-import static net.xdocc.Document.PAGE_URLS;
+import static net.xdocc.XItem.CURRENT_PAGE;
+import static net.xdocc.XItem.PAGE_URLS;
 
 /**
  *
  * @author draft
  */
-public class XList extends Document {
+public class XList extends XItem {
     
-    public XList(XPath xPath, DocumentGenerator documentGenerator, String url) {
+    public XList(XPath xPath, Generator documentGenerator, String url) {
         super(xPath, documentGenerator, url);
     }
     
     // list
-    public static final String LIST = "list";
-    public static final String DOCUMENT_SIZE = "document_size";
+    public static final String ITEMS = "items";
+    public static final String ITEMS_SIZE = "document_size";
     
     /**
      * @return a list of documents if present in the model or null
      */
-    public List<Document> getList() {
+    public List<XItem> getItems() {
         @SuppressWarnings("unchecked")
-        java.util.List<Document> documents = (java.util.List<Document>) documentGenerator()
-                .model().get(LIST);
+        java.util.List<XItem> documents = (java.util.List<XItem>) documentGenerator()
+                .model().get(ITEMS);
         if (documents == null) {
             return Collections.emptyList();
         }
@@ -41,9 +41,9 @@ public class XList extends Document {
      * @param documents The list of documents in a collection
      * @return this class
      */
-    public Document setList(java.util.List<Document> documents) {
-        documentGenerator().model().put(LIST, documents);
-        documentGenerator().model().put(DOCUMENT_SIZE, documents.size());
+    public XItem setItems(java.util.List<XItem> documents) {
+        documentGenerator().model().put(ITEMS, documents);
+        documentGenerator().model().put(ITEMS_SIZE, documents.size());
         return this;
     }
 

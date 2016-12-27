@@ -311,8 +311,8 @@ public class Utils {
      * @param documents The list of document found in the folder
      * @return The highlighted document or null.
      */
-    public static Document searchHighlight(List<Document> documents) {
-        for (Document document : documents) {
+    public static XItem searchHighlight(List<XItem> documents) {
+        for (XItem document : documents) {
             if (document.getHighlight()) {
                 return document;
             }
@@ -404,7 +404,7 @@ public class Utils {
 
     public static String applyTemplate(Site site, TemplateBean templateText,
             Map<String, Object> model) throws TemplateException, IOException {
-        model.put(Document.DEBUG, getDebug(model));
+        model.put(XItem.DEBUG, getDebug(model));
         StringWriter sw = new StringWriter();
         synchronized (lock) {
 
@@ -467,11 +467,11 @@ public class Utils {
 
     }
 
-    public static List<Document> filter(List<Document> documents) {
-        List<Document> retVal = new ArrayList<>();
-        List<Document> toPreview = new ArrayList<>();
+    public static List<XItem> filter(List<XItem> documents) {
+        List<XItem> retVal = new ArrayList<>();
+        List<XItem> toPreview = new ArrayList<>();
         if (toPreview.size() > 0) {
-            Document document = searchHighlight(toPreview);
+            XItem document = searchHighlight(toPreview);
             retVal.add(document);
         }
         return retVal;
@@ -775,15 +775,15 @@ public class Utils {
         }
     }
 
-    public static Document createDocument(Site site, XPath xPath,
+    public static XItem createDocument(Site site, XPath xPath,
             String relativePathToRoot, String htmlContent, String template) throws IOException {
         TemplateBean templateText = site.getTemplate(template, xPath.getLayoutSuffix());
         // create the document
-        Document.DocumentGenerator documentGenerator = new Document.DocumentGenerator(site,
+        XItem.Generator documentGenerator = new XItem.Generator(site,
                 templateText);
         String documentURL = xPath.getTargetURL() + ".html";
-        Document doc = new Document(xPath, documentGenerator, documentURL);
-        doc.setContent(htmlContent);
+        XItem doc = new XItem(xPath, documentGenerator, documentURL);
+        doc.setHTML(htmlContent);
         doc.setTemplate(template);
         return doc;
     }
@@ -791,7 +791,7 @@ public class Utils {
     public static XList createList(Site site, XPath xPath) throws IOException {
         TemplateBean templateText = site.getTemplate("list", xPath.getLayoutSuffix());
         // create the document
-        Document.DocumentGenerator documentGenerator = new Document.DocumentGenerator(site,
+        XItem.Generator documentGenerator = new XItem.Generator(site,
                 templateText);
         String documentURL = xPath.getTargetURL() + ".html";
         XList doc = new XList(xPath, documentGenerator, documentURL);
@@ -812,11 +812,11 @@ public class Utils {
         List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
         
         modelSite.put(XPath.PATH, relativePathToRoot);
-        modelSite.put(XList.LIST, doc.getList());
-        modelSite.put(Document.TEMPLATE, template);
-        modelSite.put(Document.CURRENT, current);
-        modelSite.put(Document.NAVIGATION, Utils.setSelected(pathToRoot, site.globalNavigation()));
-        modelSite.put(Document.BREADCRUMB, pathToRoot);
+        modelSite.put(XList.ITEMS, doc.getItems());
+        modelSite.put(XItem.TEMPLATE, template);
+        modelSite.put(XItem.CURRENT, current);
+        modelSite.put(XItem.NAVIGATION, Utils.setSelected(pathToRoot, site.globalNavigation()));
+        modelSite.put(XItem.BREADCRUMB, pathToRoot);
 
         String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
 
@@ -826,9 +826,9 @@ public class Utils {
     }
 
     public static void writeHTML(Site site, XPath xPath, 
-            String relativePathToRoot, Document doc, Path generatedFile) throws IOException, TemplateException {
+            String relativePathToRoot, XItem doc, Path generatedFile) throws IOException, TemplateException {
         
-        String htmlSite = doc.getGenerate();
+        String htmlSite = doc.getContent();
         Path generatedDir = Files.createDirectories(generatedFile.getParent());
         Utils.write(htmlSite, xPath, generatedFile);
     }
@@ -846,9 +846,9 @@ public class Utils {
         return pagesURLs;
     }
 
-    public static List<List<Document>> split(List<Document> documents,
+    public static List<List<XItem>> split(List<XItem> documents,
             int pages, int pageSize) {
-        List<List<Document>> result = new ArrayList<>();
+        List<List<XItem>> result = new ArrayList<>();
         if (pages == 0) {
             result.add(documents);
             return result;

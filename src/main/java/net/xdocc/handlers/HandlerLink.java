@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import net.xdocc.Document;
+import net.xdocc.XItem;
 import net.xdocc.Site;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -28,7 +28,7 @@ public class HandlerLink implements Handler {
 	}
 
 	@Override
-	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
                 String relativePathToRoot)
 			throws Exception {
 
@@ -49,7 +49,7 @@ public class HandlerLink implements Handler {
 				|| (founds.size() > 0 && !founds.get(0).isVisible())) {
 			return null;
 		} else {
-			List<Document> documents = new ArrayList<>();
+			List<XItem> documents = new ArrayList<>();
 
 			final boolean ascending;
 			if (xPath.isAutoSort()) {

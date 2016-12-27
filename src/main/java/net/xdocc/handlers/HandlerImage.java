@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import net.xdocc.Document;
+import net.xdocc.XItem;
 import net.xdocc.Site;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.template.TemplateException;
-import net.xdocc.Document.DocumentGenerator;
+import net.xdocc.XItem.Generator;
 
 public class HandlerImage implements Handler {
 
@@ -37,7 +37,7 @@ public class HandlerImage implements Handler {
 				&& HandlerUtils.knowsExtension(knownExtensions(), xPath);
 	}
 
-	public Document compile(Site site, XPath xPath, Map<String, Object> model2, 
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model2, 
 			ImageAttributes attributes, String relativePathToRoot)
 			throws TemplateException, IOException, InterruptedException {
 		
@@ -94,20 +94,20 @@ public class HandlerImage implements Handler {
 		Date documentDate = xPath.date();
 		long documentNr = xPath.nr();
 		String documentFilename = xPath.fileName();
-		DocumentGenerator gen = new DocumentGenerator(site, templateText);
+		Generator gen = new Generator(site, templateText);
 		Map<String, Object> model = gen.model();
 
 		HandlerUtils.fillModel(documentName, documentURL, documentDate,
 				documentNr, documentFilename, "", model);
 
-		model.put(Document.GROUP, xPath.getParent().getTargetURL());
+		model.put(XItem.GROUP, xPath.getParent().getTargetURL());
 		if (attributes != null && attributes.getCssClass() != null) {
-			model.put(Document.CSS_CLASS, attributes.getCssClass());
+			model.put(XItem.CSS_CLASS, attributes.getCssClass());
 		} else {
-			model.put(Document.CSS_CLASS, "image");
+			model.put(XItem.CSS_CLASS, "image");
 		}
 
-		Document doc = new Document(xPath, gen, xPath.getTargetURL() + ".html");
+		XItem doc = new XItem(xPath, gen, xPath.getTargetURL() + ".html");
 		//TODO: store somewhere
                 //doc.addPath(Document.IMAGE_NORMAL,
 		//		xPath.getTargetURL() + "_n" + xPath.extensions());
@@ -137,7 +137,7 @@ public class HandlerImage implements Handler {
 	}
 
 	@Override
-	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
                 String relativePathToRoot)
 			throws Exception {
 		return compile(site, xPath, model,(ImageAttributes) null,relativePathToRoot);

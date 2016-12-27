@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import net.xdocc.Document;
+import net.xdocc.XItem;
 import net.xdocc.Site;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -24,13 +24,13 @@ public class HandlerText implements Handler {
 	}
 
 	@Override
-	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
                 String relativePathToRoot)
 			throws Exception {
 		Charset charset = HandlerUtils.detectCharset(xPath.path());
 		List<String> lines = Files.readAllLines(xPath.path(), charset);
 		String htmlContent = convertHTML(lines);
-		Document doc = 
+		XItem doc = 
 				Utils.createDocument(site, xPath, relativePathToRoot,
 				htmlContent, "text");
 		// always create a single page for that

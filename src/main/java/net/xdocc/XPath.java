@@ -433,7 +433,7 @@ final public class XPath implements Comparable<XPath> {
      * @return True if the file should been compiled, e.g. compile from textile to html
      */
     public boolean isCompile() {
-        return !isHidden() && isVisible() && !isRaw();
+        return !isHidden() && isVisible();
     }
     public static final String IS_COMPILE = "iscompile";
 
@@ -447,7 +447,7 @@ final public class XPath implements Comparable<XPath> {
         } else if (fileName().startsWith(".")) {
             return true;
         }
-        return false;
+        return hasRecursiveProperty("hidden") || hasRecursiveExtension("hide");
     }
     public static final String IS_HIDDEN = "ishidden";
 
@@ -460,10 +460,14 @@ final public class XPath implements Comparable<XPath> {
     
     public boolean isVisible() {
         // first check if property "copy" is somewhere
-        if (isRaw()) {
+        if (isCopy()) {
             return false;
         }
-
+        //all non hidden files are visible (also those without 1-blabla) and compiled
+        if (hasRecursiveProperty("visible","vis") || hasRecursiveExtension("visible","vis")) {
+            return true;
+        }
+        
         return visible;
     }
     public static final String IS_VISIBLE = "isvisible";
@@ -572,46 +576,54 @@ final public class XPath implements Comparable<XPath> {
         }
         return resultArray;
     }
-
-    //rendering of directory by extension
-    public boolean isSummary() {
-        return containsExtension("sum") || isPropertyTrue("sum");
-        //item always rendered, shows a short summary, title + abstract up to n words, or marker, 
-        // or highlight and link
-    }
-    public static final String IS_SUMMARY = "issummary";
-    
-
+    /**
+     * 
+     * root/1-dir/test.txt
+     * root/1-dir/two.txt
+     * 
+     * if page is set, it will produce
+     * root/dir/index.html (contains test, two)
+     * 
+     * if page is not set, it will produce
+     * root/dir/index.html (contains test, two)
+     * root/dir/test.html (only test)
+     * root/dir/two.html (only two)
+     */
     public boolean isPage() {
         return containsExtension("page") || isPropertyTrue("page"); 
         //items not rendered, only directory page, no link
     }
     public static final String IS_PAGE = "ispage";
-   
     
-    public boolean isList() {
-        return containsExtension("list") || isPropertyTrue("list");
-        //item always rendered, shows a short summary, title and link
+    /**
+     * 
+     * root/1-dir/test.txt
+     * root/1-dir/two.txt
+     * 
+     * if no index is set, it will produce
+     * root/dir/test.html (only test)
+     * root/dir/two.html (only two)
+     * 
+     * if no index is not set, it will produce
+     * root/dir/index.html (contains test, two)
+     * root/dir/test.html (only test)
+     * root/dir/two.html (only two)
+     */
+    public boolean isNoIndex() {
+        return containsExtension("noindex") || isPropertyTrue("noidx"); 
+        //items not rendered, only directory page, no link
     }
-    public static final String IS_LIST = "islist";
+    public static final String IS_NOINDEX = "isnoindex";
     
-    
-    public boolean isRaw() { //all files are visible, but not compiled, layout set to browse
-        return hasRecursiveProperty("raw") || hasRecursiveExtension("raw");
-        //items not rendered, but link to the real file
-        //special handling as its recursive
+    //dealing with recursion: a directory that is promoted, will be a like a content page for the parent
+    public boolean isPromoted() {
+        return isPropertyTrue("promoted") || isPropertyTrue("prom") || 
+                containsExtension("promoted") || containsExtension("prom");
     }
-    public static final String IS_RAW = "israw";
-    
-     public boolean isLinkPage() { // default
-        return !isSummary() && !isPage() && !isList() &&  !isRaw();
-        //no short form as this is default
-        //item always rendered, including directory page, and link
-    }
-    public static final String IS_LINK_PAGE = "islinkpage";
+    public static final String IS_PROMOTED = "ispromoted";
     
     public boolean isItemWritten() {
-        return !isRaw() && !isPage();
+        return !isPage();
     }
     public static final String IS_WRITE = "iswrite";
     
@@ -628,35 +640,13 @@ final public class XPath implements Comparable<XPath> {
         return isPropertyTrue("highlight") || isPropertyTrue("high") || 
                 containsExtension("highlight") || containsExtension("high");
     }
-    public static final String IS_HIGHLIGHT = "ishighlight";
+    public static final String IS_HIGHLIGHT = "ishighlight";    
     
-    //dealing with recursion: a directory that is promoted, will be a like a content page for the parent
-    //if no item is highlighted, then all content is promoted. Default is not promoted
-    public boolean isPromoted() {
-        return isPropertyTrue("promoted") || isPropertyTrue("prom") || 
-                containsExtension("promoted") || containsExtension("prom");
+    public boolean isCopy() { //nothing is visible (not hidden), everything is copied (not compiled)
+        return hasRecursiveProperty("copy") || hasRecursiveExtension("copy");
     }
-    public static final String IS_PROMOTED = "ispromoted";
+    public static final String IS_COPY = "iscopy";
     
-    //visibility is recursive
-    public boolean isAllVisible() { //all non hidden files are visible (also those without 1-blabla)
-        return hasRecursiveProperty("visible","vis") || hasRecursiveExtension("visible","vis");
-    }
-    public static final String IS_ALL_VISIBLE = "isallvisible";
-     
-    
-    public boolean isNoneVisible() { //nothing is visible
-        return hasRecursiveProperty("none") || hasRecursiveExtension("none");
-    }
-    public static final String IS_NONE_VISIBLE = "isnonevisible";
-    
-    
-    public boolean isRegularVisible() { //default 1-test -> is visible, rest not
-        return !isAllVisible() && !isNoneVisible();
-    }
-    public static final String IS_REGULAR_VISIBLE = "isregularvisible";
-    
-      
 
     public String resolveTargetURL(String string) {
         if (getTargetURL().isEmpty()) {

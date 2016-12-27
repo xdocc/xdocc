@@ -28,15 +28,15 @@ public class Compiler {
         this.site = site;
     }
 
-    public CompletableFuture<List<Document>> compile(final Path pointOfView, final Path path) {
-        final CompletableFuture<List<Document>> completableFuture = new CompletableFuture<>();
+    public CompletableFuture<List<XItem>> compile(final Path pointOfView, final Path path) {
+        final CompletableFuture<List<XItem>> completableFuture = new CompletableFuture<>();
 
         completableFuture.runAsync(() -> {
 
             try {
                 List<XPath> children = Utils.getNonHiddenChildren(site, path);
                 List<CompletableFuture> stream = new ArrayList<>();
-                List<Document> results = new ArrayList<>();
+                List<XItem> results = new ArrayList<>();
 
                 for (XPath item : children) {
                     if (item.isDirectory()) {
@@ -52,7 +52,7 @@ public class Compiler {
                 }
                 completableFuture.allOf(stream.toArray(new CompletableFuture[0])).thenRunAsync(() -> {
                     stream.stream().forEach((CompletableFuture v) -> {
-                        results.addAll((List<Document>) v.getNow(Collections.emptyList()));
+                        results.addAll((List<XItem>) v.getNow(Collections.emptyList()));
                     });                 
 
                     XPath xPath = new XPath(site, path);
@@ -61,7 +61,7 @@ public class Compiler {
 
                     try {
                         XList doc = Utils.createList(site, xPath);
-                        doc.setList(results);
+                        doc.setItems(results);
                         
                         Utils.writeListHTML(site, xPath, "", doc, generatedFile);
                     } catch (Throwable t) {
@@ -82,7 +82,7 @@ public class Compiler {
         return completableFuture;
     }
 
-    private Document compile(Handler handler, XPath xPath) throws Exception {
+    private XItem compile(Handler handler, XPath xPath) throws Exception {
 
         String relativePathToRoot = Utils.relativePathToRoot(site.source(),
                 xPath.path());

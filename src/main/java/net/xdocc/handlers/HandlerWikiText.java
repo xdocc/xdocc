@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 
-import net.xdocc.Document;
-import net.xdocc.Document.DocumentGenerator;
+import net.xdocc.XItem;
+import net.xdocc.XItem.Generator;
 import net.xdocc.Site;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
@@ -60,7 +60,7 @@ public class HandlerWikiText implements Handler {
 	}
 
 	@Override
-	public Document compile(Site site, XPath xPath, Map<String, Object> model2, 
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model2, 
                 String relativePathToRoot)
 			throws Exception {
 		
@@ -75,9 +75,9 @@ public class HandlerWikiText implements Handler {
 
 		// String htmlText = Utils.applyTemplate( templateText, model );
 		// create the document
-		DocumentGenerator documentGenerator = new WikiTextDocumentGenerator(
+		Generator documentGenerator = new WikiTextDocumentGenerator(
 				templateText, site, xPath, model2, relativePathToRoot);
-		Document doc = new Document(xPath, documentGenerator,
+		XItem doc = new XItem(xPath, documentGenerator,
 				xPath.getTargetURL() + ".html");
 		doc.setTemplate("wikitext");
 		// create the site to layout ftl
@@ -179,7 +179,7 @@ public class HandlerWikiText implements Handler {
 					String relativePathToRoot = Utils.relativePathToRoot(
 							site.source(), found.path());
 					
-                                        Document doc = handlerImage.compile(site, found, model, (ImageAttributes) attributes,
+                                        XItem doc = handlerImage.compile(site, found, model, (ImageAttributes) attributes,
                                                 relativePathToRoot);
                                         
 					String base = getBase() == null ? null : getBase()
@@ -190,7 +190,7 @@ public class HandlerWikiText implements Handler {
 						
 						// TODO:enable
 					}
-					super.charactersUnescaped(doc.getGenerate());
+					super.charactersUnescaped(doc.getContent());
 				}
 			} catch (Exception e) {
 				LOG.error("cannot create xdocc image " + e);
@@ -235,7 +235,7 @@ public class HandlerWikiText implements Handler {
 
 	}
 
-	private class WikiTextDocumentGenerator extends DocumentGenerator {
+	private class WikiTextDocumentGenerator extends Generator {
 
 		private static final long serialVersionUID = -6008311072604987744L;
 		final private Site site;
@@ -275,8 +275,8 @@ public class HandlerWikiText implements Handler {
 					site, xPath, model, relativePathToRoot);
 
 			try {
-				if (model().containsKey(Document.RELATIVE)) {
-					String rel = (String) model().get(Document.RELATIVE);
+				if (model().containsKey(XItem.RELATIVE)) {
+					String rel = (String) model().get(XItem.RELATIVE);
 					builder.setBase(new URI(rel));
 				}
 			} catch (URISyntaxException e) {
@@ -323,8 +323,8 @@ public class HandlerWikiText implements Handler {
 			String rawFileContent = FileUtils.readFileToString(xPath.path()
 					.toFile(), charset);
 			parser.parse(rawFileContent);
-			model().put(Document.HANDLER, type);
-			model().put(Document.CONTENT, writer.toString());
+			model().put(XItem.HANDLER, type);
+			model().put(XItem.CONTENT, writer.toString());
 		}
 
 		@Override

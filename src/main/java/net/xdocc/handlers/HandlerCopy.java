@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 
-import net.xdocc.Document;
-import net.xdocc.Document.DocumentGenerator;
+import net.xdocc.XItem;
+import net.xdocc.XItem.Generator;
 import net.xdocc.Site;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.XPath;
@@ -30,7 +30,7 @@ public class HandlerCopy implements Handler {
 	}
 
 	@Override
-	public Document compile(Site site, XPath xPath, Map<String, Object> model2, 
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model2, 
                 String relativePathToRoot) {
 		Map<String, Object> model = new HashMap<>(model2);
 		final Path generatedFile;
@@ -52,7 +52,7 @@ public class HandlerCopy implements Handler {
 					StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
                             LOG.debug("copy {} to {}",xPath.path(), generatedFile);		
 			}
-			if (xPath.isRaw() || xPath.isVisible()) {
+			if (xPath.isCopy() || xPath.isVisible()) {
 				return createDocumentBrowse(site, xPath,
 						relativePathToRoot, model);
 				
@@ -72,12 +72,12 @@ public class HandlerCopy implements Handler {
 		return Arrays.asList(new String[0]);
 	}
 
-	public static Document createDocumentFile(Site site, XPath xPath,
+	public static XItem createDocumentFile(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
 		TemplateBean templateText = site.getTemplate("file", xPath.getLayoutSuffix());
-		DocumentGenerator documentGenerator = new DocumentGenerator(site,
+		Generator documentGenerator = new Generator(site,
 				templateText);
-		Document document = new Document(xPath, documentGenerator,
+		XItem document = new XItem(xPath, documentGenerator,
 				xPath.getTargetURLFilename());
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
 				.toMillis());
@@ -86,12 +86,12 @@ public class HandlerCopy implements Handler {
 		return document;
 	}
 
-	public static Document createDocumentBrowse(Site site, XPath xPath,
+	public static XItem createDocumentBrowse(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
 		TemplateBean templateText = site.getTemplate("browse", xPath.getLayoutSuffix());
-		DocumentGenerator documentGenerator = new DocumentGenerator(site,
+		Generator documentGenerator = new Generator(site,
 				templateText);
-		Document document = new Document(xPath, documentGenerator,
+		XItem document = new XItem(xPath, documentGenerator,
 				xPath.getTargetURL());
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
 				.toMillis());

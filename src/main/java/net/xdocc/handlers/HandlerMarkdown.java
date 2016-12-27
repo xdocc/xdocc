@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import net.xdocc.Document;
+import net.xdocc.XItem;
 import net.xdocc.Site;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -39,7 +39,7 @@ public class HandlerMarkdown implements Handler {
     }
 
     @Override
-    public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+    public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
                 String relativePathToRoot)
             throws Exception {
         try (Writer out = new StringWriter();
@@ -47,7 +47,7 @@ public class HandlerMarkdown implements Handler {
                         .toFile()))) {
             transform(in, out);
             String htmlContent = out.toString();
-            Document doc = Utils.createDocument(site, xPath,
+            XItem doc = Utils.createDocument(site, xPath,
                     relativePathToRoot, htmlContent, "markdown");
             Path generatedFile = null;
             if (xPath.getParent().isItemWritten()) {

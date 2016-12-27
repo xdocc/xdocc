@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * @author Thomas Bocek
  *
  */
-public class Document implements Comparable<Document>, Serializable {
+public class XItem implements Comparable<XItem>, Serializable {
 
     // model constants for handlers
     
@@ -36,6 +36,7 @@ public class Document implements Comparable<Document>, Serializable {
     public static final String PAGE_URLS = "page_urls";
     public static final String CURRENT_PAGE = "current_page";
     public static final String CONTENT = "content";
+    //public static final String HTML = "html";
     // shared 
     public static final String TEMPLATE = "template";
     public static final String HIGHLIGHT_URL = "highlightUrl";
@@ -64,10 +65,10 @@ public class Document implements Comparable<Document>, Serializable {
     // Utils
     public static final String DEBUG = "debug";
 
-    private static final Logger LOG = LoggerFactory.getLogger(Document.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XItem.class);
     private static final long serialVersionUID = 136066054966377823L;
     
-    private final DocumentGenerator documentGenerator;
+    private final Generator generator;
     
     private final XPath source;
     private final String url;
@@ -81,126 +82,121 @@ public class Document implements Comparable<Document>, Serializable {
      * getContent() is called.
      * @param url The full URL from the root to this xPath. To be used with relativePathToRoot
      */
-    public Document(XPath xPath, DocumentGenerator documentGenerator,
+    public XItem(XPath xPath, Generator documentGenerator,
             String url) {
-        this.documentGenerator = documentGenerator;
+        this.generator = documentGenerator;
         this.source = xPath;
         this.url = url;
         initXPath();
     }
     
-    DocumentGenerator documentGenerator() {
-        return documentGenerator;
+    Generator documentGenerator() {
+        return generator;
     }
     
     private void initXPath() {
-        documentGenerator.model().put(XPath.NAME, source.name());
-        documentGenerator.model().put(XPath.URL, source.url());
-        documentGenerator.model().put(XPath.DATE, source.date());
-        documentGenerator.model().put(XPath.NR, source.nr());
-        documentGenerator.model().put(XPath.PATH, source.relativePath(documentGenerator.site));
+        generator.model().put(XPath.NAME, source.name());
+        generator.model().put(XPath.URL, source.url());
+        generator.model().put(XPath.DATE, source.date());
+        generator.model().put(XPath.NR, source.nr());
+        generator.model().put(XPath.PATH, source.relativePath(generator.site));
         
-        documentGenerator.model().put(XPath.FILENAME, source.fileName());
-        documentGenerator.model().put(XPath.FILESCOUNT, source.filesCount());
-        documentGenerator.model().put(XPath.FILESIZE, source.fileSize());
-        documentGenerator.model().put(XPath.EXTENSIONS, source.extensions());
-        documentGenerator.model().put(XPath.EXTENSION_LIST, source.extensionList());
-        documentGenerator.model().put(XPath.PROPERTIES, source.properties());
-        documentGenerator.model().put(XPath.PAGES, source.getPageSize());
-        documentGenerator.model().put(XPath.LAYOUT, source.getLayoutSuffix());
+        generator.model().put(XPath.FILENAME, source.fileName());
+        generator.model().put(XPath.FILESCOUNT, source.filesCount());
+        generator.model().put(XPath.FILESIZE, source.fileSize());
+        generator.model().put(XPath.EXTENSIONS, source.extensions());
+        generator.model().put(XPath.EXTENSION_LIST, source.extensionList());
+        generator.model().put(XPath.PROPERTIES, source.properties());
+        generator.model().put(XPath.PAGES, source.getPageSize());
+        generator.model().put(XPath.LAYOUT, source.getLayoutSuffix());
         //
-        documentGenerator.model().put(XPath.IS_ALL_VISIBLE, source.isAllVisible());
-        documentGenerator.model().put(XPath.IS_ASCENDING, source.isAscending());
-        documentGenerator.model().put(XPath.IS_AUTOSORT, source.isAutoSort());
-        documentGenerator.model().put(XPath.IS_COMPILE, source.isCompile());
-        documentGenerator.model().put(XPath.IS_DESCENDING, source.isDescending());
-        documentGenerator.model().put(XPath.IS_DIRECTORY, source.isDirectory());
-        documentGenerator.model().put(XPath.IS_HIDDEN, source.isHidden());
-        documentGenerator.model().put(XPath.IS_HIGHLIGHT, source.isHighlight());
-        documentGenerator.model().put(XPath.IS_LINK_PAGE, source.isLinkPage());
-        documentGenerator.model().put(XPath.IS_LIST, source.isList());
-        documentGenerator.model().put(XPath.IS_NAVIGATION, source.isNavigation());
-        documentGenerator.model().put(XPath.IS_NONE_VISIBLE, source.isNoneVisible());
-        documentGenerator.model().put(XPath.IS_PAGE, source.isPage());
-        documentGenerator.model().put(XPath.IS_PROMOTED, source.isPromoted());
-        documentGenerator.model().put(XPath.IS_RAW, source.isRaw());
-        documentGenerator.model().put(XPath.IS_REGULAR_VISIBLE, source.isRegularVisible());
-        documentGenerator.model().put(XPath.IS_ROOT, source.isRoot());
-        documentGenerator.model().put(XPath.IS_SUMMARY, source.isSummary());
-        documentGenerator.model().put(XPath.IS_VISIBLE, source.isVisible());
-        documentGenerator.model().put(XPath.IS_WRITE, source.isItemWritten());
+        generator.model().put(XPath.IS_ASCENDING, source.isAscending());
+        generator.model().put(XPath.IS_AUTOSORT, source.isAutoSort());
+        generator.model().put(XPath.IS_COMPILE, source.isCompile());
+        generator.model().put(XPath.IS_DESCENDING, source.isDescending());
+        generator.model().put(XPath.IS_DIRECTORY, source.isDirectory());
+        generator.model().put(XPath.IS_HIDDEN, source.isHidden());
+        generator.model().put(XPath.IS_HIGHLIGHT, source.isHighlight());
+        generator.model().put(XPath.IS_NAVIGATION, source.isNavigation());
+        generator.model().put(XPath.IS_NOINDEX, source.isNoIndex());
+        generator.model().put(XPath.IS_COPY, source.isCopy());
+        generator.model().put(XPath.IS_PAGE, source.isPage());
+        generator.model().put(XPath.IS_PROMOTED, source.isPromoted());
+        generator.model().put(XPath.IS_ROOT, source.isRoot());
+        generator.model().put(XPath.IS_VISIBLE, source.isVisible());
+        generator.model().put(XPath.IS_WRITE, source.isItemWritten());
         
     }
 
     public String getName() {
-        return (String) documentGenerator.model().get(XPath.NAME);
+        return (String) generator.model().get(XPath.NAME);
     }
 
-    public Document setName(String name) {
-        documentGenerator.model().put(XPath.NAME, name);
+    public XItem setName(String name) {
+        generator.model().put(XPath.NAME, name);
         return this;
     }
 
     public String getUrl() {
-        return (String) documentGenerator.model().get(XPath.URL);
+        return (String) generator.model().get(XPath.URL);
     }
     
-    public Document setUrl(String url) {
-        documentGenerator.model().put(XPath.URL, url);
+    public XItem setUrl(String url) {
+        generator.model().put(XPath.URL, url);
         return this;
     }
 
     public Date getDate() {
-        return (Date) documentGenerator.model().get(XPath.DATE);
+        return (Date) generator.model().get(XPath.DATE);
     }
 
-    public Document setDate(Date date) {
-        documentGenerator.model().put(XPath.DATE, date);
+    public XItem setDate(Date date) {
+        generator.model().put(XPath.DATE, date);
         return this;
     }
     
     public long getNr() {
-        return (long) documentGenerator.model().get(XPath.NR);
+        return (long) generator.model().get(XPath.NR);
     }
 
-    public Document setNr(long nr) {
-        documentGenerator.model().put(XPath.NR, nr);
+    public XItem setNr(long nr) {
+        generator.model().put(XPath.NR, nr);
         return this;
     }
     
     public String getPath() {
-        return (String) documentGenerator.model().get(XPath.PATH);
+        return (String) generator.model().get(XPath.PATH);
     }
 
-    public Document setPath(String path) {
-        documentGenerator.model().put(XPath.PATH, path);
+    public XItem setPath(String path) {
+        generator.model().put(XPath.PATH, path);
         return this;
     }
     
     public String getFileName() {
-        return (String) documentGenerator.model().get(XPath.FILENAME);
+        return (String) generator.model().get(XPath.FILENAME);
     }
 
-    public Document setFileName(String fileName) {
-        documentGenerator.model().put(XPath.FILENAME, fileName);
+    public XItem setFileName(String fileName) {
+        generator.model().put(XPath.FILENAME, fileName);
         return this;
     }
     
     public String getFileSize() {
-        return (String) documentGenerator.model().get(XPath.FILESIZE);
+        return (String) generator.model().get(XPath.FILESIZE);
     }
 
-    public Document setFileSize(String fileSize) {
-        documentGenerator.model().put(XPath.FILESIZE, fileSize);
+    public XItem setFileSize(String fileSize) {
+        generator.model().put(XPath.FILESIZE, fileSize);
         return this;
     }
     
     public String getFilesCount() {
-        return (String) documentGenerator.model().get(XPath.FILESCOUNT);
+        return (String) generator.model().get(XPath.FILESCOUNT);
     }
 
-    public Document setFilesCount(long filesCount) {
-        documentGenerator.model().put(XPath.FILESCOUNT, filesCount);
+    public XItem setFilesCount(long filesCount) {
+        generator.model().put(XPath.FILESCOUNT, filesCount);
         return this;
     }
 
@@ -210,15 +206,15 @@ public class Document implements Comparable<Document>, Serializable {
      * @return Return if document marked as highlight. Default is xPath.isHighlight()
      */
     public boolean getHighlight() {
-        return BooleanUtils.isTrue((Boolean) documentGenerator.model().get(HIGHLIGHT));
+        return BooleanUtils.isTrue((Boolean) generator.model().get(HIGHLIGHT));
     }
 
     /**
      * @param highlight Set if document marked as highlight. Default is xPath.isHighlight()
      * @param this class
      */
-    public Document setHighlight(boolean highlight) {
-        documentGenerator.model().put(HIGHLIGHT, highlight);
+    public XItem setHighlight(boolean highlight) {
+        generator.model().put(HIGHLIGHT, highlight);
         return this;
     }
 
@@ -247,23 +243,23 @@ public class Document implements Comparable<Document>, Serializable {
      *
      * @return The content that applies the model to the freemarker template
      */
-    public String getGenerate() {
-        return documentGenerator.generate();
+    public String getContent() {
+        return generator.generate();
     }
 
     /**
      * @return The content
      */
-    public String getContent() {
-        return (String) documentGenerator.model().get(CONTENT);
+    public String getHTML() {
+        return (String) generator.model().get(CONTENT);
     }
 
     /**
      * @param path Set the content
      * @return this class
      */
-    public Document setContent(String content) {
-        documentGenerator.model().put(CONTENT, content);
+    public XItem setHTML(String content) {
+        generator.model().put(CONTENT, content);
         return this;
     }
 
@@ -287,15 +283,15 @@ public class Document implements Comparable<Document>, Serializable {
      * @return The template
      */
     public String getTemplate() {
-        return (String) documentGenerator.model().get(TEMPLATE);
+        return (String) generator.model().get(TEMPLATE);
     }
 
     /**
      * @param path Set the template
      * @return this class
      */
-    public Document setTemplate(String template) {
-        documentGenerator.model().put(TEMPLATE, template);
+    public XItem setTemplate(String template) {
+        generator.model().put(TEMPLATE, template);
         return this;
     }
 
@@ -303,15 +299,15 @@ public class Document implements Comparable<Document>, Serializable {
      * @return The layout
      */
     public String getLayout() {
-        return (String) documentGenerator.model().get(XPath.LAYOUT);
+        return (String) generator.model().get(XPath.LAYOUT);
     }
 
     /**
      * @param path Set the layout
      * @return this class
      */
-    public Document setLayout(String layout) {
-        documentGenerator.model().put(XPath.LAYOUT, layout);
+    public XItem setLayout(String layout) {
+        generator.model().put(XPath.LAYOUT, layout);
         return this;
     }
 
@@ -321,11 +317,11 @@ public class Document implements Comparable<Document>, Serializable {
      * @return The debug string in a HTML format
      */
     public String getDebug() {
-        return Utils.getDebug(documentGenerator.model());
+        return Utils.getDebug(generator.model());
     }
 
     @Override
-    public int compareTo(Document o) {
+    public int compareTo(XItem o) {
         return source.compareTo(o.source);
     }
 
@@ -336,10 +332,10 @@ public class Document implements Comparable<Document>, Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Document)) {
+        if (!(obj instanceof XItem)) {
             return false;
         }
-        Document o = (Document) obj;
+        XItem o = (XItem) obj;
         return compareTo(o) == 0;
     }
 
@@ -358,10 +354,10 @@ public class Document implements Comparable<Document>, Serializable {
     }
 
     @Accessors(chain = true, fluent = true)
-    public static class DocumentGenerator implements Serializable {
+    public static class Generator implements Serializable {
 
         private static final Logger LOG = LoggerFactory
-                .getLogger(DocumentGenerator.class);
+                .getLogger(Generator.class);
         private static final long serialVersionUID = -8512427831292951263L;
 
         @Getter
@@ -371,19 +367,22 @@ public class Document implements Comparable<Document>, Serializable {
         final private Map<String, Object> model;
         final private Site site;
 
-        public DocumentGenerator(Site site, Site.TemplateBean templateBean) {
+        public Generator(Site site, Site.TemplateBean templateBean) {
             this.site = site;
             this.templateBean = templateBean;
             this.model = new HashMap<String, Object>();
         }
 
-        public DocumentGenerator(Site site, Site.TemplateBean templateBean, Map<String, Object> model) {
+        public Generator(Site site, Site.TemplateBean templateBean, Map<String, Object> model) {
             this(site, templateBean);
             this.model.putAll(model);
         }
 
         public String generate() {
             try {
+                /*if(model.containsKey(CONTENT)) {
+                    model.put("generate", model.get(CONTENT));
+                }*/
                 return Utils.applyTemplate(site, templateBean, model);
             } catch (TemplateException | IOException e) {
                 LOG.warn("cannot generate document {}. Model is {}",
@@ -391,12 +390,5 @@ public class Document implements Comparable<Document>, Serializable {
                 return null;
             }
         }
-
-        public DocumentGenerator copy() {
-            DocumentGenerator documentGenerator = new DocumentGenerator(site, templateBean, model);
-            return documentGenerator;
-        }
-
     }
-
 }

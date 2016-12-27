@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.xdocc.Document;
+import net.xdocc.XItem;
 import net.xdocc.Link;
 import net.xdocc.Site;
 import net.xdocc.Utils;
@@ -72,7 +72,7 @@ public class HandlerUtils {
 			String documentFilename, String htmlContent, Map<String, Object> model) {
 		model.put(XPath.NAME, documentName);
 		model.put(XPath.URL, documentURL);
-		model.put(Document.CONTENT, htmlContent);
+		model.put(XItem.CONTENT, htmlContent);
 		model.put(XPath.DATE, documentDate);
 		model.put(XPath.NR, documentNr);
 		model.put(XPath.FILENAME, documentFilename);
@@ -80,16 +80,16 @@ public class HandlerUtils {
 	}
 
 	public static Map<String, Object> fillPage(Site site, XPath xPath,
-			Document document) throws IOException {
+			XItem document) throws IOException {
 		String relativePathToRoot = Utils.relativePathToRoot(site.source(),
 				xPath.path());
 		Map<String, Object> model = new HashMap<>();
-		model.put(Document.DOCUMENT, document);
+		model.put(XItem.DOCUMENT, document);
 		Link current = Utils.find(xPath.getParent(), site.globalNavigation());
 		List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
-		model.put(Document.CURRENT, current);
-		model.put(Document.BREADCRUMB, pathToRoot);
-		model.put(Document.NAVIGATION, site.globalNavigation());
+		model.put(XItem.CURRENT, current);
+		model.put(XItem.BREADCRUMB, pathToRoot);
+		model.put(XItem.NAVIGATION, site.globalNavigation());
 		model.put(XPath.PATH, relativePathToRoot);
 		return model;
 	}

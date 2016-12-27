@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 
-import net.xdocc.Document;
+import net.xdocc.XItem;
 import net.xdocc.Site;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
@@ -34,7 +34,7 @@ public class HandlerHTML implements Handler {
 	}
 
 	@Override
-	public Document compile(Site site, XPath xPath, Map<String, Object> model, 
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
                 String relativePathToRoot)
 			throws Exception {
 		
@@ -45,7 +45,7 @@ public class HandlerHTML implements Handler {
 		Elements e = docj.getElementsByTag("body");
 		
 		String htmlContent = e.toString();
-		Document doc = Utils.createDocument(site, xPath, relativePathToRoot,
+		XItem doc = Utils.createDocument(site, xPath, relativePathToRoot,
 				htmlContent, "text");
 		// always create a single page for that
 		Path generatedFile = null;
