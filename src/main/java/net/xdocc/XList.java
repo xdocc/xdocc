@@ -5,6 +5,7 @@
  */
 package net.xdocc;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import static net.xdocc.XItem.CURRENT_PAGE;
@@ -16,7 +17,7 @@ import static net.xdocc.XItem.PAGE_URLS;
  */
 public class XList extends XItem {
     
-    public XList(XPath xPath, Generator documentGenerator, String url) {
+    public XList(XPath xPath, Generator documentGenerator, String url) throws IOException {
         super(xPath, documentGenerator, url);
     }
     

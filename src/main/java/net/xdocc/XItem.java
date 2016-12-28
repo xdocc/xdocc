@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 public class XItem implements Comparable<XItem>, Serializable {
 
     // model constants for handlers
+    public static final String NAVIGATION = "navigation";
+    public static final String LOCALNAV = "localnav";
     
     
     public static final String RELATIVE = "relative";
@@ -47,7 +49,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String DOCUMENT = "document";
     public static final String CURRENT = "current";
     public static final String BREADCRUMB = "breadcrumb";
-    public static final String NAVIGATION = "navigation";
+    
 
     // HandlerImage
     public static final String GROUP = "group";
@@ -60,7 +62,7 @@ public class XItem implements Comparable<XItem>, Serializable {
 
     // HandlerDirectory
     public static final String PAGE_NR = "page_nr";
-    public static final String LOCAL_NAVIGATION = "local_navigation";
+    
 
     // Utils
     public static final String DEBUG = "debug";
@@ -83,11 +85,12 @@ public class XItem implements Comparable<XItem>, Serializable {
      * @param url The full URL from the root to this xPath. To be used with relativePathToRoot
      */
     public XItem(XPath xPath, Generator documentGenerator,
-            String url) {
+            String url) throws IOException {
         this.generator = documentGenerator;
         this.source = xPath;
         this.url = url;
         initXPath();
+        initNavigation(xPath);
     }
     
     Generator documentGenerator() {
@@ -126,6 +129,14 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.IS_VISIBLE, source.isVisible());
         generator.model().put(XPath.IS_WRITE, source.isItemWritten());
         
+    }
+    
+    private void initNavigation(XPath xPath) throws IOException {
+        generator.model().put(NAVIGATION, xPath.site().globalNavigation().getChildren());
+        Link local = xPath.site().loadNavigation(xPath);
+        if(!xPath.site().globalNavigation().equals(local)) {
+            generator.model().put(LOCALNAV, local.getChildren());
+        }
     }
 
     public String getName() {
@@ -218,7 +229,13 @@ public class XItem implements Comparable<XItem>, Serializable {
         return this;
     }
 
+    public boolean getPromoted() {
+        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED));
+    }
     
+    public boolean getDirectory() {
+        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_DIRECTORY));
+    }
 
     /**
      *
@@ -352,6 +369,8 @@ public class XItem implements Comparable<XItem>, Serializable {
         }
         return sb.toString();
     }
+
+    
 
     @Accessors(chain = true, fluent = true)
     public static class Generator implements Serializable {

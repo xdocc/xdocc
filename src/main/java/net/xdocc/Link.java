@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Link {
-	final private String URL;
+	final private String url;
 
 	final private String name;
 
@@ -21,15 +21,15 @@ public class Link {
 
 	public Link(XPath target, Link parent) {
 		this.target = target;
-		this.URL = target.getTargetURL();
+		this.url = target.getTargetURL();
 		this.name = target.name() == null ? target.fileName() : target
 				.name();
 		this.parent = parent;
 		this.properties = target.properties();
 	}
 
-	public String getURL() {
-		return URL;
+	public String getUrl() {
+		return url;
 	}
 
 	public String getName() {
@@ -62,30 +62,38 @@ public class Link {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+                }
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+                }
+		if (getClass() != obj.getClass()) {
 			return false;
+                }
 		Link other = (Link) obj;
-		if (URL == null) {
-			if (other.URL != null)
+		if (url == null) {
+			if (other.url != null) {
 				return false;
-		} else if (!URL.equals(other.URL))
+                        }
+		} else if (!url.equals(other.url)) {
 			return false;
+                }
 		if (name == null) {
-			if (other.name != null)
+			if (other.name != null) {
 				return false;
-		} else if (!name.equals(other.name))
+                        }
+		} else if (!name.equals(other.name)) {
 			return false;
-		return true;
+                }
+                
+		return children.equals(other.children);
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("Link:");
-		return sb.append(name).append(",url:").append(URL).toString();
+		return sb.append(name).append(",url:").append(url).toString();
 	}
 
 	public Link copy() {

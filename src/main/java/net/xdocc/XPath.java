@@ -45,6 +45,8 @@ final public class XPath implements Comparable<XPath> {
 
     private final static Pattern PATTERN_URL = Pattern
             .compile("([^/|.]*)([.]|[|]|$)");
+    
+    private final static List<String> KNOWN_EXTENSIONS = new ArrayList<>();
 
     @Getter
     private final Path path;
@@ -207,6 +209,15 @@ final public class XPath implements Comparable<XPath> {
                     extensionList.add(extension);
                     extensions = "." + extension + extensions;
                 }
+            }
+        }
+        for(String extension: KNOWN_EXTENSIONS) {
+            if (tmpFilename.endsWith("." + extension)) {
+                tmpFilename = tmpFilename
+                            .substring(0, tmpFilename.length() - (extension.length() + 1));
+
+                    extensionList.add(extension);
+                    extensions = "." + extension + extensions;
             }
         }
 
@@ -594,6 +605,7 @@ final public class XPath implements Comparable<XPath> {
         //items not rendered, only directory page, no link
     }
     public static final String IS_PAGE = "ispage";
+    static {KNOWN_EXTENSIONS.add("page");}
     
     /**
      * 
@@ -610,17 +622,19 @@ final public class XPath implements Comparable<XPath> {
      * root/dir/two.html (only two)
      */
     public boolean isNoIndex() {
-        return containsExtension("noindex") || isPropertyTrue("noidx"); 
+        return containsExtension("noindex") || containsExtension("noidx") || isPropertyTrue("noindex") || isPropertyTrue("noidx"); 
         //items not rendered, only directory page, no link
     }
     public static final String IS_NOINDEX = "isnoindex";
+    static {KNOWN_EXTENSIONS.add("noindex");KNOWN_EXTENSIONS.add("noidx");}
     
     //dealing with recursion: a directory that is promoted, will be a like a content page for the parent
     public boolean isPromoted() {
-        return isPropertyTrue("promoted") || isPropertyTrue("prom") || 
-                containsExtension("promoted") || containsExtension("prom");
+        return isPropertyTrue("promote") || isPropertyTrue("prm") || 
+                containsExtension("promote") || containsExtension("prm");
     }
     public static final String IS_PROMOTED = "ispromoted";
+    static {KNOWN_EXTENSIONS.add("promote");KNOWN_EXTENSIONS.add("prm");}
     
     public boolean isItemWritten() {
         return !isPage();
@@ -634,6 +648,7 @@ final public class XPath implements Comparable<XPath> {
         return containsExtension("nav") || isPropertyTrue("nav");
     }
     public static final String IS_NAVIGATION = "isnavigation";
+    static {KNOWN_EXTENSIONS.add("nav");}
     
 
     public boolean isHighlight() {
@@ -641,6 +656,7 @@ final public class XPath implements Comparable<XPath> {
                 containsExtension("highlight") || containsExtension("high");
     }
     public static final String IS_HIGHLIGHT = "ishighlight";    
+    static {KNOWN_EXTENSIONS.add("highlight");KNOWN_EXTENSIONS.add("high");}
     
     public boolean isCopy() { //nothing is visible (not hidden), everything is copied (not compiled)
         return hasRecursiveProperty("copy") || hasRecursiveExtension("copy");

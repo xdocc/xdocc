@@ -84,7 +84,11 @@ public class Service {
             });
         }
         compile(site);
-        startAfterFirstRun.countDown();
+        if (!runOnce) {
+            startAfterFirstRun.countDown();
+        } else {
+            shutdown();
+        }
     }
 
     private void addShutdownHook() {
@@ -104,7 +108,7 @@ public class Service {
         for (RecursiveWatcherService recursiveWatcherService : watchServices) {
             recursiveWatcherService.shutdown();
         }
-        executorServiceCompiler.shutdownNow();
+        executorServiceCompiler.shutdown();
     }
 
     public void compile(Site site) throws IOException, InterruptedException, ExecutionException {

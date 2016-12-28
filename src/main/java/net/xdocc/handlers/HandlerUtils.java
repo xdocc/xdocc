@@ -89,7 +89,7 @@ public class HandlerUtils {
 		List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
 		model.put(XItem.CURRENT, current);
 		model.put(XItem.BREADCRUMB, pathToRoot);
-		model.put(XItem.NAVIGATION, site.globalNavigation());
+		//model.put(XItem.NAVIGATION, site.globalNavigation());
 		model.put(XPath.PATH, relativePathToRoot);
 		return model;
 	}

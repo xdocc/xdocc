@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.xdocc.handlers.Handler;
 
 import org.slf4j.Logger;
@@ -35,40 +37,50 @@ public class Compiler {
 
             try {
                 List<XPath> children = Utils.getNonHiddenChildren(site, path);
-                List<CompletableFuture> stream = new ArrayList<>();
+                List<CompletableFuture<List<XItem>>> futures = new ArrayList<>();
+                List<CompletableFuture<List<XItem>>> futuresNoPromote = new ArrayList<>();
                 List<XItem> results = new ArrayList<>();
 
-                for (XPath item : children) {
-                    if (item.isDirectory()) {
-                        stream.add(compile(item.path(), item.path()));
+                for (XPath child : children) {
+                    if (child.isDirectory()) {
+                        if(child.isPromoted()) {
+                            futures.add(compile(child.path(), child.path()));
+                        } else {
+                            futuresNoPromote.add(compile(child.path(), child.path()));
+                        }
                     } else {
                         for (Handler handler : handlers) {
-                            if (handler.canHandle(site, item)) {
-                                results.add(compile(handler, item));
+                            if (handler.canHandle(site, child)) {
+                                results.add(compile(handler, child));
                                 break;
                             }
                         }
                     }
                 }
-                completableFuture.allOf(stream.toArray(new CompletableFuture[0])).thenRunAsync(() -> {
-                    stream.stream().forEach((CompletableFuture v) -> {
-                        results.addAll((List<XItem>) v.getNow(Collections.emptyList()));
-                    });                 
+                CompletableFuture.allOf(Stream
+                                .concat(futures.stream(), futuresNoPromote.stream())
+                                .toArray(size -> new CompletableFuture[size])
+                ).thenRunAsync(() -> {
+                    results.addAll(
+                        futures.stream()
+                            .map(v -> v.getNow(Collections.emptyList()))
+                            .flatMap(List::stream)
+                            .collect(Collectors.toList())
+                    );
 
                     XPath xPath = new XPath(site, path);
-
-                    Path generatedFile = xPath.resolveTargetFromPath("index.html");
-
-                    try {
-                        XList doc = Utils.createList(site, xPath);
-                        doc.setItems(results);
+                    if(!xPath.isNoIndex()) {
                         
-                        Utils.writeListHTML(site, xPath, "", doc, generatedFile);
-                    } catch (Throwable t) {
-                        LOG.error("compiler error", t);
-                        completableFuture.completeExceptionally(t);
+                        Path generatedFile = xPath.resolveTargetFromPath("index.html");
+                        try {
+                            XList doc = Utils.createList(site, xPath);
+                            doc.setItems(results);
+                            Utils.writeListHTML(site, xPath, "", doc, generatedFile);
+                        } catch (Throwable t) {
+                            LOG.error("compiler error", t);
+                            completableFuture.completeExceptionally(t);
+                        }
                     }
-                    
                     completableFuture.complete(results);
                     
                 }, executorServiceCompiler);

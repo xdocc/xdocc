@@ -815,10 +815,11 @@ public class Utils {
         modelSite.put(XList.ITEMS, doc.getItems());
         modelSite.put(XItem.TEMPLATE, template);
         modelSite.put(XItem.CURRENT, current);
-        modelSite.put(XItem.NAVIGATION, Utils.setSelected(pathToRoot, site.globalNavigation()));
+        //modelSite.put(XItem.NAVIGATION, Utils.setSelected(pathToRoot, site.globalNavigation()));
         modelSite.put(XItem.BREADCRUMB, pathToRoot);
 
-        String htmlSite = Utils.applyTemplate(site, templateSite, modelSite);
+        String htmlSite = doc.getContent();
+                //Utils.applyTemplate(site, templateSite, modelSite);
 
         htmlSite = Utils.postApplyTemplate(htmlSite, modelSite, "path");
         Path generatedDir = Files.createDirectories(generatedFile.getParent());
