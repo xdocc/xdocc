@@ -47,8 +47,7 @@ public class HandlerMarkdown implements Handler {
                         .toFile()))) {
             transform(in, out);
             String htmlContent = out.toString();
-            XItem doc = Utils.createDocument(site, xPath,
-                    relativePathToRoot, htmlContent, "markdown");
+            XItem doc = Utils.createDocument(site, xPath, htmlContent, "markdown");
             Path generatedFile = null;
             if (xPath.getParent().isItemWritten()) {
                 generatedFile = xPath

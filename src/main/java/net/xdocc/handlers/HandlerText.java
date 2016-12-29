@@ -25,19 +25,17 @@ public class HandlerText implements Handler {
 
 	@Override
 	public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
-                String relativePathToRoot) throws Exception {
+                String pathToRoot) throws Exception {
             
 		Charset charset = HandlerUtils.detectCharset(xPath.path());
 		List<String> lines = Files.readAllLines(xPath.path(), charset);
 		String htmlContent = convertHTML(lines);
-		XItem doc = 
-				Utils.createDocument(site, xPath, relativePathToRoot,
-				htmlContent, "text");
+		XItem doc = Utils.createDocument(site, xPath, htmlContent, "text");
 		// always create a single page for that
 		if (xPath.getParent().isItemWritten()) {
 			Path generatedFile = xPath
 					.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-			Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile);
+			Utils.writeHTML(site, xPath, pathToRoot, doc, generatedFile);
 		}
 		return doc;
 	}

@@ -90,7 +90,7 @@ public class HandlerUtils {
 		model.put(XItem.CURRENT_NAV, current);
 		model.put(XItem.BREADCRUMB, pathToRoot);
 		//model.put(XItem.NAVIGATION, site.globalNavigation());
-		model.put(XPath.PATH, relativePathToRoot);
+		//model.put(XPath.PATH, relativePathToRoot);
 		return model;
 	}
 	

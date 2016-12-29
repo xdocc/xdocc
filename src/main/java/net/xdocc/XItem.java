@@ -3,7 +3,6 @@ package net.xdocc;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +31,8 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String LOCALNAV = "localnav";
     public static final String LOCALNAV_ISCHILD = "ischildnav";
     public static final String CURRENT_NAV = "currentnav";
+    public static final String PATH_TO_ROOT = "pathtoroot";
+    public static final String PATH = "path";
     
     public static final String BREADCRUMB = "breadcrumb";
     public static final String CONTENT = "content";
@@ -45,8 +46,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     private static final long serialVersionUID = 136066054966377823L;
     
     private final Generator generator;
-    
-    private final XPath source;
+    private final XPath xPath;
     private final String url;
 
     /**
@@ -61,7 +61,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     public XItem(XPath xPath, Generator documentGenerator,
             String url) throws IOException {
         this.generator = documentGenerator;
-        this.source = xPath;
+        this.xPath = xPath;
         this.url = url;
         initXPath();
         initNavigation(xPath);
@@ -71,37 +71,46 @@ public class XItem implements Comparable<XItem>, Serializable {
         return generator;
     }
     
+    XPath xPath() {
+        return xPath;
+    }
+    
+    String url() {
+        return url;
+    }
+    
     private void initXPath() {
-        generator.model().put(XPath.NAME, source.name());
-        generator.model().put(XPath.URL, source.url());
-        generator.model().put(XPath.DATE, source.date());
-        generator.model().put(XPath.NR, source.nr());
-        generator.model().put(XPath.PATH, source.relativePath(generator.site));
+        generator.model().put(XPath.NAME, xPath.name());
+        generator.model().put(XPath.URL, xPath.url());
+        generator.model().put(XPath.DATE, xPath.date());
+        generator.model().put(XPath.NR, xPath.nr());
+        generator.model().put(XPath.ORIGINAL_PATH, xPath.originalPath());
+        generator.model().put(XPath.ORIGINAL_PATH_TO_ROOT, xPath.originalPathToRoot());
         
-        generator.model().put(XPath.FILENAME, source.fileName());
-        generator.model().put(XPath.FILESCOUNT, source.filesCount());
-        generator.model().put(XPath.FILESIZE, source.fileSize());
-        generator.model().put(XPath.EXTENSIONS, source.extensions());
-        generator.model().put(XPath.EXTENSION_LIST, source.extensionList());
-        generator.model().put(XPath.PROPERTIES, source.properties());
-        generator.model().put(XPath.PAGES, source.getPageSize());
-        generator.model().put(XPath.LAYOUT, source.getLayoutSuffix());
+        generator.model().put(XPath.FILENAME, xPath.fileName());
+        generator.model().put(XPath.FILESCOUNT, xPath.filesCount());
+        generator.model().put(XPath.FILESIZE, xPath.fileSize());
+        generator.model().put(XPath.EXTENSIONS, xPath.extensions());
+        generator.model().put(XPath.EXTENSION_LIST, xPath.extensionList());
+        generator.model().put(XPath.PROPERTIES, xPath.properties());
+        generator.model().put(XPath.PAGES, xPath.getPageSize());
+        generator.model().put(XPath.LAYOUT, xPath.getLayoutSuffix());
         //
-        generator.model().put(XPath.IS_ASCENDING, source.isAscending());
-        generator.model().put(XPath.IS_AUTOSORT, source.isAutoSort());
-        generator.model().put(XPath.IS_COMPILE, source.isCompile());
-        generator.model().put(XPath.IS_DESCENDING, source.isDescending());
-        generator.model().put(XPath.IS_DIRECTORY, source.isDirectory());
-        generator.model().put(XPath.IS_HIDDEN, source.isHidden());
-        generator.model().put(XPath.IS_HIGHLIGHT, source.isHighlight());
-        generator.model().put(XPath.IS_NAVIGATION, source.isNavigation());
-        generator.model().put(XPath.IS_NOINDEX, source.isNoIndex());
-        generator.model().put(XPath.IS_COPY, source.isCopy());
-        generator.model().put(XPath.IS_PAGE, source.isPage());
-        generator.model().put(XPath.IS_PROMOTED, source.isPromoted());
-        generator.model().put(XPath.IS_ROOT, source.isRoot());
-        generator.model().put(XPath.IS_VISIBLE, source.isVisible());
-        generator.model().put(XPath.IS_WRITE, source.isItemWritten());
+        generator.model().put(XPath.IS_ASCENDING, xPath.isAscending());
+        generator.model().put(XPath.IS_AUTOSORT, xPath.isAutoSort());
+        generator.model().put(XPath.IS_COMPILE, xPath.isCompile());
+        generator.model().put(XPath.IS_DESCENDING, xPath.isDescending());
+        generator.model().put(XPath.IS_DIRECTORY, xPath.isDirectory());
+        generator.model().put(XPath.IS_HIDDEN, xPath.isHidden());
+        generator.model().put(XPath.IS_HIGHLIGHT, xPath.isHighlight());
+        generator.model().put(XPath.IS_NAVIGATION, xPath.isNavigation());
+        generator.model().put(XPath.IS_NOINDEX, xPath.isNoIndex());
+        generator.model().put(XPath.IS_COPY, xPath.isCopy());
+        generator.model().put(XPath.IS_PAGE, xPath.isPage());
+        generator.model().put(XPath.IS_PROMOTED, xPath.isPromoted());
+        generator.model().put(XPath.IS_ROOT, xPath.isRoot());
+        generator.model().put(XPath.IS_VISIBLE, xPath.isVisible());
+        generator.model().put(XPath.IS_WRITE, xPath.isItemWritten());
         
     }
     
@@ -153,12 +162,29 @@ public class XItem implements Comparable<XItem>, Serializable {
         return this;
     }
     
+    public String getOriginalPath() {
+        return (String) generator.model().get(XPath.ORIGINAL_PATH);
+    }
+    
     public String getPath() {
-        return (String) generator.model().get(XPath.PATH);
+        return (String) generator.model().get(PATH);
     }
 
     public XItem setPath(String path) {
-        generator.model().put(XPath.PATH, path);
+        generator.model().put(PATH, path);
+        return this;
+    }
+    
+    public String getOriginalPathToRoot() {
+        return (String) generator.model().get(XPath.ORIGINAL_PATH_TO_ROOT);
+    }
+    
+    public String getPathToRoot() {
+        return (String) generator.model().get(PATH_TO_ROOT);
+    }
+
+    public XItem setPathToRoot(String pathToRoot) {
+        generator.model().put(PATH_TO_ROOT, pathToRoot);
         return this;
     }
     
@@ -299,12 +325,12 @@ public class XItem implements Comparable<XItem>, Serializable {
 
     @Override
     public int compareTo(XItem o) {
-        return source.compareTo(o.source);
+        return xPath.compareTo(o.xPath);
     }
 
     @Override
     public int hashCode() {
-        return source.hashCode();
+        return xPath.hashCode();
     }
 
     @Override
@@ -324,13 +350,11 @@ public class XItem implements Comparable<XItem>, Serializable {
             sb.append(getName());
         }
         if (getFileName() != null) {
-            sb.append(",f:");
-            sb.append(getFileName());
+            sb.append(",u:");
+            sb.append(xPath.originalPath());
         }
         return sb.toString();
-    }
-
-    
+    }    
 
     @Accessors(chain = true, fluent = true)
     public static class Generator implements Serializable {
@@ -359,10 +383,9 @@ public class XItem implements Comparable<XItem>, Serializable {
 
         public String generate() {
             try {
-                /*if(model.containsKey(CONTENT)) {
-                    model.put("generate", model.get(CONTENT));
-                }*/
-                return Utils.applyTemplate(site, templateBean, model);
+                String html = Utils.applyTemplate(site, templateBean, model);
+                html = Utils.postApplyTemplate(html, this.model, "path", "pathtoroot");
+                return html;
             } catch (TemplateException | IOException e) {
                 LOG.warn("cannot generate document {}. Model is {}",
                         templateBean.file().getFileName(), model, e);

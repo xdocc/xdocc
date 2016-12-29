@@ -75,7 +75,7 @@ public class Compiler {
                         try {
                             XList doc = Utils.createList(site, xPath);
                             doc.setItems(results);
-                            Utils.writeListHTML(site, xPath, "", doc, generatedFile);
+                            Utils.writeListHTML(site, xPath, doc, generatedFile);
                         } catch (Throwable t) {
                             LOG.error("compiler error", t);
                             completableFuture.completeExceptionally(t);

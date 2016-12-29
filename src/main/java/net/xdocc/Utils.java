@@ -35,6 +35,35 @@ public class Utils {
 
     private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
+    private static XList adjustPath(XList doc, String minusPath) {
+        adjustPath((XItem) doc, minusPath);
+        for(XItem item:doc.getItems()) {
+            adjustPath(item, minusPath);
+        }
+        return doc;
+    }
+    
+    private static XItem adjustPath(XItem doc, String minusPath) {
+        String path = doc.getOriginalPath();
+        path = path.startsWith(minusPath) ? path.substring(minusPath.length()) : path;
+        path = path.startsWith("/") ? path.substring(1) : path;
+        doc.setPath(path);
+        return doc;
+    }
+    
+    private static XList adjustPathToRoot(XList doc, String newPathToRoot) {
+        adjustPathToRoot((XItem) doc, newPathToRoot);
+        for(XItem item:doc.getItems()) {
+            adjustPathToRoot(item, newPathToRoot);
+        }
+        return doc;
+    }
+    
+    private static XItem adjustPathToRoot(XItem doc, String newPathToRoot) {
+        doc.setPathToRoot(newPathToRoot);
+        return doc;
+    }
+
     public static enum OS_TYPE {
         LINUX, WIN, MAC, OTHER
     };
@@ -775,7 +804,7 @@ public class Utils {
     }
 
     public static XItem createDocument(Site site, XPath xPath,
-            String relativePathToRoot, String htmlContent, String template) throws IOException {
+            String htmlContent, String template) throws IOException {
         TemplateBean templateText = site.getTemplate(template, xPath.getLayoutSuffix());
         // create the document
         XItem.Generator documentGenerator = new XItem.Generator(site,
@@ -798,38 +827,31 @@ public class Utils {
         return doc;
     }
     
-    public static void writeListHTML(Site site, XPath xPath, 
-            String relativePathToRoot, XList doc, Path generatedFile) throws IOException, TemplateException {
+    public static void writeListHTML(Site site, XPath xPath, XList doc, Path generatedFile) 
+            throws IOException, TemplateException {
         
-        Map<String, Object> modelSite = new HashMap<String, Object>();
+        //adjust path
+        String minusPath = xPath.getTargetURL();
+        doc = Utils.adjustPath(doc, minusPath);
+        String minusPathToRoot = xPath.originalPathToRoot();
+        doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
         
-        String template = doc.getTemplate();
-        TemplateBean templateSite = site.getTemplate(
-                template, xPath.getLayoutSuffix());
-        
-        Link current = Utils.find(xPath.getParent(), site.globalNavigation());
-        List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
-        
-        //modelSite.put(XPath.PATH, relativePathToRoot);
-        //modelSite.put(XList.ITEMS, doc.getItems());
-        //modelSite.put(XItem.TEMPLATE, template);
-        //modelSite.put(XItem.CURRENT_NAV, current);
-        //modelSite.put(XItem.NAVIGATION, Utils.setSelected(pathToRoot, site.globalNavigation()));
-        //modelSite.put(XItem.BREADCRUMB, pathToRoot);
-
         String htmlSite = doc.getContent();
-                //Utils.applyTemplate(site, templateSite, modelSite);
-
-        htmlSite = Utils.postApplyTemplate(htmlSite, modelSite, "path");
-        Path generatedDir = Files.createDirectories(generatedFile.getParent());
+        Files.createDirectories(generatedFile.getParent());
         Utils.write(htmlSite, xPath, generatedFile);
     }
 
     public static void writeHTML(Site site, XPath xPath, 
-            String relativePathToRoot, XItem doc, Path generatedFile) throws IOException, TemplateException {
+        String path, XItem doc, Path generatedFile) throws IOException, TemplateException {
+        
+         //adjust path
+        String minusPath = xPath.getTargetURLPath();
+        doc = Utils.adjustPath(doc, minusPath);
+        String minusPathToRoot = xPath.originalPathToRoot();
+        doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
         
         String htmlSite = doc.getContent();
-        Path generatedDir = Files.createDirectories(generatedFile.getParent());
+        Files.createDirectories(generatedFile.getParent());
         Utils.write(htmlSite, xPath, generatedFile);
     }
 

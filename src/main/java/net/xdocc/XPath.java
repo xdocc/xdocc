@@ -795,9 +795,13 @@ final public class XPath implements Comparable<XPath> {
     
     
 
-    public String relativePath(Site site) {
+    public String originalPath() {
+        return isDirectory() ? getTargetURL() : getTargetURLPath();
+    }
+    public static final String ORIGINAL_PATH = "originalpath";
+    
+    public String originalPathToRoot() {
         return Utils.relativePathToRoot(site.source(), path);
     }
-    //relative path!
-    public static final String PATH = "path";
+    public static final String ORIGINAL_PATH_TO_ROOT = "originalpathtoroot";
 }

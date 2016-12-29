@@ -45,8 +45,7 @@ public class HandlerHTML implements Handler {
 		Elements e = docj.getElementsByTag("body");
 		
 		String htmlContent = e.toString();
-		XItem doc = Utils.createDocument(site, xPath, relativePathToRoot,
-				htmlContent, "text");
+		XItem doc = Utils.createDocument(site, xPath, htmlContent, "text");
 		// always create a single page for that
 		Path generatedFile = null;
 		if(xPath.getParent().isItemWritten()) {
