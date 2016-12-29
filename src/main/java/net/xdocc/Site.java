@@ -153,8 +153,16 @@ public class Site {
     private Link loadGlobalNavigation() throws IOException {
         return loadNavigation(new XPath(this, source()));
     }
+    
+    public Link loadLocalNavigation(XPath source) throws IOException {
+        if(source.isDirectory()) {
+            return loadNavigation(source);
+        } else {
+            return loadNavigation(source.getParent());
+        }
+    }
 
-    public Link loadNavigation(XPath source) throws IOException {
+    private Link loadNavigation(XPath source) throws IOException {
         Link root = new Link(source, null);
         List<XPath> children = Utils.getNonHiddenChildren(this, source.path());
         final boolean ascending;

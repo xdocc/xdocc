@@ -30,6 +30,8 @@ public class XItem implements Comparable<XItem>, Serializable {
     // model constants for handlers
     public static final String NAVIGATION = "navigation";
     public static final String LOCALNAV = "localnav";
+    public static final String LOCALNAV_ISCHILD = "ischild";
+    public static final String BREADCRUMB = "breadcrumb";
     
     
     public static final String RELATIVE = "relative";
@@ -48,7 +50,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     // page
     public static final String DOCUMENT = "document";
     public static final String CURRENT = "current";
-    public static final String BREADCRUMB = "breadcrumb";
+    
     
 
     // HandlerImage
@@ -132,11 +134,13 @@ public class XItem implements Comparable<XItem>, Serializable {
     }
     
     private void initNavigation(XPath xPath) throws IOException {
-        generator.model().put(NAVIGATION, xPath.site().globalNavigation().getChildren());
-        Link local = xPath.site().loadNavigation(xPath);
-        if(!xPath.site().globalNavigation().equals(local)) {
-            generator.model().put(LOCALNAV, local.getChildren());
-        }
+        Link global = xPath.site().globalNavigation();
+        generator.model().put(NAVIGATION, global.getChildren());
+        Link local = xPath.site().loadLocalNavigation(xPath);
+        generator.model().put(LOCALNAV_ISCHILD, Utils.isChild(global, local));
+        generator.model().put(LOCALNAV, local.getChildren());
+        List<Link> pathToRoot = Utils.linkToRoot(xPath.site().source(), xPath);
+        generator.model().put(BREADCRUMB, pathToRoot);
     }
 
     public String getName() {

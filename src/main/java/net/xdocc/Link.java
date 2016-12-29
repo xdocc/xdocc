@@ -1,5 +1,6 @@
 package net.xdocc;
 
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -92,8 +93,20 @@ public class Link {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder("Link:");
-		return sb.append(name).append(",url:").append(url).toString();
+		return toStringRec("Link:");
+	}
+        
+        public String toStringRec(String header) {
+		StringBuilder sb = new StringBuilder(header);
+                if(Strings.isNullOrEmpty(name)) {
+                    sb.append(url);
+                } else {
+                    sb.append(name).append("|").append(url);
+                }
+                for(Link child:children) {
+                    sb.append(child.toStringRec("\n+"));
+                }        
+                return sb.toString();
 	}
 
 	public Link copy() {

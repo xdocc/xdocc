@@ -60,6 +60,18 @@ public class Utils {
         }
         return null;
     }
+    
+    public static boolean isChild(Link parent, Link maybeChild) {
+        if(parent.equals(maybeChild)) {
+            return true;
+        }
+        for(Link child:parent.getChildren()) {
+            if(isChild(child, maybeChild)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static boolean isChild(Path maybeChild, Path possibleParent) {
         URI parentURI = possibleParent.toUri(), childURI = maybeChild.toUri();
