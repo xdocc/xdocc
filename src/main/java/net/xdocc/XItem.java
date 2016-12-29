@@ -28,46 +28,18 @@ import org.slf4j.LoggerFactory;
 public class XItem implements Comparable<XItem>, Serializable {
 
     // model constants for handlers
-    public static final String NAVIGATION = "navigation";
+    public static final String NAVIGATION = "globalnav";
     public static final String LOCALNAV = "localnav";
-    public static final String LOCALNAV_ISCHILD = "ischild";
+    public static final String LOCALNAV_ISCHILD = "ischildnav";
+    public static final String CURRENT_NAV = "currentnav";
+    
     public static final String BREADCRUMB = "breadcrumb";
-    
-    
-    public static final String RELATIVE = "relative";
-    public static final String HIGHLIGHT = "highlight";
-    public static final String DEPTH = "depth";
-    public static final String PAGE_URLS = "page_urls";
-    public static final String CURRENT_PAGE = "current_page";
     public static final String CONTENT = "content";
-    //public static final String HTML = "html";
-    // shared 
     public static final String TEMPLATE = "template";
-    public static final String HIGHLIGHT_URL = "highlightUrl";
-    
-    
-    
-    // page
-    public static final String DOCUMENT = "document";
-    public static final String CURRENT = "current";
-    
-    
-
-    // HandlerImage
-    public static final String GROUP = "group";
-    public static final String CSS_CLASS = "css_class";
-    public static final String IMAGE_NORMAL = "image_normal";
-    public static final String IMAGE_THUMB = "image_thumb";
-
-    // HandlerWikiText
-    public static final String HANDLER = "handler";
-
-    // HandlerDirectory
-    public static final String PAGE_NR = "page_nr";
-    
-
+   
     // Utils
     public static final String DEBUG = "debug";
+    
 
     private static final Logger LOG = LoggerFactory.getLogger(XItem.class);
     private static final long serialVersionUID = 136066054966377823L;
@@ -141,6 +113,8 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(LOCALNAV, local.getChildren());
         List<Link> pathToRoot = Utils.linkToRoot(xPath.site().source(), xPath);
         generator.model().put(BREADCRUMB, pathToRoot);
+        Link current = Utils.find(xPath.isDirectory()? xPath: xPath.getParent(), xPath.site().globalNavigation());
+        generator.model().put(XItem.CURRENT_NAV, current);
     }
 
     public String getName() {
@@ -212,24 +186,6 @@ public class XItem implements Comparable<XItem>, Serializable {
 
     public XItem setFilesCount(long filesCount) {
         generator.model().put(XPath.FILESCOUNT, filesCount);
-        return this;
-    }
-
-    
-
-    /**
-     * @return Return if document marked as highlight. Default is xPath.isHighlight()
-     */
-    public boolean getHighlight() {
-        return BooleanUtils.isTrue((Boolean) generator.model().get(HIGHLIGHT));
-    }
-
-    /**
-     * @param highlight Set if document marked as highlight. Default is xPath.isHighlight()
-     * @param this class
-     */
-    public XItem setHighlight(boolean highlight) {
-        generator.model().put(HIGHLIGHT, highlight);
         return this;
     }
 

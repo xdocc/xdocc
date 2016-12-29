@@ -8,8 +8,8 @@ package net.xdocc;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import static net.xdocc.XItem.CURRENT_PAGE;
-import static net.xdocc.XItem.PAGE_URLS;
+/*import static net.xdocc.XItem.CURRENT_PAGE;
+import static net.xdocc.XItem.PAGE_URLS;*/
 
 /**
  *
@@ -54,7 +54,7 @@ public class XList extends XItem {
      * @param pageURLs
      * @param current
      */
-    public void setPaging(java.util.List<String> pageURLs, Integer current) {
+    /*public void setPaging(java.util.List<String> pageURLs, Integer current) {
         documentGenerator().model().put(PAGE_URLS, pageURLs);
         documentGenerator().model().put(CURRENT_PAGE, current);
 
@@ -68,6 +68,6 @@ public class XList extends XItem {
     public Integer getCurrent() {
         return (Integer) documentGenerator().model().get(CURRENT_PAGE);
 
-    }
+    }*/
     
 }

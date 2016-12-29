@@ -323,7 +323,7 @@ public class Utils {
      * @param documents The list of document found in the folder
      * @return The highlighted document or null.
      */
-    public static XItem searchHighlight(List<XItem> documents) {
+    /*public static XItem searchHighlight(List<XItem> documents) {
         for (XItem document : documents) {
             if (document.getHighlight()) {
                 return document;
@@ -333,7 +333,7 @@ public class Utils {
             return documents.get(0);
         }
         return null;
-    }
+    }*/
 
     /**
      * Sort the documents according to its number. If a date was provided, the date will be converted to a
@@ -479,7 +479,7 @@ public class Utils {
 
     }
 
-    public static List<XItem> filter(List<XItem> documents) {
+    /*public static List<XItem> filter(List<XItem> documents) {
         List<XItem> retVal = new ArrayList<>();
         List<XItem> toPreview = new ArrayList<>();
         if (toPreview.size() > 0) {
@@ -487,7 +487,7 @@ public class Utils {
             retVal.add(document);
         }
         return retVal;
-    }
+    }*/
 
     public static void createFile(Path source, String path, String content)
             throws IOException {
@@ -502,19 +502,6 @@ public class Utils {
         if (xPath == null) {
             return navigation;
         }
-        if (navigation.getTarget().path().equals(xPath.path())) {
-            return navigation;
-        }
-        for (Link link : navigation.getChildren()) {
-            Link found = findRec(xPath, link);
-            if (found != null) {
-                return found;
-            }
-        }
-        return navigation;
-    }
-
-    public static Link findRec(XPath xPath, Link navigation) {
         if (navigation.getTarget().path().equals(xPath.path())) {
             return navigation;
         }
@@ -823,12 +810,12 @@ public class Utils {
         Link current = Utils.find(xPath.getParent(), site.globalNavigation());
         List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
         
-        modelSite.put(XPath.PATH, relativePathToRoot);
-        modelSite.put(XList.ITEMS, doc.getItems());
-        modelSite.put(XItem.TEMPLATE, template);
-        modelSite.put(XItem.CURRENT, current);
+        //modelSite.put(XPath.PATH, relativePathToRoot);
+        //modelSite.put(XList.ITEMS, doc.getItems());
+        //modelSite.put(XItem.TEMPLATE, template);
+        //modelSite.put(XItem.CURRENT_NAV, current);
         //modelSite.put(XItem.NAVIGATION, Utils.setSelected(pathToRoot, site.globalNavigation()));
-        modelSite.put(XItem.BREADCRUMB, pathToRoot);
+        //modelSite.put(XItem.BREADCRUMB, pathToRoot);
 
         String htmlSite = doc.getContent();
                 //Utils.applyTemplate(site, templateSite, modelSite);

@@ -274,7 +274,7 @@ public class HandlerWikiText implements Handler {
 			HtmlDocumentBuilder builder = new XdoccHtmlDocumentBuilder(writer,
 					site, xPath, model, relativePathToRoot);
 
-			try {
+			/*try {
 				if (model().containsKey(XItem.RELATIVE)) {
 					String rel = (String) model().get(XItem.RELATIVE);
 					builder.setBase(new URI(rel));
@@ -282,7 +282,7 @@ public class HandlerWikiText implements Handler {
 			} catch (URISyntaxException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			}*/
 			// avoid the <html> and <body> tags
 			MarkupParser parser = null;
 			builder.setEmitAsDocument(false);
@@ -323,7 +323,7 @@ public class HandlerWikiText implements Handler {
 			String rawFileContent = FileUtils.readFileToString(xPath.path()
 					.toFile(), charset);
 			parser.parse(rawFileContent);
-			model().put(XItem.HANDLER, type);
+			//model().put(XItem.HANDLER, type);
 			model().put(XItem.CONTENT, writer.toString());
 		}
 

@@ -84,10 +84,10 @@ public class HandlerUtils {
 		String relativePathToRoot = Utils.relativePathToRoot(site.source(),
 				xPath.path());
 		Map<String, Object> model = new HashMap<>();
-		model.put(XItem.DOCUMENT, document);
+		//model.put(XItem.DOCUMENT, document);
 		Link current = Utils.find(xPath.getParent(), site.globalNavigation());
 		List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
-		model.put(XItem.CURRENT, current);
+		model.put(XItem.CURRENT_NAV, current);
 		model.put(XItem.BREADCRUMB, pathToRoot);
 		//model.put(XItem.NAVIGATION, site.globalNavigation());
 		model.put(XPath.PATH, relativePathToRoot);

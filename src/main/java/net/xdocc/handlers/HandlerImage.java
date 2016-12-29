@@ -100,12 +100,12 @@ public class HandlerImage implements Handler {
 		HandlerUtils.fillModel(documentName, documentURL, documentDate,
 				documentNr, documentFilename, "", model);
 
-		model.put(XItem.GROUP, xPath.getParent().getTargetURL());
+		/*model.put(XItem.GROUP, xPath.getParent().getTargetURL());
 		if (attributes != null && attributes.getCssClass() != null) {
 			model.put(XItem.CSS_CLASS, attributes.getCssClass());
 		} else {
 			model.put(XItem.CSS_CLASS, "image");
-		}
+		}*/
 
 		XItem doc = new XItem(xPath, gen, xPath.getTargetURL() + ".html");
 		//TODO: store somewhere
