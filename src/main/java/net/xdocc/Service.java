@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.kohsuke.args4j.CmdLineException;
@@ -75,7 +76,10 @@ public class Service {
                     try {
                         LOG.debug("file changed");
                         startAfterFirstRun.await();
-                        compile(site);
+                        LOG.info("compiling start: {}", site);
+                        final long start = System.currentTimeMillis();
+                        compile(site).get();
+                        LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
                     } catch (Throwable t) {
                         LOG.error("file changed, but could not compile", t);
                     }
@@ -83,7 +87,10 @@ public class Service {
                 }
             });
         }
-        compile(site);
+        LOG.info("compiling start: {}", site);
+        final long start = System.currentTimeMillis();
+        compile(site).get();
+        LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
         if (!runOnce) {
             startAfterFirstRun.countDown();
         } else {
@@ -111,17 +118,14 @@ public class Service {
         executorServiceCompiler.shutdown();
     }
 
-    public void compile(Site site) throws IOException, InterruptedException, ExecutionException {
-        compile(site, site.source(), new HashMap<String, Object>());
+    public CompletableFuture<List<XItem>> compile(Site site) throws IOException, InterruptedException, ExecutionException {
+        return compile(site, site.source(), new HashMap<String, Object>());
     }
 
-    public void compile(Site site, Path path, Map<String, Object> model)
+    public CompletableFuture<List<XItem>> compile(Site site, Path path, Map<String, Object> model)
             throws IOException, InterruptedException, ExecutionException {
-        LOG.info("compiling start: {} / {}", site, path);
-        final long start = System.currentTimeMillis();
         Compiler c = new Compiler(executorServiceCompiler, site);
-        c.compile(path, path).get();
-        LOG.info("compiling done in {} ms of {} / {}", (System.currentTimeMillis() - start), site, path);
+        return c.compile(path, path);
     }
 
 }

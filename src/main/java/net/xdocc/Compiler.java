@@ -29,8 +29,13 @@ public class Compiler {
         this.handlers = site.handlers();
         this.site = site;
     }
-
+    
     public CompletableFuture<List<XItem>> compile(final Path pointOfView, final Path path) {
+        return compile(pointOfView, path, 0, 0);
+    }
+
+    public CompletableFuture<List<XItem>> compile(final Path pointOfView, final Path path, 
+            final int depth, final int promoteDepth) {
         final CompletableFuture<List<XItem>> completableFuture = new CompletableFuture<>();
 
         completableFuture.runAsync(() -> {
@@ -39,14 +44,14 @@ public class Compiler {
                 List<XPath> children = Utils.getNonHiddenChildren(site, path);
                 List<CompletableFuture<List<XItem>>> futures = new ArrayList<>();
                 List<CompletableFuture<List<XItem>>> futuresNoPromote = new ArrayList<>();
-                List<XItem> results = new ArrayList<>();
+                final List<XItem> results = new ArrayList<>();
 
                 for (XPath child : children) {
                     if (child.isDirectory()) {
                         if(child.isPromoted()) {
-                            futures.add(compile(child.path(), child.path()));
+                            futures.add(compile(child.path(), child.path(), depth + 1, promoteDepth + 1));
                         } else {
-                            futuresNoPromote.add(compile(child.path(), child.path()));
+                            futuresNoPromote.add(compile(child.path(), child.path(), depth + 1, 0));
                         }
                     } else {
                         for (Handler handler : handlers) {
@@ -67,21 +72,36 @@ public class Compiler {
                             .flatMap(List::stream)
                             .collect(Collectors.toList())
                     );
-
+                    
                     XPath xPath = new XPath(site, path);
-                    if(!xPath.isNoIndex()) {
-                        
-                        Path generatedFile = xPath.resolveTargetFromPath("index.html");
-                        try {
-                            XList doc = Utils.createList(site, xPath);
-                            doc.setItems(results);
-                            Utils.writeListHTML(site, xPath, doc, generatedFile);
-                        } catch (Throwable t) {
-                            LOG.error("compiler error", t);
-                            completableFuture.completeExceptionally(t);
-                        }
+                    
+                    final boolean ascending;
+                    if (xPath.isAutoSort()) {
+                        ascending = Utils.guessAutoSort1(results);
+                    } else {
+                        ascending = xPath.isAscending();
                     }
-                    completableFuture.complete(results);
+                    Utils.sort3(results, ascending);
+
+                    try {
+                        XItem doc = Utils.createDocument(site, xPath, null, "list");
+                        doc.setItems(results);
+                        doc.setDepth(depth, promoteDepth);
+                        
+                        if(!xPath.isNoIndex()) {
+                            Path generatedFile = xPath.resolveTargetFromPath("index.html");
+                            Utils.writeListHTML(site, xPath, doc, generatedFile);
+                        }
+                        
+                        List<XItem> results2 = new ArrayList<>(1);
+                        results2.add(doc);
+                        completableFuture.complete(results2); // or result for flat
+                        
+                    } catch (Throwable t) {
+                        LOG.error("compiler error", t);
+                        completableFuture.completeExceptionally(t);
+                    }
+                    
                     
                 }, executorServiceCompiler);
             } catch (Throwable t) {
@@ -96,9 +116,7 @@ public class Compiler {
 
     private XItem compile(Handler handler, XPath xPath) throws Exception {
 
-        String relativePathToRoot = Utils.relativePathToRoot(site.source(),
-                xPath.path());
-       
+        String relativePathToRoot = Utils.relativePathToRoot(site.source(), xPath.path());
         return handler.compile(site, xPath, new HashMap<String, Object>(), relativePathToRoot);
     }
 }

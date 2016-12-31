@@ -83,15 +83,15 @@ public class TestService {
     public void testGenerateList() throws IOException, InterruptedException, ExecutionException {
         Utils.createFile(src, "1-test.txt", "this is a text file");
         Utils.createFile(src, ".xdocc", "page=true");
-        Utils.createFile(src, "1-dir/1-test.txt", "this is a 2nd text file");
-        Utils.createFile(src, "1-dir/.xdocc", "page=false\npromote=true");
+        Utils.createFile(src, "2-dir/1-test.txt", "this is a 2nd text file");
+        Utils.createFile(src, "2-dir/.xdocc", "page=false\npromote=true");
         Utils.createFile(src, ".templates/text.ftl", "text template <br><br> -- (${content})");
         Utils.createFile(src, ".templates/list.ftl", "list file <br><br> -- <#list items as item>[${item.content}]</#list>");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertTrue(Files.size(gen.resolve("index.html"))>0);
         Assert.assertTrue(Files.size(gen.resolve("dir/test.html"))>0);
         Assert.assertTrue(Files.size(gen.resolve("dir/index.html"))>0);
-        Assert.assertEquals(FileUtils.readFileToString(gen.resolve("index.html").toFile()), "list file <br><br> -- [text template <br><br> -- (this is a text file)][text template <br><br> -- (this is a 2nd text file)]");
+        Assert.assertEquals(FileUtils.readFileToString(gen.resolve("index.html").toFile()), "list file <br><br> -- [text template <br><br> -- (this is a text file)][list file <br><br> -- [text template <br><br> -- (this is a 2nd text file)]]");
     }
     
     @Test
@@ -132,7 +132,7 @@ public class TestService {
         Utils.createFile(src, ".templates/text.ftl", "text template <br><br> -- (${content})");
         Utils.createFile(src, ".templates/list.ftl", "list file <br><br> -- <#list items as item>[${item.content}]</#list>");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertTrue(Files.size(gen.resolve("index.html"))==124);
+        Assert.assertTrue(Files.size(gen.resolve("index.html"))==148);
         Assert.assertFalse(Files.exists(gen.resolve("dir/index.html")));
     }
     

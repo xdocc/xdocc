@@ -517,7 +517,7 @@ final public class XPath implements Comparable<XPath> {
             if (layoutSuffix != null) {
                 final int depth;
                 if (StringUtils.isEmpty(layoutSuffix[1])) {
-                    depth = 1;
+                    depth = 0;
                 } else {
                     depth = Integer.parseInt(layoutSuffix[1]);
                 }
@@ -531,9 +531,7 @@ final public class XPath implements Comparable<XPath> {
             }
             XPath old = parent;
             parent = parent.getParent();
-            if (old.isDirectory()) {
-                level++;
-            }
+            level++;
         }
         return "";
     }
@@ -635,6 +633,9 @@ final public class XPath implements Comparable<XPath> {
     }
     public static final String IS_PROMOTED = "ispromoted";
     static {KNOWN_EXTENSIONS.add("promote");KNOWN_EXTENSIONS.add("prm");}
+    
+    
+    
     
     public boolean isItemWritten() {
         return !isPage();

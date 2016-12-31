@@ -35,34 +35,51 @@ public class Utils {
 
     private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
-    private static XList adjustPath(XList doc, String minusPath) {
-        adjustPath((XItem) doc, minusPath);
+    private static XItem adjustPath(XItem doc, String minusPath) {
+        adjustPath0(doc, minusPath);
         for(XItem item:doc.getItems()) {
             adjustPath(item, minusPath);
         }
         return doc;
     }
     
-    private static XItem adjustPath(XItem doc, String minusPath) {
+    private static XItem adjustPath0(XItem doc, String minusPath) {
         String path = doc.getOriginalPath();
         path = path.startsWith(minusPath) ? path.substring(minusPath.length()) : path;
         path = path.startsWith("/") ? path.substring(1) : path;
+        path = path.isEmpty() ? ".":path;
         doc.setPath(path);
         return doc;
     }
     
-    private static XList adjustPathToRoot(XList doc, String newPathToRoot) {
-        adjustPathToRoot((XItem) doc, newPathToRoot);
+    private static XItem adjustPathToRoot(XItem doc, String newPathToRoot) {
+        adjustPathToRoot0(doc, newPathToRoot);
         for(XItem item:doc.getItems()) {
             adjustPathToRoot(item, newPathToRoot);
         }
         return doc;
     }
     
-    private static XItem adjustPathToRoot(XItem doc, String newPathToRoot) {
+    private static XItem adjustPathToRoot0(XItem doc, String newPathToRoot) {
         doc.setPathToRoot(newPathToRoot);
         return doc;
     }
+
+    private static XItem adjustPromotedDepth(XItem doc, Integer minusPromoteDepth) {
+        Integer calc = null;
+        if(doc.getPromoteDepthOriginal()!= null) {
+            calc = doc.getPromoteDepthOriginal() - minusPromoteDepth;
+        }
+        doc.setPromoteDepth(calc);
+        for(XItem item:doc.getItems()) {
+            adjustPromotedDepth(item, minusPromoteDepth);
+        }
+        return doc;
+    }
+
+    
+
+    
 
     public static enum OS_TYPE {
         LINUX, WIN, MAC, OTHER
@@ -380,6 +397,16 @@ public class Utils {
             }
         });
 
+    }
+    
+    public static void sort3(List<XItem> results, final boolean inverted) {
+        Collections.sort(results, new Comparator<XItem>() {
+            @Override
+            public int compare(XItem o1, XItem o2) {
+                int compare = o1.xPath().compareTo(o2.xPath());
+                return inverted ? compare : compare * -1;
+            }
+        });
     }
 
     public static void write(String html, XPath xPath, Path generatedFile)
@@ -778,6 +805,15 @@ public class Utils {
         }
         return true;
     }
+    
+    static boolean guessAutoSort1(List<XItem> results) {
+        for (XItem xItem : results) {
+            if (xItem.xPath().nr() > 1000) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * Counts all visible documents in a list. The visible documents start with either a number or a date ->
@@ -816,18 +852,7 @@ public class Utils {
         return doc;
     }
     
-    public static XList createList(Site site, XPath xPath) throws IOException {
-        TemplateBean templateText = site.getTemplate("list", xPath.getLayoutSuffix());
-        // create the document
-        XItem.Generator documentGenerator = new XItem.Generator(site,
-                templateText);
-        String documentURL = xPath.getTargetURL() + ".html";
-        XList doc = new XList(xPath, documentGenerator, documentURL);
-        doc.setTemplate("list");
-        return doc;
-    }
-    
-    public static void writeListHTML(Site site, XPath xPath, XList doc, Path generatedFile) 
+    public static void writeListHTML(Site site, XPath xPath, XItem doc, Path generatedFile) 
             throws IOException, TemplateException {
         
         //adjust path
@@ -835,6 +860,7 @@ public class Utils {
         doc = Utils.adjustPath(doc, minusPath);
         String minusPathToRoot = xPath.originalPathToRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
+        doc = Utils.adjustPromotedDepth(doc, doc.getPromoteDepthOriginal());
         
         String htmlSite = doc.getContent();
         Files.createDirectories(generatedFile.getParent());

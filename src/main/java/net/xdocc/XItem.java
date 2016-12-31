@@ -3,6 +3,7 @@ package net.xdocc;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,13 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String BREADCRUMB = "breadcrumb";
     public static final String CONTENT = "content";
     public static final String TEMPLATE = "template";
+    
+    // list
+    public static final String ITEMS = "items";
+    public static final String ITEMS_SIZE = "documentsize";
+    public static final String DEPTH = "depth";
+    public static final String PROMOTE_DEPTH_ORIGINAL = "promotedepthoriginal";
+    public static final String PROMOTE_DEPTH = "promotedepth";
    
     // Utils
     public static final String DEBUG = "debug";
@@ -124,6 +132,29 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(BREADCRUMB, pathToRoot);
         Link current = Utils.find(xPath.isDirectory()? xPath: xPath.getParent(), xPath.site().globalNavigation());
         generator.model().put(XItem.CURRENT_NAV, current);
+    }
+    
+    /**
+     * @return a list of documents if present in the model or null
+     */
+    public List<XItem> getItems() {
+        @SuppressWarnings("unchecked")
+        java.util.List<XItem> documents = (java.util.List<XItem>) documentGenerator()
+                .model().get(ITEMS);
+        if (documents == null) {
+            return Collections.emptyList();
+        }
+        return documents;
+    }
+
+    /**
+     * @param documents The list of documents in a collection
+     * @return this class
+     */
+    public XItem setItems(java.util.List<XItem> documents) {
+        documentGenerator().model().put(ITEMS, documents);
+        documentGenerator().model().put(ITEMS_SIZE, documents.size());
+        return this;
     }
 
     public String getName() {
@@ -322,6 +353,28 @@ public class XItem implements Comparable<XItem>, Serializable {
     public String getDebug() {
         return Utils.getDebug(generator.model());
     }
+    
+    public void setDepth(Integer depth, Integer promoteDepth) {
+        generator.model().put(DEPTH, depth);
+        generator.model().put(PROMOTE_DEPTH_ORIGINAL, promoteDepth);
+    }
+    
+    public Integer getDepth() {
+        return (Integer) generator.model().get(DEPTH);
+    }
+    
+    public Integer getPromoteDepthOriginal() {
+        return (Integer) generator.model().get(PROMOTE_DEPTH_ORIGINAL);
+    }
+    
+    public Integer getPromoteDepth() {
+        return (Integer) generator.model().get(PROMOTE_DEPTH);
+    }
+    
+    public XItem setPromoteDepth(Integer promoteDepth) {
+        generator.model().put(PROMOTE_DEPTH, promoteDepth);
+        return this;
+    }
 
     @Override
     public int compareTo(XItem o) {
@@ -349,12 +402,16 @@ public class XItem implements Comparable<XItem>, Serializable {
             sb.append("n:");
             sb.append(getName());
         }
-        if (getFileName() != null) {
-            sb.append(",u:");
+        sb.append(",u:");
             sb.append(xPath.originalPath());
+        if (getFileName() != null) {
+            sb.append(",f:");
+            sb.append(getFileName());
         }
         return sb.toString();
     }    
+
+    
 
     @Accessors(chain = true, fluent = true)
     public static class Generator implements Serializable {
