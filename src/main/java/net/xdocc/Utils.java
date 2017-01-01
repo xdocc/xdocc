@@ -30,6 +30,7 @@ import net.xdocc.Site.TemplateBean;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
+import java.nio.file.Paths;
 
 public class Utils {
 
@@ -45,8 +46,10 @@ public class Utils {
     
     private static XItem adjustPath0(XItem doc, String minusPath) {
         String path = doc.getOriginalPath();
-        path = path.startsWith(minusPath) ? path.substring(minusPath.length()) : path;
-        path = path.startsWith("/") ? path.substring(1) : path;
+        Path pathRelative = Paths.get(minusPath).relativize(Paths.get(path));
+        path = pathRelative.toString();
+        //path = path.startsWith(minusPath) ? path.substring(minusPath.length()) : path;
+        //path = path.startsWith("/") ? path.substring(1) : path;
         path = path.isEmpty() ? ".":path;
         doc.setPath(path);
         return doc;
@@ -635,97 +638,59 @@ public class Utils {
         }
         return result;
     }
-
-    public static List<XPath> findURL(Site site, XPath current, String url)
+    
+     public static List<XPath> findURL(Site site, XPath current, String url)
             throws IOException {
-        // split the search url
-        String[] parsedURL = url.split("/");
+        
         boolean root = url.startsWith("/");
-        final XPath rootPath;
+        XPath rootPath;
         if (root) {
             rootPath = new XPath(site, site.source());
+            url = url.substring(1);
         } else if (current.isDirectory()) {
             rootPath = current;
         } else {
             rootPath = current.getParent();
         }
-        List<XPath> tmpMatches = new ArrayList<>();
-        tmpMatches.add(rootPath);
-
-        for (int i = 0; i < parsedURL.length; i++) {
-            final String pURL = parsedURL[i];
-            final List<XPath> tmpMatches2 = new ArrayList<>();
-            for (XPath tmpMatch : tmpMatches) {
-                tmpMatches2.addAll(findChildURL(site, tmpMatch, pURL, null));
-            }
-            tmpMatches = tmpMatches2;
-        }
-        return tmpMatches;
+        String[] parsedURL = url.split("/");
+        return findURL(site, rootPath, parsedURL, 0);
     }
 
-    public static class RelativeURL {
-
-        final private String current;
-        final private RelativeURL parent;
-        final private String extension;
-        private RelativeURL child;
-
-        private RelativeURL(String current, RelativeURL parent, String extension) {
-            this.current = current;
-            this.parent = parent;
-            this.extension = extension;
+    public static List<XPath> findURL(Site site, XPath current, String[] url, int i)
+            throws IOException {
+        
+                
+        List<XPath> matches = new ArrayList<>();
+        List<XPath> results = new ArrayList<>();
+        
+        if(url[i].equals("..")) {
+            current = current.getParent();
+            matches.add(current);
         }
-
-        public String getExtensions() {
-            return extension;
-        }
-
-        public static RelativeURL create(String url) {
-            StringTokenizer st = new StringTokenizer(url, "/");
-            RelativeURL result = null;
-            String extension = null;
-            while (st.hasMoreTokens()) {
-                String next = st.nextToken().trim();
-                if (!st.hasMoreTokens()) {
-                    // is last?
-                    int index = next.indexOf(".");
-                    if (index >= 0) {
-                        extension = next.substring(index);
-                        next = next.substring(0, index);
+        else {
+            List<XPath> children = Utils.getNonHiddenChildren(site, current.path());
+            if(url[i].equals("*")) {
+                matches.addAll(children);
+            } else {
+                for(XPath child:children) {
+                    if(child.url().equals(url[i])) {
+                        matches.add(child);
                     }
                 }
-                if (result == null) {
-                    result = new RelativeURL(next, null, extension);
+            }
+        }
+        if(url.length == (i + 1)) {
+            return matches;
+        } else {
+            for(XPath match: matches) {
+                if(match.isDirectory()) {
+                    results.addAll(findURL(site, match, url, i + 1));
                 } else {
-                    RelativeURL result2 = new RelativeURL(next, result,
-                            extension);
-                    result.setChild(result2);
-                    result = result2;
+                    //no match
                 }
             }
-
-            // get root
-            while (result != null && result.getParent() != null) {
-                result = result.getParent();
-            }
-            return result;
         }
-
-        public String getCurrent() {
-            return current;
-        }
-
-        public RelativeURL getParent() {
-            return parent;
-        }
-
-        public RelativeURL getChild() {
-            return child;
-        }
-
-        public void setChild(RelativeURL child) {
-            this.child = child;
-        }
+        return results;
     }
 
     /**

@@ -114,7 +114,7 @@ public class TestHandler {
     }
     
     @Test
-    public void testLink() throws IOException, InterruptedException, ExecutionException {
+    public void testLink1() throws IOException, InterruptedException, ExecutionException {
         Utils.createFile(src, "1-test.txt", "this is a text file");
         Utils.createFile(src, "2-link.link", "url=dir1");
         Utils.createFile(src, "1-dir1/1-test.txt", "<a href=\"${path}/hallo.html\">hallo</a>");
@@ -126,5 +126,33 @@ public class TestHandler {
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertEquals("[this is a text file][([<a href=\"dir1/hallo.html\">hallo</a>][<a href=\"dir1/test.html\">test</a>])]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
         Assert.assertEquals("[<a href=\"./hallo.html\">hallo</a>][<a href=\"./test.html\">test</a>]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
+    }
+    
+    @Test
+    public void testLink2() throws IOException, InterruptedException, ExecutionException {
+        Utils.createFile(src, "1-dir1/1-subdir/1-test.txt", "<a href=\"${path}/hallo.html\">hallo</a>");
+        Utils.createFile(src, "1-dir1/1-subdir/2-hallo.txt", "<a href=\"${path}/test.html\">test</a>");
+        Utils.createFile(src, "1-dir1/1-subdir/.xdocc" ,"promote=true");
+        
+        Utils.createFile(src, "3-dir3/1-subdir/1-linkabs.link", "url=/dir1");
+        Utils.createFile(src, "3-dir3/1-subdir/2-linkrel.link", "url=../../dir1");
+        
+        Utils.createFile(src, ".templates/text.ftl", "${content}");
+        Utils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
+        Utils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertEquals("[([[<a href=\"../../dir1/subdir/hallo.html\">hallo</a>][<a href=\"../../dir1/subdir/test.html\">test</a>]])][([[<a href=\"../../dir1/subdir/hallo.html\">hallo</a>][<a href=\"../../dir1/subdir/test.html\">test</a>]])]", FileUtils.readFileToString(gen.resolve("dir3/subdir/index.html").toFile()));
+        Assert.assertEquals("([[<a href=\"../../dir1/subdir/hallo.html\">hallo</a>][<a href=\"../../dir1/subdir/test.html\">test</a>]])", FileUtils.readFileToString(gen.resolve("dir3/subdir/linkabs.html").toFile()));
+        Assert.assertEquals("([[<a href=\"../../dir1/subdir/hallo.html\">hallo</a>][<a href=\"../../dir1/subdir/test.html\">test</a>]])", FileUtils.readFileToString(gen.resolve("dir3/subdir/linkrel.html").toFile()));
+        Assert.assertEquals("[[<a href=\"subdir/hallo.html\">hallo</a>][<a href=\"subdir/test.html\">test</a>]]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
+        Assert.assertEquals("[<a href=\"./hallo.html\">hallo</a>][<a href=\"./test.html\">test</a>]", FileUtils.readFileToString(gen.resolve("dir1/subdir/index.html").toFile()));
+    }
+    
+    @Test
+    public void testCopy() throws IOException, InterruptedException, ExecutionException {
+        Utils.createFile(src, "1-dir1/read.me", "copy this data 1:1");
+        Utils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertEquals("copy this data 1:1", FileUtils.readFileToString(gen.resolve("dir1/read.me").toFile()));
     }
 }

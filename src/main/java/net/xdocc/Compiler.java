@@ -56,8 +56,11 @@ public class Compiler {
                     } else {
                         for (Handler handler : handlers) {
                             if (handler.canHandle(site, child)) {
-                                results.add(compile(handler, child));
-                                break;
+                                XItem xItem = compile(handler, child);
+                                if(xItem != null) {
+                                    results.add(xItem);
+                                    break;
+                                }
                             }
                         }
                     }

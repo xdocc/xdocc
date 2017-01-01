@@ -40,8 +40,7 @@ public class HandlerLink implements Handler {
         List<XPath> founds = new ArrayList<>();
 
         for (Object url : urls) {
-            founds.addAll(Utils.findURL(site,
-                    xPath, (String) url));
+            founds.addAll(Utils.findURL(site, xPath, (String) url));
         }
         if (founds.size() == 0 || (founds.size() > 0 && !founds.get(0).isVisible())) {
             return null;
