@@ -155,4 +155,28 @@ public class TestHandler {
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertEquals("copy this data 1:1", FileUtils.readFileToString(gen.resolve("dir1/read.me").toFile()));
     }
+    
+    @Test
+    public void testTextile() throws IOException, InterruptedException, ExecutionException {
+        Utils.createFile(src, "1-dir1/1-read.textile", "h1. A headline");
+        Utils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
+        Utils.createFile(src, ".templates/wikitext.ftl", "${content}");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertEquals("<h1 id=\"Aheadline\">A headline</h1>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
+    }
+    
+    @Test
+    public void testTextileLink() throws IOException, InterruptedException, ExecutionException {
+        Utils.createFile(src, "1-dir1/1-read.textile", "h1. A headline\n\n \"Link1\":${path}/../dir2 to 2");
+        Utils.createFile(src, "1-dir2/1-me.textile", "h1. Title\n\n \"Link2\":${path}/../dir1 to 1 ");
+        
+        Utils.createFile(src, "3-dir3.prm/4-dir4.prm/1-link.link", "url=../../dir1 \nurl=../../dir2");
+        
+        Utils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
+        Utils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
+        Utils.createFile(src, ".templates/wikitext.ftl", "${content}");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertEquals("<h1 id=\"Aheadline\">A headline</h1><a href=\"./../dir2\">Link1</a> to 2", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
+        Assert.assertEquals("[([<h1 id=\"Aheadline\">A headline</h1><a href=\"../../dir1/../dir2\">Link1</a> to 2])([<h1 id=\"Title\">Title</h1><a href=\"../../dir2/../dir1\">Link2</a> to 1 ])]", FileUtils.readFileToString(gen.resolve("dir3/dir4/index.html").toFile()));
+    }
 }

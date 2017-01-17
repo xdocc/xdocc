@@ -118,8 +118,6 @@ public class Compiler {
     }
 
     private XItem compile(Handler handler, XPath xPath) throws Exception {
-
-        String relativePathToRoot = Utils.relativePathToRoot(site.source(), xPath.path());
-        return handler.compile(site, xPath, new HashMap<String, Object>(), relativePathToRoot);
+        return handler.compile(site, xPath, new HashMap<String, Object>());
     }
 }

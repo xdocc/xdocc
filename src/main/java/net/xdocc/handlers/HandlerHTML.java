@@ -34,8 +34,7 @@ public class HandlerHTML implements Handler {
 	}
 
 	@Override
-	public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
-                String relativePathToRoot)
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model)
 			throws Exception {
 		
 		Charset charset = HandlerUtils.detectCharset(xPath.path());
@@ -50,7 +49,7 @@ public class HandlerHTML implements Handler {
 		Path generatedFile = null;
 		if(xPath.getParent().isItemWritten()) {
 			generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-			Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile);
+			Utils.writeHTML(site, xPath, doc, generatedFile);
 		}
 		return doc;
 	}

@@ -30,8 +30,7 @@ public class HandlerCopy implements Handler {
 	}
 
 	@Override
-	public XItem compile(Site site, XPath xPath, Map<String, Object> model2, 
-                String relativePathToRoot) {
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model2) {
 		Map<String, Object> model = new HashMap<>(model2);
 		final Path generatedFile;
 		if (xPath.isVisible()) {
@@ -54,11 +53,11 @@ public class HandlerCopy implements Handler {
 			}
 			if (xPath.isCopy() || xPath.isVisible()) {
 				return createDocumentBrowse(site, xPath,
-						relativePathToRoot, model);
+						"", model);
 				
 			} else if (xPath.isVisible()) {
 				return createDocumentFile(site, xPath,
-						relativePathToRoot, model);
+						"", model);
 			}
 		} catch (IOException e) {
 			LOG.error("Copy handler faild, cannot copy from {} to {}", xPath.path(), generatedFile, e);

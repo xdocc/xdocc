@@ -746,6 +746,7 @@ public class Utils {
             Map<String, Object> model, String... string) {
         for (String key : string) {
             if (!model.containsKey(key) || model.get(key) == null) {
+                LOG.info("cannot find key {} in html{}", key, html);
                 continue;
             }
             // TODO: regexp would be better
@@ -832,8 +833,8 @@ public class Utils {
         Utils.write(htmlSite, xPath, generatedFile);
     }
 
-    public static void writeHTML(Site site, XPath xPath, 
-        String path, XItem doc, Path generatedFile) throws IOException, TemplateException {
+    public static void writeHTML(Site site, XPath xPath, XItem doc, Path generatedFile) 
+            throws IOException, TemplateException {
         
          //adjust path
         String minusPath = xPath.getTargetURLPath();

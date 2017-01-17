@@ -29,8 +29,7 @@ public class HandlerLink implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<String, Object> model, String relativePathToRoot)
-            throws Exception {
+    public XItem compile(Site site, XPath xPath, Map<String, Object> model) throws Exception {
 
         Configuration config = new PropertiesConfiguration(xPath.path().toFile());
 
@@ -42,7 +41,7 @@ public class HandlerLink implements Handler {
         for (Object url : urls) {
             founds.addAll(Utils.findURL(site, xPath, (String) url));
         }
-        if (founds.size() == 0 || (founds.size() > 0 && !founds.get(0).isVisible())) {
+        if (founds.isEmpty() || (founds.size() > 0 && !founds.get(0).isVisible())) {
             return null;
         } else {
             List<XItem> documents = new ArrayList<>();
@@ -71,7 +70,7 @@ public class HandlerLink implements Handler {
             if (xPath.getParent().isItemWritten()) {
                 Path generatedFile = xPath
                         .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-                Utils.writeHTML(site, xPath, "", doc, generatedFile);
+                Utils.writeHTML(site, xPath, doc, generatedFile);
             }
             return doc;
         }

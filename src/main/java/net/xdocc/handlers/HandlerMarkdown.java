@@ -39,9 +39,7 @@ public class HandlerMarkdown implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
-                String relativePathToRoot)
-            throws Exception {
+    public XItem compile(Site site, XPath xPath, Map<String, Object> model) throws Exception {
         try (Writer out = new StringWriter();
                 Reader in = new BufferedReader(new FileReader(xPath.path()
                         .toFile()))) {
@@ -52,7 +50,7 @@ public class HandlerMarkdown implements Handler {
             if (xPath.getParent().isItemWritten()) {
                 generatedFile = xPath
                         .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-                Utils.writeHTML(site, xPath, relativePathToRoot, doc, generatedFile);
+                Utils.writeHTML(site, xPath, doc, generatedFile);
             }
             return doc;
         }

@@ -38,7 +38,7 @@ public class HandlerImage implements Handler {
 	}
 
 	public XItem compile(Site site, XPath xPath, Map<String, Object> model2, 
-			ImageAttributes attributes, String relativePathToRoot)
+			ImageAttributes attributes)
 			throws TemplateException, IOException, InterruptedException {
 		
 		// copy the original image
@@ -137,10 +137,8 @@ public class HandlerImage implements Handler {
 	}
 
 	@Override
-	public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
-                String relativePathToRoot)
-			throws Exception {
-		return compile(site, xPath, model,(ImageAttributes) null,relativePathToRoot);
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model) throws Exception {
+		return compile(site, xPath, model,(ImageAttributes) null);
 	}
 
 	@Override

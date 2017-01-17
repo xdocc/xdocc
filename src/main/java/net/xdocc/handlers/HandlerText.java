@@ -24,8 +24,7 @@ public class HandlerText implements Handler {
 	}
 
 	@Override
-	public XItem compile(Site site, XPath xPath, Map<String, Object> model, 
-                String pathToRoot) throws Exception {
+	public XItem compile(Site site, XPath xPath, Map<String, Object> model) throws Exception {
             
 		Charset charset = HandlerUtils.detectCharset(xPath.path());
 		List<String> lines = Files.readAllLines(xPath.path(), charset);
@@ -35,7 +34,7 @@ public class HandlerText implements Handler {
 		if (xPath.getParent().isItemWritten()) {
 			Path generatedFile = xPath
 					.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-			Utils.writeHTML(site, xPath, pathToRoot, doc, generatedFile);
+			Utils.writeHTML(site, xPath, doc, generatedFile);
 		}
 		return doc;
 	}
