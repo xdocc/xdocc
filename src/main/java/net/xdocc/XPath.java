@@ -109,9 +109,13 @@ final public class XPath implements Comparable<XPath> {
         if (extensionList.size() > 0 || Files.isDirectory(path)) {
             this.visible = parse(extensionFilteredFileName, site.source().equals(path));
         } else {
-            this.url = fileName();
             this.visible = false;
         }
+        
+        if(!this.visible) {
+             this.url = extensionFilteredFileName;
+        }
+        
         if (Files.isRegularFile(path)) {
             parseFrontmatter();
         } else if (Files.isDirectory(path)) {
@@ -461,6 +465,7 @@ final public class XPath implements Comparable<XPath> {
         return hasRecursiveProperty("hidden") || hasRecursiveExtension("hide");
     }
     public static final String IS_HIDDEN = "ishidden";
+    static {KNOWN_EXTENSIONS.add("hide");}
 
     
     public boolean isDirectory() {
@@ -482,6 +487,7 @@ final public class XPath implements Comparable<XPath> {
         return visible;
     }
     public static final String IS_VISIBLE = "isvisible";
+    static {KNOWN_EXTENSIONS.add("visible");KNOWN_EXTENSIONS.add("vis");}
 
     public boolean isAscending() {
         return properties != null
@@ -663,6 +669,14 @@ final public class XPath implements Comparable<XPath> {
         return hasRecursiveProperty("copy") || hasRecursiveExtension("copy");
     }
     public static final String IS_COPY = "iscopy";
+    static {KNOWN_EXTENSIONS.add("copy");}
+    
+    
+    public boolean isKeep() { //nothing is visible (not hidden), everything is copied (not compiled)
+        return hasRecursiveProperty("keep", "keep_orig") || hasRecursiveExtension("keep", "keep_orig");
+    }
+    public static final String IS_KEEP = "iskeep";
+    static {KNOWN_EXTENSIONS.add("keep");KNOWN_EXTENSIONS.add("keep_orig");}
     
 
     public String resolveTargetURL(String string) {
@@ -749,20 +763,15 @@ final public class XPath implements Comparable<XPath> {
     }
     
      public boolean hasRecursiveExtension(String... names) {
-        XPath parent = getParent();
-        for(String name:names) {
-            if (extensionList != null && extensionList.contains(name)) {
-                return true;
-            }
-        }
-        for(String name:names) {
-            while (parent != null) {
-                if (parent.extensionList != null && parent.extensionList.contains(name)) {
+        XPath current = this;
+        do {
+            for(String name:names) {
+                if (current.extensionList != null && current.extensionList.contains(name)) {
                     return true;
                 }
-                parent = parent.getParent();
             }
-        }
+        } while ((current = current.getParent()) != null);
+
         return false;
     }
 

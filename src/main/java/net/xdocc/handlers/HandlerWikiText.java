@@ -61,8 +61,8 @@ public class HandlerWikiText implements Handler {
         TemplateBean templateText = site.getTemplate("wikitext", xPath.getLayoutSuffix());
         Generator documentGenerator = new WikiTextDocumentGenerator(
                 templateText, site, xPath, model2);
-        String documentURL = xPath.getTargetURL() + ".html";
-        XItem doc = new XItem(xPath, documentGenerator, documentURL);
+        
+        XItem doc = new XItem(xPath, documentGenerator);
         doc.setTemplate("wikitext");
 
         // always create a single page for that
@@ -197,7 +197,7 @@ public class HandlerWikiText implements Handler {
 
     }
 
-    private class WikiTextDocumentGenerator extends Generator {
+    private class WikiTextDocumentGenerator extends XItem.FillGenerator {
 
         private static final long serialVersionUID = -6008311072604987744L;
         final private Site site;

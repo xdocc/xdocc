@@ -74,10 +74,9 @@ public class HandlerCopy implements Handler {
 	public static XItem createDocumentFile(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
 		TemplateBean templateText = site.getTemplate("file", xPath.getLayoutSuffix());
-		Generator documentGenerator = new Generator(site,
+		Generator documentGenerator = new XItem.FillGenerator(site,
 				templateText);
-		XItem document = new XItem(xPath, documentGenerator,
-				xPath.getTargetURLFilename());
+		XItem document = new XItem(xPath, documentGenerator);
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
 				.toMillis());
 		document.setDate(lastModified);
@@ -88,10 +87,9 @@ public class HandlerCopy implements Handler {
 	public static XItem createDocumentBrowse(Site site, XPath xPath,
 			String path, Map<String, Object> model) throws IOException {
 		TemplateBean templateText = site.getTemplate("browse", xPath.getLayoutSuffix());
-		Generator documentGenerator = new Generator(site,
+		Generator documentGenerator = new XItem.FillGenerator(site,
 				templateText);
-		XItem document = new XItem(xPath, documentGenerator,
-				xPath.getTargetURL());
+		XItem document = new XItem(xPath, documentGenerator);
 		Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
 				.toMillis());
 		document.setDate(lastModified);

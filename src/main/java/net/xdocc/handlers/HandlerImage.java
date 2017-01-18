@@ -31,76 +31,120 @@ public class HandlerImage implements Handler {
     private static final Logger LOG = LoggerFactory
             .getLogger(HandlerImage.class);
 
+    
     @Override
     public boolean canHandle(Site site, XPath xPath) {
         return xPath.isCompile() && !xPath.isDirectory()
                 && HandlerUtils.knowsExtension(knownExtensions(), xPath);
     }
 
+    /**
+     * if image is visible, create thumbnail
+     * 
+     */
     public XItem compile(Site site, XPath xPath, Map<String, Object> model2,
             ImageAttributes attributes)
             throws TemplateException, IOException, InterruptedException {
 
-        // copy the original image
-        Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
-                + xPath.extensions());
-
+        Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + xPath.extensions());
         Files.createDirectories(generatedFile.getParent());
 
-        Files.copy(xPath.path(), generatedFile,
+        TemplateBean templateTextTop = site.getTemplate("image", xPath.getLayoutSuffix());
+        Generator genTop = new XItem.FillGenerator(site, templateTextTop);
+        XItem docTop = new XItem(xPath, genTop);
+        
+        if(xPath.isKeep()) {
+            // copy the original image
+            Files.copy(xPath.path(), generatedFile,
                 StandardCopyOption.COPY_ATTRIBUTES,
                 StandardCopyOption.REPLACE_EXISTING,
                 StandardCopyOption.COPY_ATTRIBUTES,
                 LinkOption.NOFOLLOW_LINKS);
-
+            
+            TemplateBean templateText = site.getTemplate("image_orig", xPath.getLayoutSuffix());
+            Generator gen = new XItem.FillGenerator(site, templateText);
+            XItem doc = new XItem(xPath, gen);
+            
+            doc.setTemplate("image_orig");
+            docTop.addItems(doc);
+            if (xPath.getParent().isItemWritten()) {
+                doc.add("link", xPath.getTargetURL() + ".html");
+                Path generatedFile2 = xPath
+                    .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+                Utils.writeHTML(site, xPath, doc, generatedFile2);
+            }
+            
+        } else {
+            XItem doc = new XItem(xPath, new XItem.EmptyGenerator());
+            docTop.addItems(doc);
+        }
+        
         // create a thumbnail
         String sizeIcon = xPath.getRecursiveProperty("size_icon", "si");
         if (sizeIcon == null) {
             sizeIcon = "250x250^c";
         }
-        Path generatedFileThumb = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
+        if(!sizeIcon.startsWith("0x")) {
+        
+            TemplateBean templateText = site.getTemplate("image_thumb", xPath.getLayoutSuffix());
+            Generator gen = new XItem.FillGenerator(site, templateText);
+            XItem doc = new XItem(xPath, gen);
+            Path generatedFileThumb = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                 + "_t" + xPath.extensions());
 
-        if (sizeIcon.endsWith("c")) {
-            cropResize(xPath, generatedFileThumb, stripMod(sizeIcon, "c"));
+            if (sizeIcon.endsWith("c")) {
+                cropResize(xPath, generatedFileThumb, stripMod(sizeIcon, "c"));
+            } else {
+                resize(xPath, generatedFileThumb, sizeIcon);
+            }
+            doc.setTemplate("image_thumb");
+            docTop.addItems(doc);
+            
+            if (xPath.getParent().isItemWritten()) {
+                doc.add("link", xPath.getTargetURL() + "_t.html");
+                Path generatedFile2 = xPath
+                    .resolveTargetFromBasePath(xPath.getTargetURL() + "_t.html");
+                Utils.writeHTML(site, xPath, doc, generatedFile2);
+            }
         } else {
-            resize(xPath, generatedFileThumb, sizeIcon);
+            XItem doc = new XItem(xPath, new XItem.EmptyGenerator());
+            docTop.addItems(doc);
         }
 
         // create display size image
         String sizeNorm = xPath.getRecursiveProperty("size_normal", "sn");
-        if (sizeIcon == null) {
-            sizeIcon = "800x600^";
-        }
-        Path generatedFileNorm = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
-                + "_n" + xPath.extensions());
-
-        if (sizeNorm.endsWith("c")) {
-            cropResize(xPath, generatedFileNorm, stripMod(sizeNorm, "c"));
-        } else {
-            resize(xPath, generatedFileNorm, sizeNorm);
-        }
-
-        // apply text ftl
-        TemplateBean templateText = site.getTemplate("image", xPath.getLayoutSuffix());
-        
-        //String documentName = xPath.name();
-        //String documentURL = xPath.getTargetURL() + xPath.extensions();
-        //Date documentDate = xPath.date();
-        //long documentNr = xPath.nr();
-        //String documentFilename = xPath.fileName();
-        Generator gen = new Generator(site, templateText);
-        Map<String, Object> model = gen.model();
-        XItem doc = new XItem(xPath, gen, xPath.getTargetURL() + ".html");
-        doc.setTemplate("image");
-
-        if (xPath.getParent().isItemWritten()) {
-            Path generatedFile2 = xPath
-                    .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-            Utils.writeHTML(site, xPath, doc, generatedFile2);
+        if (sizeNorm == null) {
+            sizeNorm = "800x600^";
         }
         
-        return doc;
+        if(!sizeNorm.startsWith("0x")) {
+        
+            TemplateBean templateText = site.getTemplate("image_norm", xPath.getLayoutSuffix());
+            Generator gen = new XItem.FillGenerator(site, templateText);
+            XItem doc = new XItem(xPath, gen);
+            
+            Path generatedFileNorm = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
+                    + "_n" + xPath.extensions());
+
+            if (sizeNorm.endsWith("c")) {
+                cropResize(xPath, generatedFileNorm, stripMod(sizeNorm, "c"));
+            } else {
+                resize(xPath, generatedFileNorm, sizeNorm);
+            }
+            doc.setTemplate("image_norm");
+            docTop.addItems(doc);
+            
+            if (xPath.getParent().isItemWritten()) {
+                doc.add("link", xPath.getTargetURL() + "_n.html");
+                Path generatedFile2 = xPath
+                    .resolveTargetFromBasePath(xPath.getTargetURL() + "_n.html");
+                Utils.writeHTML(site, xPath, doc, generatedFile2);
+            }
+        }  else {
+            XItem doc = new XItem(xPath, new XItem.EmptyGenerator());
+            docTop.addItems(doc);
+        }
+        return docTop;
     }
 
     @Override

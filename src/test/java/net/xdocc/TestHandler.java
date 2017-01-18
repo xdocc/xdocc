@@ -181,8 +181,15 @@ public class TestHandler {
     }
     
     @Test
-    public void testImage() {
-        
+    public void testImage() throws IOException, InterruptedException, ExecutionException {
+        Utils.copyFile("imgs/label-1.jpg", src, "1-dir1.vis/label-1.jpg");
+        Utils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
+        Utils.createFile(src, ".templates/image_thumb.ftl", "${debug}");
+        Utils.createFile(src, ".templates/image_norm.ftl", "${debug}");
+        Utils.createFile(src, ".templates/image_orig.ftl", "${debug}");
+        Utils.createFile(src, ".templates/image.ftl", "||:${items[0].content}\n\n||:${items[1].content}\n\n||:${items[2].content}");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertEquals(true,false);
     }
             
 }

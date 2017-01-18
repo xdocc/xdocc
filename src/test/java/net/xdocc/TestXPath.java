@@ -107,6 +107,15 @@ public class TestXPath {
         Assert.assertTrue(x.isVisible());
         service.shutdown();
     }
+    
+    @Test
+    public void testURL() throws IOException {
+        Service service = new Service();
+        Site site = new Site(service, src, gen);
+        Path p = Paths.get(src.toString()+"/label-1.jpg");
+        XPath x = new XPath(site, p);
+        Assert.assertEquals("label-1",x.url());
+    }
 
     @Test
     public void testDate() throws IOException {

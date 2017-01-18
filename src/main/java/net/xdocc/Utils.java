@@ -30,6 +30,8 @@ import net.xdocc.Site.TemplateBean;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
+import java.io.InputStream;
+import java.nio.file.CopyOption;
 import java.nio.file.Paths;
 
 public class Utils {
@@ -78,6 +80,17 @@ public class Utils {
             adjustPromotedDepth(item, minusPromoteDepth);
         }
         return doc;
+    }
+
+    public static void copyFile(String source, Path src, String dst) throws IOException {
+        InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(source);
+        if(in == null) {
+            in = Thread.currentThread().getContextClassLoader().getResourceAsStream("/"+source);
+        }
+        Path dstPath = src.resolve(dst);
+        Files.createDirectories(dstPath.getParent());
+        Files.copy(in, dstPath);
+        in.close();
     }
 
     
@@ -809,10 +822,10 @@ public class Utils {
             String htmlContent, String template) throws IOException {
         TemplateBean templateText = site.getTemplate(template, xPath.getLayoutSuffix());
         // create the document
-        XItem.Generator documentGenerator = new XItem.Generator(site,
+        XItem.Generator documentGenerator = new XItem.FillGenerator(site,
                 templateText);
-        String documentURL = xPath.getTargetURL() + ".html";
-        XItem doc = new XItem(xPath, documentGenerator, documentURL);
+       
+        XItem doc = new XItem(xPath, documentGenerator);
         doc.setHTML(htmlContent);
         doc.setTemplate(template);
         return doc;

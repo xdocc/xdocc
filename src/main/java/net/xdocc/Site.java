@@ -22,6 +22,7 @@ import freemarker.template.Template;
 import java.nio.file.DirectoryStream;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.logging.Level;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -154,7 +155,7 @@ public class Site {
         return loadNavigation(new XPath(this, source()));
     }
     
-    public Link loadLocalNavigation(XPath source) throws IOException {
+    public Link loadLocalNavigation(XPath source) /*throws IOException*/ {
         if(source.isDirectory()) {
             return loadNavigation(source);
         } else {
@@ -162,9 +163,15 @@ public class Site {
         }
     }
 
-    private Link loadNavigation(XPath source) throws IOException {
+    private Link loadNavigation(XPath source) /*throws IOException*/ {
         Link root = new Link(source, null);
-        List<XPath> children = Utils.getNonHiddenChildren(this, source.path());
+        List<XPath> children;
+        try {
+            children = Utils.getNonHiddenChildren(this, source.path());
+        } catch (IOException ex) {
+            LOG.error("cannot load navigation", ex);
+            return root;
+        }
         final boolean ascending;
         if (source.isAutoSort()) {
             ascending = Utils.guessAutoSort(children);
@@ -183,8 +190,14 @@ public class Site {
     }
 
     private void loadNavigation(Site site, Link parent, Path parentPath)
-            throws IOException {
-        List<XPath> children = Utils.getNonHiddenChildren(site, parentPath);
+            /**throws IOException*/ {
+        List<XPath> children;
+        try {
+            children = Utils.getNonHiddenChildren(site, parentPath);
+        } catch (IOException ex) {
+            LOG.error("cannot load navigation", ex);
+            return;
+        }
 
         final boolean ascending;
         if (parent.getTarget().isAutoSort()) {

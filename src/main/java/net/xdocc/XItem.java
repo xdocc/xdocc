@@ -3,6 +3,7 @@ package net.xdocc;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,14 +28,13 @@ import org.slf4j.LoggerFactory;
  */
 public class XItem implements Comparable<XItem>, Serializable {
 
-    // model constants for handlers
+    // generic
     public static final String NAVIGATION = "globalnav";
     public static final String LOCALNAV = "localnav";
     public static final String LOCALNAV_ISCHILD = "ischildnav";
     public static final String CURRENT_NAV = "currentnav";
     public static final String PATH_TO_ROOT = "pathtoroot";
     public static final String PATH = "path";
-    
     public static final String BREADCRUMB = "breadcrumb";
     public static final String CONTENT = "content";
     public static final String TEMPLATE = "template";
@@ -49,13 +49,16 @@ public class XItem implements Comparable<XItem>, Serializable {
     // Utils
     public static final String DEBUG = "debug";
     
+    // Image
+    public static final String URL_IMG_NORMAL = "imgurl";
+    public static final String URL_IMG_THUMB = "imgurlthumb";
+    public static final String URL_IMG_ORIG = "imgurlorig";
 
     private static final Logger LOG = LoggerFactory.getLogger(XItem.class);
     private static final long serialVersionUID = 136066054966377823L;
     
     private final Generator generator;
     private final XPath xPath;
-    private final String url;
 
     /**
      * Set the document. The name will be set to xPath.getName() as default.
@@ -66,11 +69,9 @@ public class XItem implements Comparable<XItem>, Serializable {
      * getContent() is called.
      * @param url The full URL from the root to this xPath. To be used with relativePathToRoot
      */
-    public XItem(XPath xPath, Generator documentGenerator,
-            String url) throws IOException {
+    public XItem(XPath xPath, Generator documentGenerator) {
         this.generator = documentGenerator;
         this.xPath = xPath;
-        this.url = url;
         initXPath();
         initNavigation(xPath);
     }
@@ -81,10 +82,6 @@ public class XItem implements Comparable<XItem>, Serializable {
     
     XPath xPath() {
         return xPath;
-    }
-    
-    String url() {
-        return url;
     }
     
     private void initXPath() {
@@ -120,9 +117,10 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.IS_VISIBLE, xPath.isVisible());
         generator.model().put(XPath.IS_WRITE, xPath.isItemWritten());
         
+        generator.model().put(XPath.IS_KEEP, xPath.isKeep());
     }
     
-    private void initNavigation(XPath xPath) throws IOException {
+    private void initNavigation(XPath xPath) /*throws IOException*/ {
         Link global = xPath.site().globalNavigation();
         generator.model().put(NAVIGATION, global.getChildren());
         Link local = xPath.site().loadLocalNavigation(xPath);
@@ -151,7 +149,7 @@ public class XItem implements Comparable<XItem>, Serializable {
      * @param documents The list of documents in a collection
      * @return this class
      */
-    public XItem setItems(java.util.List<XItem> documents) {
+    public XItem setItems(List<XItem> documents) {
         documentGenerator().model().put(ITEMS, documents);
         documentGenerator().model().put(ITEMS_SIZE, documents.size());
         return this;
@@ -411,10 +409,39 @@ public class XItem implements Comparable<XItem>, Serializable {
         return sb.toString();
     }    
 
+    public void add(String key, String value) {
+        generator.model().put(key, value);
+    }
+
+    public void addItems(XItem doc) {
+        List<XItem> items = (List<XItem>) documentGenerator().model().get(ITEMS);
+        if(items == null) {
+            items = new ArrayList<XItem>(1);
+        }
+        items.add(doc);
+        setItems(items);
+    }
     
+    public interface Generator {
+        public String generate();
+        public Map<String, Object> model();
+    }
+
+    public static class EmptyGenerator implements Generator {
+        final private static Map<String, Object> MODEL = new HashMap<String, Object>();
+        @Override
+        public String generate() {
+            return "";
+        }
+
+        @Override
+        public Map<String, Object> model() {
+            return MODEL;
+        }
+    }
 
     @Accessors(chain = true, fluent = true)
-    public static class Generator implements Serializable {
+    public static class FillGenerator implements Generator, Serializable {
 
         private static final Logger LOG = LoggerFactory
                 .getLogger(Generator.class);
@@ -427,13 +454,13 @@ public class XItem implements Comparable<XItem>, Serializable {
         final private Map<String, Object> model;
         final private Site site;
 
-        public Generator(Site site, Site.TemplateBean templateBean) {
+        public FillGenerator(Site site, Site.TemplateBean templateBean) {
             this.site = site;
             this.templateBean = templateBean;
             this.model = new HashMap<String, Object>();
         }
 
-        public Generator(Site site, Site.TemplateBean templateBean, Map<String, Object> model) {
+        public FillGenerator(Site site, Site.TemplateBean templateBean, Map<String, Object> model) {
             this(site, templateBean);
             this.model.putAll(model);
         }
