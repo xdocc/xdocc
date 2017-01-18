@@ -182,14 +182,21 @@ public class TestHandler {
     
     @Test
     public void testImage() throws IOException, InterruptedException, ExecutionException {
-        Utils.copyFile("imgs/label-1.jpg", src, "1-dir1.vis/label-1.jpg");
+        Utils.copyFile("imgs/label-1.jpg", src, "1-dir1.vis.prm/label-1.jpg");
         Utils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
-        Utils.createFile(src, ".templates/image_thumb.ftl", "${debug}");
-        Utils.createFile(src, ".templates/image_norm.ftl", "${debug}");
-        Utils.createFile(src, ".templates/image_orig.ftl", "${debug}");
-        Utils.createFile(src, ".templates/image.ftl", "||:${items[0].content}\n\n||:${items[1].content}\n\n||:${items[2].content}");
+        Utils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
+        Utils.createFile(src, ".templates/image_norm.ftl", "norm:<img src=${path}>");
+        Utils.createFile(src, ".templates/image_orig.ftl", "orig:<img src=${path}>");
+        Utils.createFile(src, ".templates/image.ftl", "<#if items[0].link??>${items[0].content}</#if>|<#if items[1].link??>${items[1].content}</#if>|<#if items[2].link??>${items[2].content}</#if>");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals(true,false);
+        Assert.assertEquals("[[|thumb:<img src=dir1/label-1_t.jpg>|norm:<img src=dir1/label-1_n.jpg>]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+        Assert.assertEquals("[|thumb:<img src=label-1_t.jpg>|norm:<img src=label-1_n.jpg>]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
+        
+        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_n.jpg")));
+        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_n.html")));
+        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_t.jpg")));
+        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_t.html")));
+        
     }
             
 }

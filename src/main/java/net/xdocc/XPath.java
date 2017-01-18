@@ -204,24 +204,32 @@ final public class XPath implements Comparable<XPath> {
     private String findKnownExtensions(Site site, String tmpFilename) {
         extensionList.clear();
         extensions = "";
-        for (Handler handler : site.handlers()) {
-            for (String extension : handler.knownExtensions()) {
+        int len1 = site.handlers().size();
+        
+        for (int i = 0; i < len1; i++) {
+            int len2 = site.handlers().get(i).knownExtensions().size();
+            for (int j = 0; j < len2; j++) {
+                String extension = site.handlers().get(i).knownExtensions().get(j);
                 if (tmpFilename.endsWith("." + extension)) {
                     tmpFilename = tmpFilename
                             .substring(0, tmpFilename.length() - (extension.length() + 1));
 
                     extensionList.add(extension);
                     extensions = "." + extension + extensions;
+                    i = j = 0;
+                    break;
                 }
             }
         }
-        for(String extension: KNOWN_EXTENSIONS) {
-            if (tmpFilename.endsWith("." + extension)) {
+        int len3 = KNOWN_EXTENSIONS.size();
+        for (int i = 0; i < len3; i++) {
+            if (tmpFilename.endsWith("." + KNOWN_EXTENSIONS.get(i))) {
                 tmpFilename = tmpFilename
-                            .substring(0, tmpFilename.length() - (extension.length() + 1));
+                            .substring(0, tmpFilename.length() - (KNOWN_EXTENSIONS.get(i).length() + 1));
 
-                    extensionList.add(extension);
-                    extensions = "." + extension + extensions;
+                    extensionList.add(KNOWN_EXTENSIONS.get(i));
+                    extensions = "." + KNOWN_EXTENSIONS.get(i) + extensions;
+                i = 0;
             }
         }
 

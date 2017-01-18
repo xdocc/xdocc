@@ -76,6 +76,10 @@ public class Site {
         loadTemplates(templatePath);
         this.globalNavigation = loadGlobalNavigation();
     }
+    
+    public boolean hasExactTemplate(final String name, final String suffix) {
+        return templates.containsKey(name + suffix + ".ftl");
+    }
 
     public TemplateBean getTemplate(final String name, final String suffix)
             throws IOException {

@@ -50,10 +50,17 @@ public class Utils {
         String path = doc.getOriginalPath();
         Path pathRelative = Paths.get(minusPath).relativize(Paths.get(path));
         path = pathRelative.toString();
-        //path = path.startsWith(minusPath) ? path.substring(minusPath.length()) : path;
-        //path = path.startsWith("/") ? path.substring(1) : path;
         path = path.isEmpty() ? ".":path;
         doc.setPath(path);
+        
+        String linkOrig = doc.getOriginalLink();
+        if(linkOrig != null) {
+            Path pathRelativeLink = Paths.get(minusPath).relativize(Paths.get(linkOrig));
+            linkOrig = pathRelativeLink.toString();
+            linkOrig = linkOrig.isEmpty() ? ".":linkOrig;
+            doc.setLink(linkOrig);
+        }
+        
         return doc;
     }
     

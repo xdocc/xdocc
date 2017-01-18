@@ -38,6 +38,8 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String BREADCRUMB = "breadcrumb";
     public static final String CONTENT = "content";
     public static final String TEMPLATE = "template";
+    public static final String LINK = "link";
+    public static final String LINK_ORIGINAL = "linkoriganal";
     
     // list
     public static final String ITEMS = "items";
@@ -191,6 +193,11 @@ public class XItem implements Comparable<XItem>, Serializable {
         return this;
     }
     
+    public XItem setOriginalPath(String originalPath) {
+        generator.model().put(XPath.ORIGINAL_PATH, originalPath);
+        return this;
+    }
+    
     public String getOriginalPath() {
         return (String) generator.model().get(XPath.ORIGINAL_PATH);
     }
@@ -201,6 +208,24 @@ public class XItem implements Comparable<XItem>, Serializable {
 
     public XItem setPath(String path) {
         generator.model().put(PATH, path);
+        return this;
+    }
+    
+    public XItem setOriginalLink(String originalLink) {
+        generator.model().put(LINK_ORIGINAL, originalLink);
+        return this;
+    }
+    
+    public String getOriginalLink() {
+        return (String) generator.model().get(LINK_ORIGINAL);
+    }
+    
+    public String getLink() {
+        return (String) generator.model().get(LINK);
+    }
+
+    public XItem setLink(String link) {
+        generator.model().put(LINK, link);
         return this;
     }
     
@@ -409,9 +434,9 @@ public class XItem implements Comparable<XItem>, Serializable {
         return sb.toString();
     }    
 
-    public void add(String key, String value) {
+    /*public void add(String key, String value) {
         generator.model().put(key, value);
-    }
+    }*/
 
     public void addItems(XItem doc) {
         List<XItem> items = (List<XItem>) documentGenerator().model().get(ITEMS);
@@ -421,6 +446,14 @@ public class XItem implements Comparable<XItem>, Serializable {
         items.add(doc);
         setItems(items);
     }
+
+    /*public String getString(String key) {
+        Object retVal = generator.model().get(key);
+        if(retVal != null) {
+            return retVal.toString();
+        }
+        return null;
+    }*/
     
     public interface Generator {
         public String generate();

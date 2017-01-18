@@ -67,8 +67,10 @@ public class HandlerImage implements Handler {
             
             doc.setTemplate("image_orig");
             docTop.addItems(doc);
+            doc.setOriginalPath(xPath.getTargetURL() + xPath.extensions());
+            
             if (xPath.getParent().isItemWritten()) {
-                doc.add("link", xPath.getTargetURL() + ".html");
+                doc.setOriginalLink(xPath.getTargetURL() + ".html");
                 Path generatedFile2 = xPath
                     .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
                 Utils.writeHTML(site, xPath, doc, generatedFile2);
@@ -84,7 +86,7 @@ public class HandlerImage implements Handler {
         if (sizeIcon == null) {
             sizeIcon = "250x250^c";
         }
-        if(!sizeIcon.startsWith("0x")) {
+        if(!sizeIcon.startsWith("0x") && site.hasExactTemplate("image_thumb", xPath.getLayoutSuffix())) {
         
             TemplateBean templateText = site.getTemplate("image_thumb", xPath.getLayoutSuffix());
             Generator gen = new XItem.FillGenerator(site, templateText);
@@ -98,10 +100,12 @@ public class HandlerImage implements Handler {
                 resize(xPath, generatedFileThumb, sizeIcon);
             }
             doc.setTemplate("image_thumb");
+            doc.setOriginalPath(xPath.getTargetURL() + "_t" + xPath.extensions());
             docTop.addItems(doc);
             
             if (xPath.getParent().isItemWritten()) {
-                doc.add("link", xPath.getTargetURL() + "_t.html");
+                doc.setOriginalLink(xPath.getTargetURL() + "_t.html");
+                
                 Path generatedFile2 = xPath
                     .resolveTargetFromBasePath(xPath.getTargetURL() + "_t.html");
                 Utils.writeHTML(site, xPath, doc, generatedFile2);
@@ -117,7 +121,7 @@ public class HandlerImage implements Handler {
             sizeNorm = "800x600^";
         }
         
-        if(!sizeNorm.startsWith("0x")) {
+        if(!sizeNorm.startsWith("0x") && site.hasExactTemplate("image_norm", xPath.getLayoutSuffix())) {
         
             TemplateBean templateText = site.getTemplate("image_norm", xPath.getLayoutSuffix());
             Generator gen = new XItem.FillGenerator(site, templateText);
@@ -132,10 +136,11 @@ public class HandlerImage implements Handler {
                 resize(xPath, generatedFileNorm, sizeNorm);
             }
             doc.setTemplate("image_norm");
+            doc.setOriginalPath(xPath.getTargetURL() + "_n" + xPath.extensions());
             docTop.addItems(doc);
             
             if (xPath.getParent().isItemWritten()) {
-                doc.add("link", xPath.getTargetURL() + "_n.html");
+                doc.setOriginalLink(xPath.getTargetURL() + "_n.html");
                 Path generatedFile2 = xPath
                     .resolveTargetFromBasePath(xPath.getTargetURL() + "_n.html");
                 Utils.writeHTML(site, xPath, doc, generatedFile2);
