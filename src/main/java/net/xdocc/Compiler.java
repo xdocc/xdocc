@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -22,18 +23,22 @@ public class Compiler {
     final private Site site;
 
     final private ExecutorService executorServiceCompiler;
+    
+    final private Set<Path> filesInSrc;
 
-    public Compiler(ExecutorService executorServiceCompiler, Site site) {
+    public Compiler(ExecutorService executorServiceCompiler, Site site, Set<Path> filesInSrc) {
         this.executorServiceCompiler = executorServiceCompiler;
         this.handlers = site.handlers();
         this.site = site;
+        this.site.compiler(this);
+        this.filesInSrc = filesInSrc;
     }
     
-    public CompletableFuture<List<XItem>> compile(final Path pointOfView, final Path path) {
-        return compile(pointOfView, path, 0, 0);
+    public CompletableFuture<List<XItem>> compile(final Path path) {
+        return compile(path, 0, 0);
     }
 
-    public CompletableFuture<List<XItem>> compile(final Path pointOfView, final Path path, 
+    public CompletableFuture<List<XItem>> compile(final Path path, 
             final int depth, final int promoteDepth) {
         final CompletableFuture<List<XItem>> completableFuture = new CompletableFuture<>();
 
@@ -48,9 +53,9 @@ public class Compiler {
                 for (XPath child : children) {
                     if (child.isDirectory()) {
                         if(child.isPromoted()) {
-                            futures.add(compile(child.path(), child.path(), depth + 1, promoteDepth + 1));
+                            futures.add(compile(child.path(), depth + 1, promoteDepth + 1));
                         } else {
-                            futuresNoPromote.add(compile(child.path(), child.path(), depth + 1, 0));
+                            futuresNoPromote.add(compile(child.path(), depth + 1, 0));
                         }
                     } else {
                         for (Handler handler : handlers) {

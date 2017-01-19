@@ -5,8 +5,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -69,7 +71,8 @@ public class Service {
 
         final CountDownLatch startAfterFirstRun = new CountDownLatch(1);
         final Site site = new Site(this, Paths.get(watchDirectory), Paths.get(outputDirectory));
-        if (!runOnce) {
+        final boolean isDaemon = !runOnce;
+        if (isDaemon) {
             startWatch(site, new RecursiveWatcherService.Listener() {
                 @Override
                 public void filesChanged(Site site) {
@@ -91,7 +94,7 @@ public class Service {
         final long start = System.currentTimeMillis();
         compile(site).get();
         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
-        if (!runOnce) {
+        if (isDaemon) {
             startAfterFirstRun.countDown();
         } else {
             shutdown();
@@ -119,13 +122,7 @@ public class Service {
     }
 
     public CompletableFuture<List<XItem>> compile(Site site) throws IOException, InterruptedException, ExecutionException {
-        return compile(site, site.source(), new HashMap<String, Object>());
+        Compiler c = new Compiler(executorServiceCompiler, site, new HashSet<>());
+        return c.compile(site.source());
     }
-
-    public CompletableFuture<List<XItem>> compile(Site site, Path path, Map<String, Object> model)
-            throws IOException, InterruptedException, ExecutionException {
-        Compiler c = new Compiler(executorServiceCompiler, site);
-        return c.compile(path, path);
-    }
-
 }

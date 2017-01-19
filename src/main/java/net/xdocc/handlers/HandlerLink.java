@@ -3,7 +3,6 @@ package net.xdocc.handlers;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import net.xdocc.XItem;
@@ -54,8 +53,7 @@ public class HandlerLink implements Handler {
             Utils.sort2(founds, ascending);
 
             for (XPath found : founds) {
-                documents.addAll(site.service().compile(site, found.path(), new HashMap<String, Object>()).
-                        get());
+                documents.addAll(site.compiler().compile(found.path()).get());
             }
 
             if (limit >= 0) {

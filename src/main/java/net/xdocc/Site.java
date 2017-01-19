@@ -57,6 +57,9 @@ public class Site {
 
     @Getter @Setter
     private Path templatePath;
+    
+    @Getter @Setter
+    private Compiler compiler;
 
     final private Map<String, TemplateBean> templates = new HashMap<>();
 
