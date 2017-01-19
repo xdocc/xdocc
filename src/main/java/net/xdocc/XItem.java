@@ -82,7 +82,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         return generator;
     }
     
-    XPath xPath() {
+    public XPath xPath() {
         return xPath;
     }
     

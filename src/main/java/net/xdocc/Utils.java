@@ -2,12 +2,10 @@ package net.xdocc;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
-import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -21,7 +19,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +27,6 @@ import net.xdocc.Site.TemplateBean;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
-import java.io.InputStream;
-import java.nio.file.CopyOption;
 import java.nio.file.Paths;
 
 public class Utils {
@@ -89,16 +84,7 @@ public class Utils {
         return doc;
     }
 
-    public static void copyFile(String source, Path src, String dst) throws IOException {
-        InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(source);
-        if(in == null) {
-            in = Thread.currentThread().getContextClassLoader().getResourceAsStream("/"+source);
-        }
-        Path dstPath = src.resolve(dst);
-        Files.createDirectories(dstPath.getParent());
-        Files.copy(in, dstPath);
-        in.close();
-    }
+    
 
     
 
@@ -121,15 +107,6 @@ public class Utils {
         }
     }
 
-    public static XPath find(Path resolved, List<Site> sites) {
-        for (Site site : sites) {
-            if (isChild(resolved, site.source())) {
-                return new XPath(site, resolved);
-            }
-        }
-        return null;
-    }
-    
     public static boolean isChild(Link parent, Link maybeChild) {
         if(parent.equals(maybeChild)) {
             return true;
@@ -176,46 +153,6 @@ public class Utils {
             parent = parent.getParent();
         }
         return sb.toString();
-    }
-    
-    public static void deleteDirectories(Path... paths) throws IOException {
-        for(Path path:paths) {
-            deleteDirectory(path);
-        }
-    }
-
-    public static void deleteDirectory(Path dir) throws IOException {
-        Files.walkFileTree(dir, new FileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                    throws IOException {
-                if (exc == null) {
-                    Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                } else {
-                    throw exc;
-                }
-            }
-
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc)
-                    throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-        });
     }
 
     public static String[] createURLSplit(Path source, XPath xPath) {
@@ -284,125 +221,6 @@ public class Utils {
         });
         return result;
     }
-
-    public static List<XPath> getDownDependencies(final Site site,
-            final Path siteToCompile) throws IOException {
-        final List<XPath> result = new ArrayList<>();
-        Files.walkFileTree(siteToCompile,
-                EnumSet.noneOf(FileVisitOption.class), 1,
-                new FileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) throws IOException {
-                // do not include ourself
-                if (!siteToCompile.equals(dir)) {
-                    XPath xPath = new XPath(site, dir);
-                    if (!xPath.isHidden() && xPath.isVisible() && !xPath.isNavigation()) {
-                        result.add(xPath);
-                    }
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws IOException {
-                // do not include ourself
-                if (!siteToCompile.equals(file)) {
-                    XPath xPath = new XPath(site, file);
-                    if (!xPath.isHidden() && xPath.isVisible() && !xPath.isNavigation()) {
-                        result.add(xPath);
-                    }
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file,
-                    IOException exc) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir,
-                    IOException exc) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-        });
-        return result;
-    }
-
-    public static List<Path> getChildren(final Site site,
-            final Path siteToCompile) throws IOException {
-        final List<Path> result = new ArrayList<>();
-        Files.walkFileTree(siteToCompile,
-                EnumSet.noneOf(FileVisitOption.class), Integer.MAX_VALUE,
-                new FileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) throws IOException {
-                // do not include ourself
-                if (!siteToCompile.equals(dir)) {
-                    result.add(dir);
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws IOException {
-                // do not include ourself
-                if (!siteToCompile.equals(file)) {
-                    result.add(file);
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file,
-                    IOException exc) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir,
-                    IOException exc) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-        });
-        return result;
-    }
-
-    public static List<String> splitExtensions(String extensions) {
-        List<String> retVal = new ArrayList<>();
-        StringTokenizer st = new StringTokenizer(extensions, ".");
-        while (st.hasMoreTokens()) {
-            String extension = st.nextToken();
-            if (!extension.equals("")) {
-                retVal.add(extension);
-            }
-        }
-        return retVal;
-    }
-
-    /**
-     * Search for the highlighted document. May return null if no document was found. If non document is
-     * tagged, the first one will be used
-     *
-     * @param documents The list of document found in the folder
-     * @return The highlighted document or null.
-     */
-    /*public static XItem searchHighlight(List<XItem> documents) {
-        for (XItem document : documents) {
-            if (document.getHighlight()) {
-                return document;
-            }
-        }
-        if (documents.size() > 0) {
-            return documents.get(0);
-        }
-        return null;
-    }*/
 
     /**
      * Sort the documents according to its number. If a date was provided, the date will be converted to a
@@ -509,9 +327,7 @@ public class Utils {
                     .template()
                     .getConfiguration()
                     .setTemplateLoader(
-                            new Custom2FileTemplateLoader(site
-                                    .templatePath().toFile(), site,
-                                    templateText));
+                            new FileTemplateLoader(site.templatePath().toFile()));
             try {
                 templateText.template().process(model, sw);
             } catch (Exception e) {
@@ -528,52 +344,6 @@ public class Utils {
             return sw.getBuffer().toString();
         }
 
-    }
-
-    final static class Custom2FileTemplateLoader extends FileTemplateLoader {
-
-        final private TemplateBean parentTemplateBean;
-        final private Site site;
-
-        public Custom2FileTemplateLoader(File baseDir, Site site,
-                TemplateBean templateBean) throws IOException {
-            super(baseDir);
-            this.site = site;
-            this.parentTemplateBean = templateBean;
-        }
-
-        @Override
-        public Object findTemplateSource(String name) throws IOException {
-
-            File source = (File) super.findTemplateSource(name);
-            if (source == null) {
-                return null;
-            }
-
-            //TemplateBean templateBean = site.service().getTemplateBeans(site).get(name);
-            //templateBean.addDependencies(parentTemplateBean);
-
-            return source;
-        }
-
-    }
-
-    /*public static List<XItem> filter(List<XItem> documents) {
-        List<XItem> retVal = new ArrayList<>();
-        List<XItem> toPreview = new ArrayList<>();
-        if (toPreview.size() > 0) {
-            XItem document = searchHighlight(toPreview);
-            retVal.add(document);
-        }
-        return retVal;
-    }*/
-
-    public static void createFile(Path source, String path, String content)
-            throws IOException {
-        Path file = source.resolve(path);
-        Files.createDirectories(file.getParent());
-        Files.createFile(file);
-        Files.write(file, content.getBytes());
     }
 
     public static Link find(XPath xPath, Link navigation) {
@@ -595,26 +365,6 @@ public class Utils {
 
     public static void createDirectory(Site site) throws IOException {
         Files.createDirectories(site.generated());
-    }
-
-    public static String searchXPath(Path parent, String xPath)
-            throws IOException {
-        if (!Files.exists(parent)) {
-            return null;
-        }
-        try (DirectoryStream<Path> ds = Files.newDirectoryStream(parent)) {
-            for (Path p : ds) {
-                if (Files.isDirectory(p)) {
-                    if (p.getFileName().toString().indexOf("|" + xPath) > 0) {
-                        return p.toString();
-                    } else if (p.getFileName().toString().indexOf(xPath) == 0) {
-                        return p.toString();
-                    }
-                }
-            }
-
-        }
-        return null;
     }
 
     /**
@@ -642,24 +392,8 @@ public class Utils {
         }
         return true;
     }
-
-    public static List<XPath> findChildURL(Site site, XPath current,
-            String url, String extension) throws IOException {
-        List<XPath> children = Utils.getNonHiddenChildren(site,
-                current.path());
-        List<XPath> result = new ArrayList<>();
-        for (XPath child : children) {
-            if (wildCardMatch(child.url(), url)) {
-                if (extension == null
-                        || extension.equals(child.extensions())) {
-                    result.add(child);
-                }
-            }
-        }
-        return result;
-    }
     
-     public static List<XPath> findURL(Site site, XPath current, String url)
+    public static List<XPath> findURL(Site site, XPath current, String url)
             throws IOException {
         
         boolean root = url.startsWith("/");
@@ -740,28 +474,6 @@ public class Utils {
         return retVal;
     }
 
-    public static Link setSelected(List<Link> pathToRoot, Link root) {
-        Link copy = root.copy();
-        List<Link> pathToRootCopy = new ArrayList<>();
-        pathToRootCopy.addAll(pathToRoot);
-        setSelectedRec(pathToRootCopy, copy);
-        return copy;
-    }
-
-    public static void setSelectedRec(List<Link> pathToRoot, Link root) {
-        if (pathToRoot.size() == 0) {
-            return;
-        }
-
-        Link current = pathToRoot.remove(0);
-        for (Link children : root.getChildren()) {
-            if (children.equals(current)) {
-                children.setSelected(true);
-            }
-            setSelectedRec(pathToRoot, children);
-        }
-    }
-
     public static String postApplyTemplate(String html,
             Map<String, Object> model, String... string) {
         for (String key : string) {
@@ -799,30 +511,6 @@ public class Utils {
             }
         }
         return true;
-    }
-
-    /**
-     * Counts all visible documents in a list. The visible documents start with either a number or a date ->
-     * 1|bla... or 2013-01-01|bla...
-     *
-     * @param children The list of all files to consider
-     * @return The number of visible elements.
-     */
-    public static int countVisibleDocmuntes(List<XPath> children) {
-        int counter = 0;
-        for (XPath xpath : children) {
-            if (xpath.isVisible()) {
-                counter++;
-            }
-        }
-        return counter;
-    }
-
-    public static void copyModelValues(Map<String, Object> modelDestination,
-            Map<String, Object> modelSource, String... keys) {
-        for (String key : keys) {
-            modelDestination.put(key, modelSource.get(key));
-        }
     }
 
     public static XItem createDocument(Site site, XPath xPath,
@@ -866,37 +554,4 @@ public class Utils {
         Files.createDirectories(generatedFile.getParent());
         Utils.write(htmlSite, xPath, generatedFile);
     }
-
-    public static String[] paging(XPath xPath, int pages) {
-        String[] pagesURLs = new String[pages + 1];
-        for (int i = 0; i <= pages; i++) {
-            // first is special, no _ in the URL
-            if (i == 0) {
-                pagesURLs[i] = xPath.resolveTargetURL("index.html");
-            } else {
-                pagesURLs[i] = xPath.resolveTargetURL("index_" + i + ".html");
-            }
-        }
-        return pagesURLs;
-    }
-
-    public static List<List<XItem>> split(List<XItem> documents,
-            int pages, int pageSize) {
-        List<List<XItem>> result = new ArrayList<>();
-        if (pages == 0) {
-            result.add(documents);
-            return result;
-        } else {
-            for (int i = 0; i <= pages; i++) {
-                int start = i * pageSize;
-                int stop = start + pageSize;
-                result.add(documents.subList(start,
-                        documents.size() < stop ? documents.size() : stop));
-            }
-        }
-        return result;
-    }
-
-    
-
 }

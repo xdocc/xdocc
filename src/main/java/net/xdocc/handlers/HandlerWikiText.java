@@ -1,28 +1,23 @@
 package net.xdocc.handlers;
 
+import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import net.xdocc.XItem;
-import net.xdocc.XItem.Generator;
 import net.xdocc.Site;
 import net.xdocc.Site.TemplateBean;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.mylyn.wikitext.confluence.core.ConfluenceLanguage;
 import org.eclipse.mylyn.wikitext.core.parser.Attributes;
-import org.eclipse.mylyn.wikitext.core.parser.ImageAttributes;
 import org.eclipse.mylyn.wikitext.core.parser.MarkupParser;
 import org.eclipse.mylyn.wikitext.core.parser.builder.HtmlDocumentBuilder;
 import org.eclipse.mylyn.wikitext.mediawiki.core.MediaWikiLanguage;
@@ -55,14 +50,17 @@ public class HandlerWikiText implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<String, Object> model2)
+    public XItem compile(Site site, XPath xPath)
             throws Exception {
         //do Utils.createDocument manually here		
         TemplateBean templateText = site.getTemplate("wikitext", xPath.getLayoutSuffix());
-        Generator documentGenerator = new WikiTextDocumentGenerator(
-                templateText, site, xPath, model2);
+        WikiTextDocumentGenerator documentGenerator = new WikiTextDocumentGenerator(
+                templateText, site, xPath);
+
         
-        XItem doc = new XItem(xPath, documentGenerator);
+        XItem doc = documentGenerator.xItem();
+                
+                
         doc.setTemplate("wikitext");
 
         // always create a single page for that
@@ -98,103 +96,82 @@ public class HandlerWikiText implements Handler {
         return result;
     }
 
+    //https://github.com/eclipse/mylyn.docs/tree/master/org.eclipse.mylyn.wikitext.core/src/org/eclipse/mylyn/wikitext/core/parser/builder
     private static class XdoccHtmlDocumentBuilder extends HtmlDocumentBuilder {
 
         final private Site site;
-        final private XPath current;
-        final private Map<String, Object> model;
+        final private XItem xItem;
+        private String htmlNsUri = "http://www.w3.org/1999/xhtml";
 
-        public XdoccHtmlDocumentBuilder(Writer out, Site site,
-                XPath current, Map<String, Object> model) {
+        public XdoccHtmlDocumentBuilder(Writer out, Site site, XItem xItem) {
             super(out);
             this.site = site;
-            this.current = current;
-            this.model = model;
+            this.xItem = xItem;
         }
 
         @Override
-        public void image(Attributes attributes, String url) {
-            String path = Utils.relativePathToRoot(site.source(), current
-                    .getParent().path());
-            /*
-			 * if(!current.isVisible()) { super.image(attributes, url); }
-             */
-            try {
-                String[] parsedURL = url.split("/");
-                // XPath xPath = Utils.findXPathFromURL(url, site,
-                // current.getParent());
-                List<XPath> founds = new ArrayList<>();
-                founds.add(current.getParent());
-                HandlerImage handlerImage = new HandlerImage();
-                for (int i = 0; i < parsedURL.length; i++) {
-                    String pURL = parsedURL[i];
-                    List<XPath> result = new ArrayList<>();
-                    for (Iterator<XPath> iterator = founds.iterator(); iterator
-                            .hasNext();) {
-                        XPath found = iterator.next();
-                        String extension = parseExtension(pURL, handlerImage);
-                        String filename = parseURL(pURL, handlerImage);
-                        result.addAll(Utils.findChildURL(site, found, filename,
-                                extension));
-                    }
-                    founds = result;
-                }
-                if (founds.size() > 1) {
-                    LOG.warn("found more than one URLs for url=" + url + " ->"
-                            + founds);
-                } else if (founds.size() == 0
-                        || (founds.size() > 0 && !founds.get(0).isVisible())) {
-                    super.image(attributes, url);
-                    return;
-                } else {
-                    XPath found = founds.get(0);
-                    String relativePathToRoot = Utils.relativePathToRoot(
-                            site.source(), found.path());
-
-                    XItem doc = handlerImage.compile(site, found, model, (ImageAttributes) attributes);
-
-                    String base = getBase() == null ? null : getBase()
-                            .toString();
-                    if (StringUtils.isEmpty(base)) {
-                        // TODO:enable
+        public void image(Attributes attributes, String imageUrl) {
+            if (imageUrl != null) {
+                //if relative only!
+                if (!imageUrl.contains("://")) {
+                    if (imageUrl.endsWith(":thumb")) {
+                        String tmpImageUrl = imageUrl.replaceAll(":thumb$", "");
+                        //convert
+                        HandlerImage handler = new HandlerImage();
+                        try {
+                            XPath img = xItem.xPath().getParent().resolveSource(tmpImageUrl);
+                            XItem item = handler.convertNorm(site, img, false);
+                            String href = item.getLink();
+                            super.imageLink(attributes, href, imageUrl);
+                            return;
+                        } catch (TemplateException | IOException | InterruptedException ex) {
+                            LOG.error("cannot convert", ex);
+                            imageUrl = imageUrl.replaceAll(":thumb$", "");
+                        }
                     } else {
-
-                        // TODO:enable
+                        imageUrl = xItem.getPath() + "/" + imageUrl;
                     }
-                    super.charactersUnescaped(doc.getContent());
-                }
-            } catch (Exception e) {
-                LOG.error("cannot create xdocc image " + e);
-                e.printStackTrace();
-            }
-        }
-
-        /**
-         *
-         */
-        /*@Override
-		protected void emitAnchorHref(String href) {
-                    super.emitAnchorHref(href);
-		}*/
-        private String parseExtension(String pURL, HandlerImage handlerImage) {
-            for (String extension : handlerImage.knownExtensions()) {
-                if (pURL.endsWith("." + extension)) {
-                    return "." + extension;
                 }
             }
-            return null;
+            super.image(attributes, imageUrl);
         }
 
-        private String parseURL(String pURL, HandlerImage handlerImage) {
-            for (String extension : handlerImage.knownExtensions()) {
-                if (pURL.endsWith("." + extension)) {
-                    return pURL.substring(0, pURL.length() - extension.length()
-                            - 1);
+        @Override
+        public void imageLink(Attributes linkAttributes, Attributes imageAttributes, String href, String imageUrl) {
+            if (imageUrl != null) {
+                //if relative only!
+                if (!imageUrl.contains("://")) {
+                    if (imageUrl.endsWith(":thumb")) {
+                        imageUrl = imageUrl.replaceAll(":thumb$", "");
+                        //convert
+                        HandlerImage handler = new HandlerImage();
+                        try {
+                            XPath img = xItem.xPath().getParent().resolveSource(imageUrl);
+                            XItem item = handler.convertThumb(site, img, true);
+                            imageUrl = item.getOriginalPath();
+                        } catch (TemplateException | IOException | InterruptedException ex) {
+                            LOG.error("cannot convert", ex);
+                        }
+                    } else {
+                        imageUrl = xItem.getPath() + "/" + imageUrl;
+                    }
                 }
             }
-            return pURL;
+            super.imageLink(linkAttributes, imageAttributes, href, imageUrl);
         }
+        
+        
 
+        @Override
+        protected void emitAnchorHref(String href) {
+            if (href != null) {
+                //if relative only!
+                if (!href.contains("://")) {
+                    href = xItem.getPath() + "/" + href;        
+                }
+            }
+            super.emitAnchorHref(href);
+        }
     }
 
     private class WikiTextDocumentGenerator extends XItem.FillGenerator {
@@ -202,14 +179,13 @@ public class HandlerWikiText implements Handler {
         private static final long serialVersionUID = -6008311072604987744L;
         final private Site site;
         final private XPath xPath;
-        final private Map<String, Object> model;
+        final private XItem xItem;
 
-        public WikiTextDocumentGenerator(TemplateBean templateText, Site site,
-                XPath xPath, Map<String, Object> model) {
-            super(site, templateText, model);
+        public WikiTextDocumentGenerator(TemplateBean templateText, Site site, XPath xPath) {
+            super(site, templateText);
             this.site = site;
             this.xPath = xPath;
-            this.model = model;
+            this.xItem = new XItem(xPath, this);
         }
 
         public String generate() {
@@ -225,40 +201,39 @@ public class HandlerWikiText implements Handler {
         private void fillModel() throws IOException {
             StringWriter writer = new StringWriter();
             HtmlDocumentBuilder builder = new XdoccHtmlDocumentBuilder(writer,
-                    site, xPath, model);
+                    site, xItem);
 
             // avoid the <html> and <body> tags
             MarkupParser parser = null;
             builder.setEmitAsDocument(false);
-            String type = null;
             for (String ext : TEXTILE_EXT) {
                 if (xPath.extensionList().contains(ext)) {
                     parser = new MarkupParser(new TextileLanguage());
-                    type = "textile";
+                    //type = "textile";
                 }
             }
             for (String ext : MEDIA_WIKI_EXT) {
                 if (xPath.extensionList().contains(ext)) {
                     parser = new MarkupParser(new MediaWikiLanguage());
-                    type = "mediawiki";
+                    //type = "mediawiki";
                 }
             }
             for (String ext : TRAC_WIKI_EXT) {
                 if (xPath.extensionList().contains(ext)) {
                     parser = new MarkupParser(new TracWikiLanguage());
-                    type = "tracwiki";
+                    //type = "tracwiki";
                 }
             }
             for (String ext : T_WIKI_EXT) {
                 if (xPath.extensionList().contains(ext)) {
                     parser = new MarkupParser(new TWikiLanguage());
-                    type = "twiki";
+                    //type = "twiki";
                 }
             }
             for (String ext : CONFLUENCE_EXT) {
                 if (xPath.extensionList().contains(ext)) {
                     parser = new MarkupParser(new ConfluenceLanguage());
-                    type = "confluence";
+                    //type = "confluence";
                 }
             }
             if (parser == null) {
@@ -276,6 +251,10 @@ public class HandlerWikiText implements Handler {
         @Override
         public String toString() {
             return "WIKI" + super.toString();
+        }
+
+        private XItem xItem() {
+            return xItem;
         }
     }
 }

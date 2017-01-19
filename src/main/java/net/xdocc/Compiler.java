@@ -3,7 +3,6 @@ package net.xdocc;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +55,7 @@ public class Compiler {
                     } else {
                         for (Handler handler : handlers) {
                             if (handler.canHandle(site, child)) {
-                                XItem xItem = compile(handler, child);
+                                XItem xItem = handler.compile(site, child);
                                 if(xItem != null) {
                                     results.add(xItem);
                                     break;
@@ -115,9 +114,5 @@ public class Compiler {
         }, executorServiceCompiler);
 
         return completableFuture;
-    }
-
-    private XItem compile(Handler handler, XPath xPath) throws Exception {
-        return handler.compile(site, xPath, new HashMap<String, Object>());
     }
 }

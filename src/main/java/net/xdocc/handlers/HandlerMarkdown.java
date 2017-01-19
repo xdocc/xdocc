@@ -39,7 +39,7 @@ public class HandlerMarkdown implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<String, Object> model) throws Exception {
+    public XItem compile(Site site, XPath xPath) throws Exception {
         try (Writer out = new StringWriter();
                 Reader in = new BufferedReader(new FileReader(xPath.path()
                         .toFile()))) {

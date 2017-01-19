@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
@@ -24,7 +23,7 @@ public class HandlerText implements Handler {
 	}
 
 	@Override
-	public XItem compile(Site site, XPath xPath, Map<String, Object> model) throws Exception {
+	public XItem compile(Site site, XPath xPath) throws Exception {
             
 		Charset charset = HandlerUtils.detectCharset(xPath.path());
 		List<String> lines = Files.readAllLines(xPath.path(), charset);

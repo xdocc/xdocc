@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
@@ -29,7 +28,7 @@ public class HandlerLink implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<String, Object> model) throws Exception {
+    public XItem compile(Site site, XPath xPath) throws Exception {
 
         Configuration config = new PropertiesConfiguration(xPath.path().toFile());
 

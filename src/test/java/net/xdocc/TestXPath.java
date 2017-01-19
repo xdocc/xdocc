@@ -25,7 +25,7 @@ public class TestXPath {
 
     @AfterClass
     public static void tearDown() throws IOException {
-        Utils.deleteDirectories(gen, src);
+        TestUtils.deleteDirectories(gen, src);
     }
 
     @Test

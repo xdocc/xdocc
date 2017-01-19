@@ -22,8 +22,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import net.xdocc.handlers.Handler;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -114,6 +112,7 @@ final public class XPath implements Comparable<XPath> {
         
         if(!this.visible) {
              this.url = extensionFilteredFileName;
+             extractName();
         }
         
         if (Files.isRegularFile(path)) {
@@ -310,12 +309,14 @@ final public class XPath implements Comparable<XPath> {
                 Matcher matcher4 = PATTERN_URL.matcher(mandatory);
                 if (matcher4.find(offset + 1)) {
                     this.url = matcher4.group(1);
+                    extractName();
                     offset = matcher4.end(1);
                 } else {
                     this.url = "";
                 }
             } else {
                 this.url = mandatory;
+                extractName();
             }
             //  tags
             if (firstPipeIndex != -1) {
@@ -435,6 +436,10 @@ final public class XPath implements Comparable<XPath> {
         } else {
             return site.generated().resolve(target.getParent().resolve(url));
         }
+    }
+    
+    public XPath resolveSource(String url) {
+        return new XPath(site, this.path.resolve(url));
     }
 
     /**
@@ -822,4 +827,14 @@ final public class XPath implements Comparable<XPath> {
         return Utils.relativePathToRoot(site.source(), path);
     }
     public static final String ORIGINAL_PATH_TO_ROOT = "originalpathtoroot";
+
+    private void extractName() {
+        if(url.contains(":")) {
+            String[] tmp = url.split(":", 2);
+            this.url = tmp[0];
+            this.name = tmp[1];
+        }
+    }
+
+    
 }

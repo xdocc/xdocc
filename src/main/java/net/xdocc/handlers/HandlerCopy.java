@@ -30,8 +30,7 @@ public class HandlerCopy implements Handler {
 	}
 
 	@Override
-	public XItem compile(Site site, XPath xPath, Map<String, Object> model2) {
-		Map<String, Object> model = new HashMap<>(model2);
+	public XItem compile(Site site, XPath xPath) {
 		final Path generatedFile;
 		if (xPath.isVisible()) {
 			String filename = xPath.fileName();
@@ -52,12 +51,10 @@ public class HandlerCopy implements Handler {
                             LOG.debug("copy {} to {}",xPath.path(), generatedFile);		
 			}
 			if (xPath.isCopy() || xPath.isVisible()) {
-				return createDocumentBrowse(site, xPath,
-						"", model);
+				return createDocumentBrowse(site, xPath, "");
 				
 			} else if (xPath.isVisible()) {
-				return createDocumentFile(site, xPath,
-						"", model);
+				return createDocumentFile(site, xPath, "");
 			}
 		} catch (IOException e) {
 			LOG.error("Copy handler faild, cannot copy from {} to {}", xPath.path(), generatedFile, e);
@@ -71,8 +68,7 @@ public class HandlerCopy implements Handler {
 		return Arrays.asList(new String[0]);
 	}
 
-	public static XItem createDocumentFile(Site site, XPath xPath,
-			String path, Map<String, Object> model) throws IOException {
+	public static XItem createDocumentFile(Site site, XPath xPath, String path) throws IOException {
 		TemplateBean templateText = site.getTemplate("file", xPath.getLayoutSuffix());
 		Generator documentGenerator = new XItem.FillGenerator(site,
 				templateText);
@@ -85,7 +81,7 @@ public class HandlerCopy implements Handler {
 	}
 
 	public static XItem createDocumentBrowse(Site site, XPath xPath,
-			String path, Map<String, Object> model) throws IOException {
+			String path) throws IOException {
 		TemplateBean templateText = site.getTemplate("browse", xPath.getLayoutSuffix());
 		Generator documentGenerator = new XItem.FillGenerator(site,
 				templateText);

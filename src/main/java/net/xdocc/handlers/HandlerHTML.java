@@ -4,8 +4,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
@@ -34,8 +32,7 @@ public class HandlerHTML implements Handler {
 	}
 
 	@Override
-	public XItem compile(Site site, XPath xPath, Map<String, Object> model)
-			throws Exception {
+	public XItem compile(Site site, XPath xPath) throws Exception {
 		
 		Charset charset = HandlerUtils.detectCharset(xPath.path());
 		String all = FileUtils.readFileToString(xPath.path().toFile(), charset);
