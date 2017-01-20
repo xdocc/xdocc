@@ -21,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.template.TemplateException;
+import java.util.Map;
+import java.util.Set;
 import net.xdocc.XItem.Generator;
 
 public class HandlerImage implements Handler {
@@ -35,7 +37,7 @@ public class HandlerImage implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath)
+    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter)
             throws TemplateException, IOException, InterruptedException {
 
         Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + xPath.extensions());
@@ -45,21 +47,21 @@ public class HandlerImage implements Handler {
         Generator genTop = new XItem.FillGenerator(site, templateTextTop);
         XItem docTop = new XItem(xPath, genTop);
 
-        XItem doc = convertOrig(xPath, generatedFile, site, false);
+        XItem doc = convertOrig(xPath, generatedFile, site, false, filesCounter);
         docTop.addItems(doc);
 
         // create a thumbnail
-        doc = convertThumb(site, xPath, false);
+        doc = convertThumb(site, xPath, false, filesCounter);
         docTop.addItems(doc);
 
         // create display size image
-        doc = convertNorm(site, xPath, false);
+        doc = convertNorm(site, xPath, false, filesCounter);
         docTop.addItems(doc);
 
         return docTop;
     }
 
-    public XItem convertNorm(Site site, XPath xPath, boolean neverWriteToDisk)
+    public XItem convertNorm(Site site, XPath xPath, boolean neverWriteToDisk, Map<Path, Integer> filesCounter)
             throws InterruptedException, TemplateException, IOException {
 
         String sizeNorm = xPath.getRecursiveProperty("size_normal", "sn");
@@ -80,6 +82,8 @@ public class HandlerImage implements Handler {
             } else {
                 resize(xPath, generatedFileNorm, sizeNorm);
             }
+            Utils.increase(filesCounter, Utils.listPaths(site, generatedFileNorm));
+            
             doc.setTemplate("image_norm");
             doc.setOriginalPath(xPath.getTargetURL() + "_n" + xPath.extensions());
 
@@ -87,7 +91,8 @@ public class HandlerImage implements Handler {
                 doc.setOriginalLink(xPath.getTargetURL() + "_n.html");
                 Path generatedFile2 = xPath
                         .resolveTargetFromBasePath(xPath.getTargetURL() + "_n.html");
-                Utils.writeHTML(site, xPath, doc, generatedFile2);
+                Utils.writeHTML(xPath, doc, generatedFile2);
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
             }
             return doc;
         } else {
@@ -96,7 +101,7 @@ public class HandlerImage implements Handler {
 
     }
 
-    public XItem convertThumb(Site site, XPath xPath, boolean neverWriteToDisk)
+    public XItem convertThumb(Site site, XPath xPath, boolean neverWriteToDisk, Map<Path, Integer> filesCounter)
             throws TemplateException, IOException, InterruptedException {
 
         String sizeIcon = xPath.getRecursiveProperty("size_icon", "si");
@@ -115,6 +120,8 @@ public class HandlerImage implements Handler {
             } else {
                 resize(xPath, generatedFileThumb, sizeIcon);
             }
+            Utils.increase(filesCounter, Utils.listPaths(site, generatedFileThumb));
+            
             doc.setTemplate("image_thumb");
             doc.setOriginalPath(xPath.getTargetURL() + "_t" + xPath.extensions());
 
@@ -123,7 +130,8 @@ public class HandlerImage implements Handler {
 
                 Path generatedFile2 = xPath
                         .resolveTargetFromBasePath(xPath.getTargetURL() + "_t.html");
-                Utils.writeHTML(site, xPath, doc, generatedFile2);
+                Utils.writeHTML(xPath, doc, generatedFile2);
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
             }
             return doc;
         } else {
@@ -132,7 +140,7 @@ public class HandlerImage implements Handler {
 
     }
 
-    private XItem convertOrig(XPath xPath, Path generatedFile, Site site, boolean neverWriteToDisk)
+    private XItem convertOrig(XPath xPath, Path generatedFile, Site site, boolean neverWriteToDisk, Map<Path, Integer> filesCounter)
             throws IOException, TemplateException {
 
         if (xPath.isKeep()) {
@@ -142,6 +150,7 @@ public class HandlerImage implements Handler {
                     StandardCopyOption.REPLACE_EXISTING,
                     StandardCopyOption.COPY_ATTRIBUTES,
                     LinkOption.NOFOLLOW_LINKS);
+            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
 
             TemplateBean templateText = site.getTemplate("image_orig", xPath.getLayoutSuffix());
             Generator gen = new XItem.FillGenerator(site, templateText);
@@ -154,7 +163,8 @@ public class HandlerImage implements Handler {
                 doc.setOriginalLink(xPath.getTargetURL() + ".html");
                 Path generatedFile2 = xPath
                         .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-                Utils.writeHTML(site, xPath, doc, generatedFile2);
+                Utils.writeHTML(xPath, doc, generatedFile2);
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
             }
 
             return doc;

@@ -6,16 +6,19 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 import net.xdocc.XItem;
 import net.xdocc.XItem.Generator;
 import net.xdocc.Site;
 import net.xdocc.Site.TemplateBean;
+import net.xdocc.Utils;
 import net.xdocc.XPath;
 
 import org.slf4j.Logger;
@@ -30,7 +33,7 @@ public class HandlerCopy implements Handler {
 	}
 
 	@Override
-	public XItem compile(Site site, XPath xPath) {
+	public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter) {
 		final Path generatedFile;
 		if (xPath.isVisible()) {
 			String filename = xPath.fileName();
@@ -48,6 +51,7 @@ public class HandlerCopy implements Handler {
                             Files.copy(xPath.path(), generatedFile, 
                                     StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING,
 					StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
+                            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                             LOG.debug("copy {} to {}",xPath.path(), generatedFile);		
 			}
 			if (xPath.isCopy() || xPath.isVisible()) {

@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
@@ -39,7 +40,7 @@ public class HandlerMarkdown implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath) throws Exception {
+    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter) throws Exception {
         try (Writer out = new StringWriter();
                 Reader in = new BufferedReader(new FileReader(xPath.path()
                         .toFile()))) {
@@ -50,7 +51,8 @@ public class HandlerMarkdown implements Handler {
             if (xPath.getParent().isItemWritten()) {
                 generatedFile = xPath
                         .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-                Utils.writeHTML(site, xPath, doc, generatedFile);
+                Utils.writeHTML(xPath, doc, generatedFile);
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
             }
             return doc;
         }

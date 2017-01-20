@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -24,14 +25,14 @@ public class Compiler {
 
     final private ExecutorService executorServiceCompiler;
     
-    final private Set<Path> filesInSrc;
+    final private Map<Path, Integer> filesCounter;
 
-    public Compiler(ExecutorService executorServiceCompiler, Site site, Set<Path> filesInSrc) {
+    public Compiler(ExecutorService executorServiceCompiler, Site site, Map<Path, Integer> filesCounter) {
         this.executorServiceCompiler = executorServiceCompiler;
         this.handlers = site.handlers();
         this.site = site;
         this.site.compiler(this);
-        this.filesInSrc = filesInSrc;
+        this.filesCounter = filesCounter;
     }
     
     public CompletableFuture<List<XItem>> compile(final Path path) {
@@ -60,7 +61,7 @@ public class Compiler {
                     } else {
                         for (Handler handler : handlers) {
                             if (handler.canHandle(site, child)) {
-                                XItem xItem = handler.compile(site, child);
+                                XItem xItem = handler.compile(site, child, filesCounter);
                                 if(xItem != null) {
                                     results.add(xItem);
                                     break;
@@ -97,7 +98,7 @@ public class Compiler {
                         
                         if(!xPath.isNoIndex()) {
                             Path generatedFile = xPath.resolveTargetFromPath("index.html");
-                            Utils.writeListHTML(site, xPath, doc, generatedFile);
+                            Utils.writeListHTML(xPath, doc, generatedFile);
                         }
                         
                         List<XItem> results2 = new ArrayList<>(1);

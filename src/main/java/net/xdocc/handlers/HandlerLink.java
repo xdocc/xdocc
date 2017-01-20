@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
@@ -27,7 +29,7 @@ public class HandlerLink implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath) throws Exception {
+    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter) throws Exception {
 
         Configuration config = new PropertiesConfiguration(xPath.path().toFile());
 
@@ -67,7 +69,8 @@ public class HandlerLink implements Handler {
             if (xPath.getParent().isItemWritten()) {
                 Path generatedFile = xPath
                         .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-                Utils.writeHTML(site, xPath, doc, generatedFile);
+                Utils.writeHTML(xPath, doc, generatedFile);
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
             }
             return doc;
         }

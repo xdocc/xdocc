@@ -22,7 +22,6 @@ import freemarker.template.Template;
 import java.nio.file.DirectoryStream;
 import java.util.ArrayList;
 import java.util.Set;
-import java.util.logging.Level;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;

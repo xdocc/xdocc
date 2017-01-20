@@ -97,7 +97,7 @@ final public class XPath implements Comparable<XPath> {
      */
     public XPath(Site site, Path path) {
         if (!Utils.isChild(path, site.source())) {
-            throw new IllegalArgumentException(path + "is not a child of "
+            throw new IllegalArgumentException(path + " is not a child of "
                     + site.source());
         }
         this.path = path;

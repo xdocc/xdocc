@@ -28,6 +28,7 @@ import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
 import java.nio.file.Paths;
+import java.util.Collection;
 
 public class Utils {
 
@@ -84,11 +85,56 @@ public class Utils {
         return doc;
     }
 
-    
+    public static Collection<Path> listPaths(Site site, Path generatedFile) {
+        
+        generatedFile = generatedFile.normalize();
+        
+        if (!isChild(generatedFile, site.generated())) {
+            return null;
+        }
+        
+        Collection<Path> retVal = new ArrayList<>();
+        while(!generatedFile.equals(site.generated())) {
+            retVal.add(generatedFile);
+            generatedFile = generatedFile.getParent();
+        }
+        retVal.add(generatedFile);
+        return retVal;
+    }
 
-    
+    public static void increase(Map<Path, Integer> filesCounter, Collection<Path> listPaths) {
+        for(Path path:listPaths) {
+            synchronized(filesCounter) {
+                Integer i = filesCounter.get(path);
+                if(i == null) {
+                    i = 1;
+                } else {
+                    i++;
+                }
+                /*if(path.toString().endsWith("dir1/label-2.jpg")) {
+                    System.out.println("path increase to: " +i);
+                }*/
+                filesCounter.put(path, i);
+            }
+        }
+    }
 
-    
+    public static void decrease(Map<Path, Integer> filesCounter, Collection<Path> listPaths) {
+        for(Path path:listPaths) {
+            synchronized(filesCounter) {
+                Integer i = filesCounter.get(path);
+                if(i == null) {
+                    i = 0;
+                } else {
+                    i--;
+                }
+                /*if(path.toString().endsWith("dir1/label-2.jpg")) {
+                    System.out.println("path decreos to: " +i);
+                }*/
+                filesCounter.put(path, i);
+            }
+        }
+    }
 
     public static enum OS_TYPE {
         LINUX, WIN, MAC, OTHER
@@ -120,8 +166,7 @@ public class Utils {
     }
 
     public static boolean isChild(Path maybeChild, Path possibleParent) {
-        URI parentURI = possibleParent.toUri(), childURI = maybeChild.toUri();
-        return !parentURI.relativize(childURI).isAbsolute();
+        return maybeChild.normalize().startsWith(possibleParent.normalize());
     }
 
     /**
@@ -526,7 +571,7 @@ public class Utils {
         return doc;
     }
     
-    public static void writeListHTML(Site site, XPath xPath, XItem doc, Path generatedFile) 
+    public static void writeListHTML(XPath xPath, XItem doc, Path generatedFile) 
             throws IOException, TemplateException {
         
         //adjust path
@@ -540,8 +585,16 @@ public class Utils {
         Files.createDirectories(generatedFile.getParent());
         Utils.write(htmlSite, xPath, generatedFile);
     }
+    
+    public static XItem adjust(XPath xPath, XItem doc) {
+        String minusPath = xPath.getTargetURLPath();
+        doc = Utils.adjustPath(doc, minusPath);
+        String minusPathToRoot = xPath.originalPathToRoot();
+        doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
+        return doc;
+    }
 
-    public static void writeHTML(Site site, XPath xPath, XItem doc, Path generatedFile) 
+    public static void writeHTML(XPath xPath, XItem doc, Path generatedFile) 
             throws IOException, TemplateException {
         
          //adjust path

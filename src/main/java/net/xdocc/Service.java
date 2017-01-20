@@ -1,10 +1,12 @@
 package net.xdocc;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Service {
 
@@ -81,7 +86,14 @@ public class Service {
                         startAfterFirstRun.await();
                         LOG.info("compiling start: {}", site);
                         final long start = System.currentTimeMillis();
-                        compile(site).get();
+                        Map<Path, Integer> filesCounter = Collections.synchronizedMap(Files.walk(site.
+                                generated()).collect(Collectors.toMap(p -> p, p -> 0)));
+                        compile(site, filesCounter).get();
+                        filesCounter.entrySet().stream().
+                                sorted((f1, f2) -> f2.getKey().compareTo(f1.getKey())).filter(f1 -> f1.
+                                getValue() <= 0 && Utils.isChild(f1.getKey(), site.generated())).forEach(
+                                        f1 -> {try {Files.delete(f1.getKey());} catch (IOException ex) {LOG.error("cannot delete", ex);}});
+
                         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
                     } catch (Throwable t) {
                         LOG.error("file changed, but could not compile", t);
@@ -92,7 +104,13 @@ public class Service {
         }
         LOG.info("compiling start: {}", site);
         final long start = System.currentTimeMillis();
-        compile(site).get();
+        Map<Path, Integer> filesCounter = Collections.synchronizedMap(Files.walk(site.generated()).collect(
+                Collectors.toMap(p -> p, p -> 0)));
+        compile(site, filesCounter).get();
+        filesCounter.entrySet().stream().sorted((f1, f2) -> f2.getKey().compareTo(f1.getKey())).filter(
+                f1 -> f1.getValue() <= 0 && Utils.isChild(f1.getKey(), site.generated())).forEach(
+                        f1 -> {try {Files.delete(f1.getKey());} catch (IOException ex) {LOG.error("cannot delete", ex);}});
+
         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
         if (isDaemon) {
             startAfterFirstRun.countDown();
@@ -121,8 +139,8 @@ public class Service {
         executorServiceCompiler.shutdown();
     }
 
-    public CompletableFuture<List<XItem>> compile(Site site) throws IOException, InterruptedException, ExecutionException {
-        Compiler c = new Compiler(executorServiceCompiler, site, new HashSet<>());
+    public CompletableFuture<List<XItem>> compile(Site site, Map<Path, Integer> filesCounter) throws IOException, InterruptedException, ExecutionException {
+        Compiler c = new Compiler(executorServiceCompiler, site, filesCounter);
         return c.compile(site.source());
     }
 }
