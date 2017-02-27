@@ -3,7 +3,7 @@ package net.xdocc.handlers;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import net.xdocc.Cache;
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
@@ -15,5 +15,5 @@ public interface Handler {
 
     public List<String> knownExtensions();
 
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter) throws Exception;
+    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache) throws Exception;
 }

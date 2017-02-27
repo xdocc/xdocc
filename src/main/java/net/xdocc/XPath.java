@@ -726,6 +726,25 @@ final public class XPath implements Comparable<XPath> {
         return path.hashCode();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this) {
+            return true;
+        }
+        if(obj == null) {
+            return false;
+        }
+        if(!(obj instanceof XPath)) {
+            return false;
+        }
+        
+        XPath other = (XPath) obj;
+        
+        return compareTo(other) == 0;
+    }
+    
+    
+
     public boolean isRoot() {
         return path().equals(site.source());
     }

@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import net.xdocc.Cache;
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
@@ -40,22 +40,30 @@ public class HandlerMarkdown implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter) throws Exception {
-        try (Writer out = new StringWriter();
-                Reader in = new BufferedReader(new FileReader(xPath.path()
-                        .toFile()))) {
-            transform(in, out);
-            String htmlContent = out.toString();
-            XItem doc = Utils.createDocument(site, xPath, htmlContent, "markdown");
-            Path generatedFile = null;
+    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache) throws Exception {
+        final XItem doc;
+        final Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+        Cache.CacheEntry cached = cache.getCached(xPath);
+        if (cached != null) {
+            doc = cached.xItem();
             if (xPath.getParent().isItemWritten()) {
-                generatedFile = xPath
-                        .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-                Utils.writeHTML(xPath, doc, generatedFile);
                 Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
             }
-            return doc;
+        } else {
+            try (Writer out = new StringWriter();
+                    Reader in = new BufferedReader(new FileReader(xPath.path()
+                            .toFile()))) {
+                transform(in, out);
+                String htmlContent = out.toString();
+                doc = Utils.createDocument(site, xPath, htmlContent, "markdown");
+                if (xPath.getParent().isItemWritten()) {
+                    Utils.writeHTML(xPath, doc, generatedFile);
+                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                }
+                cache.setCached(xPath, doc, generatedFile);
+            }
         }
+        return doc;
     }
 
     private void transform(Reader in, Writer out) throws ParseException {

@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.xdocc.Cache;
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
@@ -52,25 +53,32 @@ public class HandlerWikiText implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter)
+    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache)
             throws Exception {
-        //do Utils.createDocument manually here		
-        TemplateBean templateText = site.getTemplate("wikitext", xPath.getLayoutSuffix());
-        WikiTextDocumentGenerator documentGenerator = new WikiTextDocumentGenerator(
-                templateText, site, xPath, filesCounter);
+        final XItem doc;
+        final Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+        Cache.CacheEntry cached = cache.getCached(xPath);
+        if (cached != null) {
+            doc = cached.xItem();
+            if (xPath.getParent().isItemWritten()) {
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+            }
+        } else {
 
-        
-        XItem doc = documentGenerator.xItem();
-                
-                
-        doc.setTemplate("wikitext");
+            TemplateBean templateText = site.getTemplate("wikitext", xPath.getLayoutSuffix());
+            WikiTextDocumentGenerator documentGenerator = new WikiTextDocumentGenerator(
+                    templateText, site, xPath, filesCounter, cache);
 
-        // always create a single page for that
-        if (xPath.getParent().isItemWritten()) {
-            Path generatedFile = xPath
-                    .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-            Utils.writeHTML(xPath, doc, generatedFile);
-            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+            doc = documentGenerator.xItem();
+            doc.setTemplate("wikitext");
+
+            // always create a single page for that
+            if (xPath.getParent().isItemWritten()) {                
+                Utils.writeHTML(xPath, doc, generatedFile);
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+            }
+
+            cache.setCached(xPath, doc, generatedFile);
         }
         return doc;
     }
@@ -105,12 +113,15 @@ public class HandlerWikiText implements Handler {
         final private Site site;
         final private XItem xItem;
         final private Map<Path, Integer> filesCounter;
+        final private Cache cache;
 
-        public XdoccHtmlDocumentBuilder(Writer out, Site site, XItem xItem, Map<Path, Integer> filesCounter) {
+        public XdoccHtmlDocumentBuilder(Writer out, Site site, XItem xItem, Map<Path, Integer> filesCounter,
+                Cache cache) {
             super(out);
             this.site = site;
             this.xItem = xItem;
             this.filesCounter = filesCounter;
+            this.cache = cache;
         }
 
         @Override
@@ -124,7 +135,7 @@ public class HandlerWikiText implements Handler {
                         HandlerImage handler = new HandlerImage();
                         try {
                             XPath img = xItem.xPath().getParent().resolveSource(tmpImageUrl);
-                            XItem item = handler.convertNorm(site, img, false, filesCounter);
+                            XItem item = handler.convertNorm(site, img, false, filesCounter, cache);
                             String href = item.getLink();
                             super.imageLink(attributes, href, imageUrl);
                             return;
@@ -135,7 +146,8 @@ public class HandlerWikiText implements Handler {
                     } else {
                         XPath img = xItem.xPath().getParent().resolveSource(imageUrl);
                         imageUrl = xItem.getPath() + "/" + imageUrl;
-                        Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img.extensions());
+                        Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
+                                .extensions());
                         Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                     }
                 }
@@ -144,7 +156,8 @@ public class HandlerWikiText implements Handler {
         }
 
         @Override
-        public void imageLink(Attributes linkAttributes, Attributes imageAttributes, String href, String imageUrl) {
+        public void imageLink(Attributes linkAttributes, Attributes imageAttributes, String href,
+                String imageUrl) {
             if (imageUrl != null) {
                 //if relative only!
                 if (!imageUrl.contains("://")) {
@@ -154,12 +167,13 @@ public class HandlerWikiText implements Handler {
                         HandlerImage handler = new HandlerImage();
                         try {
                             XPath img = xItem.xPath().getParent().resolveSource(imageUrl);
-                            XItem item = handler.convertThumb(site, img, true, filesCounter);
+                            XItem item = handler.convertThumb(site, img, true, filesCounter, cache);
                             item = Utils.adjust(img, item);
                             imageUrl = xItem.getPath() + "/" + item.getPath();
                             //the original image gets copied, but we don't want that, since we have requested
                             //to show a thumbnail with a normal sized image
-                            Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img.extensions());
+                            Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
+                                    .extensions());
                             Utils.decrease(filesCounter, Utils.listPaths(site, generatedFile));
                         } catch (TemplateException | IOException | InterruptedException ex) {
                             LOG.error("cannot convert", ex);
@@ -167,15 +181,14 @@ public class HandlerWikiText implements Handler {
                     } else {
                         XPath img = xItem.xPath().getParent().resolveSource(imageUrl);
                         imageUrl = xItem.getPath() + "/" + imageUrl;
-                        Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img.extensions());
+                        Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
+                                .extensions());
                         Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                     }
                 }
             }
             super.imageLink(linkAttributes, imageAttributes, href, imageUrl);
         }
-        
-        
 
         @Override
         protected void emitAnchorHref(String href) {
@@ -198,15 +211,17 @@ public class HandlerWikiText implements Handler {
         final private Site site;
         final private XPath xPath;
         final private XItem xItem;
-        final private  Map<Path, Integer> filesCounter;
+        final private Map<Path, Integer> filesCounter;
+        final private Cache cache;
 
-        public WikiTextDocumentGenerator(TemplateBean templateText, Site site, XPath xPath, Map<Path, Integer> filesCounter) {
+        public WikiTextDocumentGenerator(TemplateBean templateText, Site site, XPath xPath,
+                Map<Path, Integer> filesCounter, Cache cache) {
             super(site, templateText);
             this.site = site;
             this.xPath = xPath;
             this.xItem = new XItem(xPath, this);
             this.filesCounter = filesCounter;
-
+            this.cache = cache;
         }
 
         public String generate() {
@@ -222,7 +237,7 @@ public class HandlerWikiText implements Handler {
         private void fillModel() throws IOException {
             StringWriter writer = new StringWriter();
             HtmlDocumentBuilder builder = new XdoccHtmlDocumentBuilder(writer,
-                    site, xItem, filesCounter);
+                    site, xItem, filesCounter, cache);
 
             // avoid the <html> and <body> tags
             MarkupParser parser = null;

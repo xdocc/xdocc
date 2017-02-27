@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.xdocc.Cache;
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
@@ -25,20 +26,28 @@ public class HandlerText implements Handler {
 	}
 
 	@Override
-	public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter) throws Exception {
+	public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache) throws Exception {
             
-		Charset charset = HandlerUtils.detectCharset(xPath.path());
+            final XItem doc;
+            final Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+            Cache.CacheEntry cached = cache.getCached(xPath);
+            if (cached != null) {
+                doc = cached.xItem();
+                if (xPath.getParent().isItemWritten()) {
+                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                }
+            } else {
+                Charset charset = HandlerUtils.detectCharset(xPath.path());
 		List<String> lines = Files.readAllLines(xPath.path(), charset);
 		String htmlContent = convertHTML(lines);
-		XItem doc = Utils.createDocument(site, xPath, htmlContent, "text");
-		// always create a single page for that
-		if (xPath.getParent().isItemWritten()) {
-			Path generatedFile = xPath
-					.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-			Utils.writeHTML(xPath, doc, generatedFile);
-                        Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
-		}
-		return doc;
+		doc = Utils.createDocument(site, xPath, htmlContent, "text");
+                if (xPath.getParent().isItemWritten()) {
+		    Utils.writeHTML(xPath, doc, generatedFile);
+                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                }
+                cache.setCached(xPath, doc, generatedFile);
+            }
+            return doc;
 	}
 
 	private String convertHTML(List<String> lines) {

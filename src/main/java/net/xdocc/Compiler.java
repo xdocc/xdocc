@@ -26,13 +26,16 @@ public class Compiler {
     final private ExecutorService executorServiceCompiler;
     
     final private Map<Path, Integer> filesCounter;
+    
+    final private Cache cache;
 
-    public Compiler(ExecutorService executorServiceCompiler, Site site, Map<Path, Integer> filesCounter) {
+    public Compiler(ExecutorService executorServiceCompiler, Site site, Map<Path, Integer> filesCounter, Cache cache) {
         this.executorServiceCompiler = executorServiceCompiler;
         this.handlers = site.handlers();
         this.site = site;
         this.site.compiler(this);
         this.filesCounter = filesCounter;
+        this.cache = cache;
     }
     
     public CompletableFuture<List<XItem>> compile(final Path path) {
@@ -61,7 +64,7 @@ public class Compiler {
                     } else {
                         for (Handler handler : handlers) {
                             if (handler.canHandle(site, child)) {
-                                XItem xItem = handler.compile(site, child, filesCounter);
+                                final XItem xItem = handler.compile(site, child, filesCounter, cache);
                                 if(xItem != null) {
                                     results.add(xItem);
                                     break;

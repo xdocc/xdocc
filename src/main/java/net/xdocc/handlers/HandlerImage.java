@@ -21,8 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.template.TemplateException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import net.xdocc.Cache;
 import net.xdocc.XItem.Generator;
 
 public class HandlerImage implements Handler {
@@ -37,7 +39,7 @@ public class HandlerImage implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter)
+    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache)
             throws TemplateException, IOException, InterruptedException {
 
         Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + xPath.extensions());
@@ -47,52 +49,67 @@ public class HandlerImage implements Handler {
         Generator genTop = new XItem.FillGenerator(site, templateTextTop);
         XItem docTop = new XItem(xPath, genTop);
 
-        XItem doc = convertOrig(xPath, generatedFile, site, false, filesCounter);
+        XItem doc = convertOrig(xPath, generatedFile, site, false, filesCounter, cache);
         docTop.addItems(doc);
 
         // create a thumbnail
-        doc = convertThumb(site, xPath, false, filesCounter);
+        doc = convertThumb(site, xPath, false, filesCounter, cache);
         docTop.addItems(doc);
 
         // create display size image
-        doc = convertNorm(site, xPath, false, filesCounter);
+        doc = convertNorm(site, xPath, false, filesCounter, cache);
         docTop.addItems(doc);
 
         return docTop;
     }
 
-    public XItem convertNorm(Site site, XPath xPath, boolean neverWriteToDisk, Map<Path, Integer> filesCounter)
+    public XItem convertNorm(Site site, XPath xPath, boolean neverWriteToDisk, Map<Path, Integer> filesCounter, Cache cache)
             throws InterruptedException, TemplateException, IOException {
 
+        Set<Path> generatedFiles = new HashSet<>();
         String sizeNorm = xPath.getRecursiveProperty("size_normal", "sn");
         if (sizeNorm == null) {
             sizeNorm = "800x600^";
         }
 
         if (!sizeNorm.startsWith("0x") && site.hasExactTemplate("image_norm", xPath.getLayoutSuffix())) {
-            TemplateBean templateText = site.getTemplate("image_norm", xPath.getLayoutSuffix());
-            Generator gen = new XItem.FillGenerator(site, templateText);
-            XItem doc = new XItem(xPath, gen);
 
             Path generatedFileNorm = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_n" + xPath.extensions());
-
-            if (sizeNorm.endsWith("c")) {
-                cropResize(xPath, generatedFileNorm, stripMod(sizeNorm, "c"));
-            } else {
-                resize(xPath, generatedFileNorm, sizeNorm);
-            }
-            Utils.increase(filesCounter, Utils.listPaths(site, generatedFileNorm));
-            
-            doc.setTemplate("image_norm");
-            doc.setOriginalPath(xPath.getTargetURL() + "_n" + xPath.extensions());
-
-            if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
-                doc.setOriginalLink(xPath.getTargetURL() + "_n.html");
-                Path generatedFile2 = xPath
+            Path generatedFile2 = xPath
                         .resolveTargetFromBasePath(xPath.getTargetURL() + "_n.html");
-                Utils.writeHTML(xPath, doc, generatedFile2);
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+            
+            final XItem doc;
+            Cache.CacheEntry cached = cache.getCached(xPath, generatedFileNorm);
+            if (cached != null) {
+                doc = cached.xItem();
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFileNorm));
+                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
+                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+                }
+            } else {
+                TemplateBean templateText = site.getTemplate("image_norm", xPath.getLayoutSuffix());
+                Generator gen = new XItem.FillGenerator(site, templateText);
+                doc = new XItem(xPath, gen);
+                generatedFiles.add(generatedFileNorm);
+                if (sizeNorm.endsWith("c")) {
+                    cropResize(xPath, generatedFileNorm, stripMod(sizeNorm, "c"));
+                } else {
+                    resize(xPath, generatedFileNorm, sizeNorm);
+                }
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFileNorm));
+            
+                doc.setTemplate("image_norm");
+                doc.setOriginalPath(xPath.getTargetURL() + "_n" + xPath.extensions());
+
+                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
+                    doc.setOriginalLink(xPath.getTargetURL() + "_n.html");
+                
+                    generatedFiles.add(generatedFile2);
+                    Utils.writeHTML(xPath, doc, generatedFile2);
+                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+                }
+                cache.setCached(xPath, doc, generatedFiles.toArray(new Path[generatedFiles.size()]));
             }
             return doc;
         } else {
@@ -101,37 +118,55 @@ public class HandlerImage implements Handler {
 
     }
 
-    public XItem convertThumb(Site site, XPath xPath, boolean neverWriteToDisk, Map<Path, Integer> filesCounter)
+    public XItem convertThumb(Site site, XPath xPath, boolean neverWriteToDisk, Map<Path, Integer> filesCounter, Cache cache)
             throws TemplateException, IOException, InterruptedException {
 
+        Set<Path> generatedFiles = new HashSet<>();
+        
         String sizeIcon = xPath.getRecursiveProperty("size_icon", "si");
         if (sizeIcon == null) {
             sizeIcon = "250x250^c";
         }
         if (!sizeIcon.startsWith("0x") && site.hasExactTemplate("image_thumb", xPath.getLayoutSuffix())) {
-            TemplateBean templateText = site.getTemplate("image_thumb", xPath.getLayoutSuffix());
-            Generator gen = new XItem.FillGenerator(site, templateText);
-            XItem doc = new XItem(xPath, gen);
+            
             Path generatedFileThumb = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_t" + xPath.extensions());
-
-            if (sizeIcon.endsWith("c")) {
-                cropResize(xPath, generatedFileThumb, stripMod(sizeIcon, "c"));
-            } else {
-                resize(xPath, generatedFileThumb, sizeIcon);
-            }
-            Utils.increase(filesCounter, Utils.listPaths(site, generatedFileThumb));
-            
-            doc.setTemplate("image_thumb");
-            doc.setOriginalPath(xPath.getTargetURL() + "_t" + xPath.extensions());
-
-            if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
-                doc.setOriginalLink(xPath.getTargetURL() + "_t.html");
-
-                Path generatedFile2 = xPath
+            Path generatedFile2 = xPath
                         .resolveTargetFromBasePath(xPath.getTargetURL() + "_t.html");
-                Utils.writeHTML(xPath, doc, generatedFile2);
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+            
+            final XItem doc;
+            Cache.CacheEntry cached = cache.getCached(xPath, generatedFileThumb);
+            if (cached != null) {
+                doc = cached.xItem();
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFileThumb));
+                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
+                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+                }
+                
+            } else {
+                TemplateBean templateText = site.getTemplate("image_thumb", xPath.getLayoutSuffix());
+                Generator gen = new XItem.FillGenerator(site, templateText);
+                doc = new XItem(xPath, gen);
+                generatedFiles.add(generatedFileThumb);
+                if (sizeIcon.endsWith("c")) {
+                    cropResize(xPath, generatedFileThumb, stripMod(sizeIcon, "c"));
+                } else {
+                    resize(xPath, generatedFileThumb, sizeIcon);
+                }
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFileThumb));
+            
+                doc.setTemplate("image_thumb");
+                doc.setOriginalPath(xPath.getTargetURL() + "_t" + xPath.extensions());
+
+                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
+                    doc.setOriginalLink(xPath.getTargetURL() + "_t.html");
+
+                   
+                    generatedFiles.add(generatedFile2);
+                    Utils.writeHTML(xPath, doc, generatedFile2);
+                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+                }
+                cache.setCached(xPath, doc, generatedFiles.toArray(new Path[generatedFiles.size()]));
             }
             return doc;
         } else {
@@ -140,33 +175,50 @@ public class HandlerImage implements Handler {
 
     }
 
-    private XItem convertOrig(XPath xPath, Path generatedFile, Site site, boolean neverWriteToDisk, Map<Path, Integer> filesCounter)
+    private XItem convertOrig(XPath xPath, Path generatedFile, Site site, boolean neverWriteToDisk, Map<Path, Integer> filesCounter, Cache cache)
             throws IOException, TemplateException {
 
+        Set<Path> generatedFiles = new HashSet<>();
         if (xPath.isKeep()) {
-            // copy the original image
-            Files.copy(xPath.path(), generatedFile,
+            Path generatedFile2 = xPath
+                        .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+            
+            final XItem doc;
+            Cache.CacheEntry cached = cache.getCached(xPath, generatedFile);
+            if (cached != null) {
+                doc = cached.xItem();
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
+                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+                }
+            } else {
+            
+                // copy the original image
+                Files.copy(xPath.path(), generatedFile,
                     StandardCopyOption.COPY_ATTRIBUTES,
                     StandardCopyOption.REPLACE_EXISTING,
                     StandardCopyOption.COPY_ATTRIBUTES,
                     LinkOption.NOFOLLOW_LINKS);
-            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                //generatedFiles.add(generatedFile);
+            
+                TemplateBean templateText = site.getTemplate("image_orig", xPath.getLayoutSuffix());
+                Generator gen = new XItem.FillGenerator(site, templateText);
+                doc = new XItem(xPath, gen);
 
-            TemplateBean templateText = site.getTemplate("image_orig", xPath.getLayoutSuffix());
-            Generator gen = new XItem.FillGenerator(site, templateText);
-            XItem doc = new XItem(xPath, gen);
+                doc.setTemplate("image_orig");
+                doc.setOriginalPath(xPath.getTargetURL() + xPath.extensions());
 
-            doc.setTemplate("image_orig");
-            doc.setOriginalPath(xPath.getTargetURL() + xPath.extensions());
+                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
+                    doc.setOriginalLink(xPath.getTargetURL() + ".html");
+                    
+                    generatedFiles.add(generatedFile2);
+                    Utils.writeHTML(xPath, doc, generatedFile2);
+                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+                }
 
-            if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
-                doc.setOriginalLink(xPath.getTargetURL() + ".html");
-                Path generatedFile2 = xPath
-                        .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-                Utils.writeHTML(xPath, doc, generatedFile2);
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+                cache.setCached(xPath, doc, generatedFiles.toArray(new Path[generatedFiles.size()]));
             }
-
             return doc;
 
         } else {
