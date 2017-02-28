@@ -1,5 +1,7 @@
 package net.xdocc;
 
+import freemarker.cache.FileTemplateLoader;
+import freemarker.cache.MultiTemplateLoader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.cache.NullCacheStorage;
+import freemarker.cache.StringTemplateLoader;
+import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
@@ -26,6 +30,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.xdocc.handlers.HandlerCopy;
+import net.xdocc.handlers.HandlerHTML;
+import net.xdocc.handlers.HandlerImage;
+import net.xdocc.handlers.HandlerLink;
+import net.xdocc.handlers.HandlerMarkdown;
+import net.xdocc.handlers.HandlerText;
+import net.xdocc.handlers.HandlerUtils;
+import net.xdocc.handlers.HandlerWikiText;
 import org.reflections.Reflections;
 
 @Accessors(chain = true, fluent = true)
@@ -61,7 +72,7 @@ public class Site {
     private Compiler compiler;
 
     final private Map<String, TemplateBean> templates = new HashMap<>();
-
+    
     public Site(Service service, Path source, Path generated) throws IOException {
         this(service, source, generated, findHandlers(), new Properties());
     }
@@ -89,7 +100,7 @@ public class Site {
                 name + suffix + ".ftl");
         if (templateBean == null || templateBean.file() == null) {
             templateBean = templates.get(name + ".ftl");
-            if (templateBean == null || templateBean.file() == null) {
+            if (templateBean == null) {
                 throw new FileNotFoundException("Template " + name
                         + ".ftl not found, there should be a file called "
                         + (source + "/.templates/" + name + suffix + ".ftl"));
@@ -102,6 +113,18 @@ public class Site {
         }
         return templateBean;
     }
+    
+    private Map<String, String> defaults() {
+        final Map<String, String> map = new HashMap<String, String>();
+        map.putAll(HandlerHTML.MAP);
+        map.putAll(HandlerImage.MAP);
+        map.putAll(HandlerLink.MAP);
+        map.putAll(HandlerMarkdown.MAP);
+        map.putAll(HandlerText.MAP);
+        map.putAll(HandlerUtils.MAP);
+        map.putAll(HandlerWikiText.MAP);
+        return map;
+    }
 
     private Configuration createTemplateEngine(Path templateDirectory)
             throws IOException {
@@ -109,7 +132,13 @@ public class Site {
         // Specify the data source where the template files come from.
         // Here I set a file directory for it:
         if (Files.exists(templateDirectory)) {
-            cfg.setDirectoryForTemplateLoading(templateDirectory.toFile());
+            StringTemplateLoader stl = new StringTemplateLoader();
+            FileTemplateLoader ftl = new FileTemplateLoader(templateDirectory.toFile());
+            for(Map.Entry<String,String> entry:defaults().entrySet()) {
+                stl.putTemplate(entry.getKey(), entry.getValue());
+            }
+            cfg.setTemplateLoader(new MultiTemplateLoader(new TemplateLoader[]{ftl, stl}));
+            //cfg.setDirectoryForTemplateLoading(templateDirectory.toFile());
             cfg.setCacheStorage(new NullCacheStorage());
             // Specify how templates will see the data-model. This is an
             // advanced topic...
@@ -136,6 +165,12 @@ public class Site {
             }
 
         }
+        for(Map.Entry<String,String> entry:defaults().entrySet()) {
+            TemplateBean templateBean = new TemplateBean()
+                .template(freemakerEngine.getTemplate(entry.getKey()));
+        templates.put(entry.getKey(), templateBean);
+        }
+        
 
     }
 
@@ -233,6 +268,10 @@ public class Site {
         private Path file;
 
         public boolean isDirty() {
+            if(file == null) {
+                //its loaded from memory, so never refresh
+                return false;
+            }
             try {
                 final FileTime fileTime = Files.getLastModifiedTime(this.file);
                 final long filesize = Files.size(this.file);

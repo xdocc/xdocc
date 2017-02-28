@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.template.TemplateException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,9 +29,15 @@ import net.xdocc.Cache;
 import net.xdocc.XItem.Generator;
 
 public class HandlerImage implements Handler {
-
-    private static final Logger LOG = LoggerFactory
-            .getLogger(HandlerImage.class);
+    
+    public static final Map<String, String> MAP = new HashMap<String, String>() {{
+        put("image.ftl", "<img src=${path}>");
+        put("image_thumb.ftl", "<img src=${path}>");
+        put("image_norm.ftl", "<img src=${path}>");
+        put("image_orig.ftl", "<img src=${path}>");
+    }};
+    
+    private static final Logger LOG = LoggerFactory.getLogger(HandlerImage.class);
 
     @Override
     public boolean canHandle(Site site, XPath xPath) {

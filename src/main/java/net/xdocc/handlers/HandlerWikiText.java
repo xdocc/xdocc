@@ -7,6 +7,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,9 +32,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HandlerWikiText implements Handler {
+    
+    public static final Map<String, String> MAP = new HashMap<String, String>() {{
+        put("wikitext.ftl", "${content}");
+    }};
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(HandlerWikiText.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HandlerWikiText.class);
 
     final private static String[] MEDIA_WIKI_EXT = {"mediawiki", "Mediawiki",
         "MediaWiki", "MEDIAWIKI"};

@@ -32,6 +32,36 @@ public class TestHandler {
     }
     
     @Test
+    public void testHeader() throws IOException, InterruptedException, ExecutionException {
+        TestUtils.createFile(src, "1-test.txt", "this is a text file <a href=\"${path}\">current</a>(<a href=\"${pathtoroot}\">back</a>)");
+        TestUtils.createFile(src, ".xdocc", "page=true");
+        TestUtils.createFile(src, "2-dir1.nav/1-test.txt", "this is a 3rd text file <a href=\"${path}\">current</a>(<a href=\"${pathtoroot}\">back</a>)");
+        TestUtils.createFile(src, "2-dir1.nav/.xdocc", "page=true");
+        
+        TestUtils.createFile(src, ".templates/header.ftl", "[header in path: ${pathtoroot}]");
+        TestUtils.createFile(src, ".templates/text.ftl", "${content}");
+        TestUtils.createFile(src, ".templates/page.ftl", "<#include \"header.ftl\">${content}");
+        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>${item.content}</#list>");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertEquals("[header in path: ../]this is a 3rd text file <a href=\".\">current</a>(<a href=\"../\">back</a>)", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
+    }
+    
+    @Test
+    public void testCopyRoot() throws IOException, InterruptedException, ExecutionException {
+        TestUtils.createFile(src, "1-test.txt", "this is a text file");
+        TestUtils.createFile(src, "h2h.png", "this is an image");
+        TestUtils.createFile(src, ".xdocc", "page=true");
+        
+        TestUtils.createFile(src, ".templates/header.ftl", "[header in path: ${pathtoroot}]");
+        TestUtils.createFile(src, ".templates/text.ftl", "${content}");
+        TestUtils.createFile(src, ".templates/page.ftl", "<#include \"header.ftl\">${content}");
+        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>${item.content}</#list>");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertTrue(Files.exists(gen.resolve("h2h.png")));
+    }
+    
+    
+    @Test
     public void testPath() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-test.txt", "this is a text file <a href=\"${path}\">current</a>(<a href=\"${pathtoroot}\">back</a>)");
         TestUtils.createFile(src, "2-dir1.nav/1-test.txt", "this is a 2nd text file <a href=\"${path}\">current</a>(<a href=\"${pathtoroot}\">back</a>)");
@@ -42,7 +72,7 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals("[this is a text file <a href=\".\">current</a>(<a href=\"\">back</a>)][[this is a 2nd text file <a href=\"dir1\">current</a>(<a href=\"\">back</a>)][[this is a 3rd text file <a href=\"dir1/subdir1\">current</a>(<a href=\"\">back</a>)]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+        Assert.assertEquals("[this is a text file <a href=\".\">current</a>(<a href=\".\">back</a>)][[this is a 2nd text file <a href=\"dir1\">current</a>(<a href=\".\">back</a>)][[this is a 3rd text file <a href=\"dir1/subdir1\">current</a>(<a href=\".\">back</a>)]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
         Assert.assertEquals("[this is a 2nd text file <a href=\".\">current</a>(<a href=\"../\">back</a>)][[this is a 3rd text file <a href=\"subdir1\">current</a>(<a href=\"../\">back</a>)]]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
         Assert.assertEquals("[this is a 3rd text file <a href=\".\">current</a>(<a href=\"../../\">back</a>)]", FileUtils.readFileToString(gen.resolve("dir1/subdir1/index.html").toFile()));
     }
@@ -149,6 +179,26 @@ public class TestHandler {
     }
     
     @Test
+    public void testLink3() throws IOException, InterruptedException, ExecutionException {
+        TestUtils.createFile(src, "1-test.txt", "first item");
+        TestUtils.createFile(src, "2-link.link", "url=dir3/*\nlimit=1");
+        TestUtils.createFile(src, "3-hallo.txt", "third item");
+        TestUtils.createFile(src, ".xdocc" ,"page=true");
+        
+        TestUtils.createFile(src, "3-dir3/4-test4.txt", "test4");
+        TestUtils.createFile(src, "3-dir3/5-test5.txt", "test5");
+        TestUtils.createFile(src, "3-dir3/6-test6.txt", "test6");
+        
+        TestUtils.createFile(src, ".templates/text.ftl", "${content}");
+        TestUtils.createFile(src, ".templates/page.ftl", "${content}");
+        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
+        TestUtils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        
+        Assert.assertEquals("[first item][(test4)][third item]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+    }
+    
+    @Test
     public void testCopy() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-dir1/read.me", "copy this data 1:1");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
@@ -220,6 +270,15 @@ public class TestHandler {
         
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertEquals("[[[([<p><img border=\"0\" src=\"dir1/label-1.jpg\"/></p>])([<p><a href=\"dir2/label-2_n.html\"><img border=\"0\" src=\"dir2/label-2_t.jpg\"/></a></p>])([<p><a href=\"dir3/../dir1/read.html\"><img border=\"0\" src=\"dir3/label-3_t.jpg\"/></a></p>])]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+    }
+    
+    @Test
+    public void testMarkdown() throws IOException, InterruptedException, ExecutionException {
+        TestUtils.createFile(src, "1-dir1/1-read.md", "#A headline");
+        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
+        TestUtils.createFile(src, ".templates/markdown.ftl", "${content}");
+        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertEquals("<h1>A headline</h1>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()).trim());
     }
             
 }

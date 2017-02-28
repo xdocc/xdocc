@@ -47,22 +47,18 @@ public class HandlerCopy implements Handler {
             Cache.CacheEntry cached = cache.getCached(xPath);
             if (cached != null) {
                 XItem doc = cached.xItem();
-                if (xPath.getParent().isItemWritten()) {
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
-                }
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));                
                 return doc;
                 
             } else {
-                if (xPath.getParent().isItemWritten()) {
+                //copy ignores the page/isItemWritten flag
+                Files.createDirectories(generatedFile.getParent());
+                Files.copy(xPath.path(), generatedFile,
+                        StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                LOG.debug("copy {} to {}", xPath.path(), generatedFile);
 
-                    Files.createDirectories(generatedFile.getParent());
-                    Files.copy(xPath.path(), generatedFile,
-                            StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING,
-                            StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
-                    LOG.debug("copy {} to {}", xPath.path(), generatedFile);
-
-                }
                 if (xPath.isCopy() || xPath.isVisible()) {
                     XItem item = createDocumentBrowse(site, xPath, "");
                     cache.setCached(xPath, item, generatedFile);

@@ -41,6 +41,18 @@ public class Compiler {
     public CompletableFuture<List<XItem>> compile(final Path path) {
         return compile(path, 0, 0);
     }
+    
+    public XItem compile(XPath child) throws Exception {
+        for (Handler handler : handlers) {
+            if (handler.canHandle(site, child)) {
+                final XItem xItem = handler.compile(site, child, filesCounter, cache);
+                if(xItem != null) {
+                    return xItem;
+                }
+            }
+        }
+        return null;
+    }
 
     public CompletableFuture<List<XItem>> compile(final Path path, 
             final int depth, final int promoteDepth) {
@@ -62,14 +74,9 @@ public class Compiler {
                             futuresNoPromote.add(compile(child.path(), depth + 1, 0));
                         }
                     } else {
-                        for (Handler handler : handlers) {
-                            if (handler.canHandle(site, child)) {
-                                final XItem xItem = handler.compile(site, child, filesCounter, cache);
-                                if(xItem != null) {
-                                    results.add(xItem);
-                                    break;
-                                }
-                            }
+                        final XItem xItem = compile(child);
+                        if(xItem != null) {
+                            results.add(xItem);
                         }
                     }
                 }

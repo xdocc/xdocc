@@ -46,29 +46,16 @@ public class TestCache {
     }
     
     @Test
-    public void testTextileImage() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1/label-1.jpg");
-        TestUtils.copyFile("imgs/label-2.jpg", src, "1-dir2/label-2.jpg");
-        TestUtils.copyFile("imgs/label-3.jpg", src, "1-dir3/label-3.jpg");
-        TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-1.jpg!");
-        TestUtils.createFile(src, "1-dir2/1-me.textile", "!label-2.jpg:thumb!");
-        TestUtils.createFile(src, "1-dir3/1-first.textile", "!label-3.jpg:thumb!:../dir1/read.html");
-        
-        TestUtils.createFile(src, "1-dir4.prm/4-dir5.prm/1-link.link", "url=../../dir1 \nurl=../../dir2 \nurl=../../dir3");
-        
-        TestUtils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
+    public void testImage() throws IOException, InterruptedException, ExecutionException {
+        TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1.vis.prm/1-label.jpg");
+        TestUtils.createFile(src, ".templates/image.ftl", "<#if items[0].link??>${items[0].content}</#if>|<#if items[1].link??>${items[1].content}</#if>|<#if items[2].link??>${items[2].content}</#if>");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
-        TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
-        
         TestUtils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_norm.ftl", "norm:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_orig.ftl", "orig:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image.ftl", "");
-        
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Cache cache =  Service.service().cache();
-        Service.restart(cache, "-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         
-        Assert.assertEquals(29, cache.hits());
+        Service.restart(cache, "-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Assert.assertEquals(1, cache.hits());
+        
     }
 }

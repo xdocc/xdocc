@@ -4,9 +4,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import net.xdocc.Cache;
 
 import net.xdocc.XItem;
@@ -15,9 +15,12 @@ import net.xdocc.Utils;
 import net.xdocc.XPath;
 
 public class HandlerText implements Handler {
+    
+    public static final Map<String, String> MAP = new HashMap<String, String>() {{
+        put("text.ftl", "${content}");
+    }};
 
-	// final private static Logger LOG = LoggerFactory.getLogger(
-	// HandlerText.class );
+	
 
 	@Override
 	public boolean canHandle(Site site, XPath xPath) {

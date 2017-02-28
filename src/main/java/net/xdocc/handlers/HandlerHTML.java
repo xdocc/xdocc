@@ -3,6 +3,7 @@ package net.xdocc.handlers;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.xdocc.Cache;
@@ -17,9 +18,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
 public class HandlerHTML implements Handler {
-
-    // final private static Logger LOG = LoggerFactory.getLogger(
-    // HandlerText.class );
+    
+    public static final Map<String, String> MAP = new HashMap<String, String>() {{
+        put("html.ftl", "${content}");
+    }};
+            
     @Override
     public boolean canHandle(Site site, XPath xPath) {
         return xPath.isCompile() && !xPath.isDirectory()

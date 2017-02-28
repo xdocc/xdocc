@@ -10,6 +10,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.xdocc.Cache;
@@ -26,6 +27,10 @@ import org.tautua.markdownpapers.parser.ParseException;
 import org.tautua.markdownpapers.parser.Parser;
 
 public class HandlerMarkdown implements Handler {
+    
+    public static final Map<String, String> MAP = new HashMap<String, String>() {{
+        put("md.ftl", "${content}");
+    }};
 
     @Override
     public boolean canHandle(Site site, XPath xPath) {

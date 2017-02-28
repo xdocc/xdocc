@@ -69,6 +69,7 @@ public class Utils {
     }
     
     private static XItem adjustPathToRoot0(XItem doc, String newPathToRoot) {
+        newPathToRoot = newPathToRoot.isEmpty() ? ".":newPathToRoot;
         doc.setPathToRoot(newPathToRoot);
         return doc;
     }
@@ -562,8 +563,7 @@ public class Utils {
             String htmlContent, String template) throws IOException {
         TemplateBean templateText = site.getTemplate(template, xPath.getLayoutSuffix());
         // create the document
-        XItem.Generator documentGenerator = new XItem.FillGenerator(site,
-                templateText);
+        XItem.Generator documentGenerator = new XItem.FillGenerator(site, templateText);
        
         XItem doc = new XItem(xPath, documentGenerator);
         doc.setHTML(htmlContent);
@@ -574,16 +574,22 @@ public class Utils {
     public static void writeListHTML(XPath xPath, XItem doc, Path generatedFile) 
             throws IOException, TemplateException {
         
-        //adjust path
+        //adjust path in current item
         String minusPath = xPath.getTargetURL();
         doc = Utils.adjustPath(doc, minusPath);
         String minusPathToRoot = xPath.originalPathToRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
         doc = Utils.adjustPromotedDepth(doc, doc.getPromoteDepthOriginal());
         
+        //adjust path in page item
         String htmlSite = doc.getContent();
+        XItem page = Utils.createDocument(xPath.site(), xPath, htmlSite, "page");
+        page = Utils.adjustPath(page, minusPath);
+        page = Utils.adjustPathToRoot(page, minusPathToRoot);
+        page = Utils.adjustPromotedDepth(page, doc.getPromoteDepthOriginal());
+        
         Files.createDirectories(generatedFile.getParent());
-        Utils.write(htmlSite, xPath, generatedFile);
+        Utils.write(page.getContent(), xPath, generatedFile);
     }
     
     public static XItem adjust(XPath xPath, XItem doc) {
@@ -597,14 +603,19 @@ public class Utils {
     public static void writeHTML(XPath xPath, XItem doc, Path generatedFile) 
             throws IOException, TemplateException {
         
-         //adjust path
+         //adjust path in current item
         String minusPath = xPath.getTargetURLPath();
         doc = Utils.adjustPath(doc, minusPath);
         String minusPathToRoot = xPath.originalPathToRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
         
+        //adjust path in page item
         String htmlSite = doc.getContent();
+        XItem page = Utils.createDocument(xPath.site(), xPath, htmlSite, "page");
+        page = Utils.adjustPath(page, minusPath);
+        page = Utils.adjustPathToRoot(page, minusPathToRoot);
+        
         Files.createDirectories(generatedFile.getParent());
-        Utils.write(htmlSite, xPath, generatedFile);
+        Utils.write(page.getContent(), xPath, generatedFile);
     }
 }

@@ -109,14 +109,6 @@ public class Link {
                 return sb.toString();
 	}
 
-	public Link copy() {
-		Link copy = new Link(target, parent);
-		for (Link link : children) {
-			copy.children.add(link.copy());
-		}
-		return copy;
-	}
-
 	public void setSelected(boolean selected) {
 		this.selected = selected;
 	}
