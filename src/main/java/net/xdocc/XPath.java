@@ -408,6 +408,11 @@ final public class XPath implements Comparable<XPath> {
         String url = Utils.createURL(paths);
         return url;
     }
+    
+    public int getTargetDepth() {
+        String[] paths = Utils.createURLSplit(site.source(), this);
+        return paths.length - (isDirectory() ? 0 : 1);
+    }
 
     public String getTargetURLPath() {
         String[] paths = Utils.createURLSplit(site.source(), this);
@@ -854,6 +859,8 @@ final public class XPath implements Comparable<XPath> {
             this.name = tmp[1];
         }
     }
+
+   
 
     
 }

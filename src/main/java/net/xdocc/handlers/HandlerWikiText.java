@@ -199,10 +199,14 @@ public class HandlerWikiText implements Handler {
             if (href != null) {
                 //if relative only!
                 if (!href.contains("://")) {
-                    XPath img = xItem.xPath().getParent().resolveSource(href);
-                    href = xItem.getPath() + "/" + href;
-                    Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img.extensions());
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                    try {
+                        XPath img = xItem.xPath().getParent().resolveSource(href);
+                        href = xItem.getPath() + "/" + href;
+                        Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img.extensions());
+                        Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                    } catch (IllegalArgumentException e) {
+                        //try to find a source to for conversion, TODO: check what to do here
+                    }
                 }
             }
             super.emitAnchorHref(href);

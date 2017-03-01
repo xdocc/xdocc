@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import org.apache.commons.lang.BooleanUtils;
@@ -75,7 +76,8 @@ public class XItem implements Comparable<XItem>, Serializable {
         this.generator = documentGenerator;
         this.xPath = xPath;
         initXPath();
-        initNavigation(xPath);
+        initNavigation();
+        initDepth();
     }
     
     Generator documentGenerator() {
@@ -84,6 +86,10 @@ public class XItem implements Comparable<XItem>, Serializable {
     
     public XPath xPath() {
         return xPath;
+    }
+    
+    private void initDepth() {
+        generator.model().put(XItem.DEPTH, xPath.getTargetDepth());
     }
     
     private void initXPath() {
@@ -122,7 +128,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.IS_KEEP, xPath.isKeep());
     }
     
-    private void initNavigation(XPath xPath) /*throws IOException*/ {
+    private void initNavigation() {
         Link global = xPath.site().globalNavigation();
         generator.model().put(NAVIGATION, global.getChildren());
         Link local = xPath.site().loadLocalNavigation(xPath);
@@ -434,9 +440,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         return sb.toString();
     }    
 
-    /*public void add(String key, String value) {
-        generator.model().put(key, value);
-    }*/
+    
 
     public void addItems(XItem doc) {
         List<XItem> items = (List<XItem>) documentGenerator().model().get(ITEMS);
@@ -447,17 +451,16 @@ public class XItem implements Comparable<XItem>, Serializable {
         setItems(items);
     }
 
-    /*public String getString(String key) {
-        Object retVal = generator.model().get(key);
-        if(retVal != null) {
-            return retVal.toString();
-        }
-        return null;
-    }*/
+    
+
+    //public void setTemplateBean(Site.TemplateBean templateBean) {
+    //    generator.templateBean(templateBean);
+    //}
     
     public interface Generator {
         public String generate();
         public Map<String, Object> model();
+        public Generator templateBean(Site.TemplateBean templateBean);
     }
 
     public static class EmptyGenerator implements Generator {
@@ -471,6 +474,11 @@ public class XItem implements Comparable<XItem>, Serializable {
         public Map<String, Object> model() {
             return MODEL;
         }
+
+        @Override
+        public Generator templateBean(Site.TemplateBean templateBean) {
+            return this;
+        }
     }
 
     @Accessors(chain = true, fluent = true)
@@ -480,8 +488,8 @@ public class XItem implements Comparable<XItem>, Serializable {
                 .getLogger(Generator.class);
         private static final long serialVersionUID = -8512427831292951263L;
 
-        @Getter
-        final private Site.TemplateBean templateBean;
+        @Getter @Setter
+        private Site.TemplateBean templateBean;
 
         @Getter
         final private Map<String, Object> model;

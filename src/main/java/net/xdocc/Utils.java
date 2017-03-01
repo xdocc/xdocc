@@ -504,6 +504,9 @@ public class Utils {
         if (xPath == null) {
             return Collections.emptyList();
         }
+        if(!xPath.isDirectory()) {
+            xPath = xPath.getParent();
+        }
         List<XPath> xPaths = new ArrayList<>();
         while (!root.equals(xPath.path())) {
             xPaths.add(0, xPath);
@@ -584,6 +587,8 @@ public class Utils {
         //adjust path in page item
         String htmlSite = doc.getContent();
         XItem page = Utils.createDocument(xPath.site(), xPath, htmlSite, "page");
+        
+        page.setDepth(doc.getDepth(), doc.getPromoteDepthOriginal());
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
         page = Utils.adjustPromotedDepth(page, doc.getPromoteDepthOriginal());
@@ -609,13 +614,25 @@ public class Utils {
         String minusPathToRoot = xPath.originalPathToRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
         
+        
+        String path = generatedFile.getFileName().toString();
+        path = path.isEmpty() ? ".":path;
+        doc.setUrl(path);
+        
+        
         //adjust path in page item
         String htmlSite = doc.getContent();
         XItem page = Utils.createDocument(xPath.site(), xPath, htmlSite, "page");
+        page.setDepth(doc.getDepth(), doc.getPromoteDepthOriginal());
+        page.setUrl(path);
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
         
         Files.createDirectories(generatedFile.getParent());
+        
+        
+        
+        
         Utils.write(page.getContent(), xPath, generatedFile);
     }
 }

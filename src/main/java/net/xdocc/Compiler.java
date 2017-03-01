@@ -76,6 +76,7 @@ public class Compiler {
                     } else {
                         final XItem xItem = compile(child);
                         if(xItem != null) {
+                            xItem.setDepth(depth, promoteDepth);
                             results.add(xItem);
                         }
                     }

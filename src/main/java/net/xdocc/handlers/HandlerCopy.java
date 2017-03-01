@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.xdocc.Cache;
@@ -22,6 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HandlerCopy implements Handler {
+    
+    public static final Map<String, String> MAP = new HashMap<String, String>() {{
+        put("file.ftl", "<a href=\"${url}\">${name}</a>");
+    }};
 
     private static final Logger LOG = LoggerFactory.getLogger(HandlerCopy.class);
 
@@ -64,10 +69,6 @@ public class HandlerCopy implements Handler {
                     cache.setCached(xPath, item, generatedFile);
                     return item;
 
-                } else if (xPath.isVisible()) {
-                    XItem item = createDocumentFile(site, xPath, "");
-                    cache.setCached(xPath, item, generatedFile);
-                    return item;
                 } else {
                     cache.setCached(xPath, null, generatedFile);
                 }
@@ -84,7 +85,8 @@ public class HandlerCopy implements Handler {
         return Arrays.asList(new String[0]);
     }
 
-    public static XItem createDocumentFile(Site site, XPath xPath, String path) throws IOException {
+    public static XItem createDocumentBrowse(Site site, XPath xPath,
+            String path) throws IOException {
         TemplateBean templateText = site.getTemplate("file", xPath.getLayoutSuffix());
         Generator documentGenerator = new XItem.FillGenerator(site,
                 templateText);
@@ -92,21 +94,8 @@ public class HandlerCopy implements Handler {
         Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
                 .toMillis());
         document.setDate(lastModified);
-        document.setTemplate("file");
-        return document;
-    }
-
-    public static XItem createDocumentBrowse(Site site, XPath xPath,
-            String path) throws IOException {
-        TemplateBean templateText = site.getTemplate("browse", xPath.getLayoutSuffix());
-        Generator documentGenerator = new XItem.FillGenerator(site,
-                templateText);
-        XItem document = new XItem(xPath, documentGenerator);
-        Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
-                .toMillis());
-        document.setDate(lastModified);
         document.setName(xPath.fileName());
-        document.setTemplate("browse");
+        document.setTemplate("file");
         return document;
     }
 

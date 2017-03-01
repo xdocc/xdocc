@@ -123,6 +123,7 @@ public class Site {
         map.putAll(HandlerText.MAP);
         map.putAll(HandlerUtils.MAP);
         map.putAll(HandlerWikiText.MAP);
+        map.putAll(HandlerCopy.MAP);
         return map;
     }
 

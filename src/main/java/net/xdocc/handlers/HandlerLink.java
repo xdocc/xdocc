@@ -72,6 +72,9 @@ public class HandlerLink implements Handler {
                 int counter = 0;
                 for (XPath found : founds) {
                     XItem item = site.compiler().compile(found);
+                    
+                    //Site.TemplateBean templateText = site.getTemplate(template, xPath.getLayoutSuffix());
+                    //item.setTemplateBean(templateText);
                     documents.add(item);
                     //enforce limit
                     if(limit >= 0 && ++counter >= limit ) {
