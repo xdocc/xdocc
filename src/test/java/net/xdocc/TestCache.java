@@ -55,7 +55,7 @@ public class TestCache {
         Cache cache =  Service.service().cache();
         
         Service.restart(cache, "-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals(1, cache.hits());
+        Assert.assertEquals(2, cache.hits());
         
     }
 }

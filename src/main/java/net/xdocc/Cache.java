@@ -8,7 +8,10 @@ package net.xdocc;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
@@ -76,11 +79,16 @@ public class Cache {
     }
 
     public Cache setCached(XPath xPath, XItem item, Path... generatedFile) {
-        Map<XPath, Long> map = parentMap(xPath);
-        CacheEntry c  = new CacheEntry().xItem(item).sourceDirs(map).generatedFiles(generatedFile);
         String key = xPath.getTargetURL();
-        
-        cache.put(key, c);
+        CacheEntry c = cache.get(key);
+        List<Path> genFiles = new ArrayList<>(Arrays.asList(generatedFile));
+        if(c == null) {
+            Map<XPath, Long> map = parentMap(xPath);
+            c  = new CacheEntry().xItem(item).sourceDirs(map).generatedFiles(genFiles);
+            cache.put(key, c);
+        } else {
+            c.generatedFiles().addAll(genFiles);  
+        }
         return this;
     }
 
@@ -105,7 +113,7 @@ public class Cache {
         @Getter @Setter
         private Map<XPath, Long> sourceDirs;
         @Getter @Setter
-        private Path[] generatedFiles;
+        private List<Path> generatedFiles;
     }
     
 }
