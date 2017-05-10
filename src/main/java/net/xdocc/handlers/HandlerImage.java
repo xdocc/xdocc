@@ -7,34 +7,55 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 
-import net.xdocc.XItem;
-import net.xdocc.Site;
+import net.xdocc.*;
 import net.xdocc.Site.TemplateBean;
-import net.xdocc.Utils;
-import net.xdocc.XPath;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.template.TemplateException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import net.xdocc.Cache;
 import net.xdocc.XItem.Generator;
 
+/**
+ * Create responsive images
+ *
+ * https://responsiveimages.org/demos/on-a-grid/index.html
+ * http://www.responsivebreakpoints.com/
+ * http://stackoverflow.com/questions/21262466/imagemagick-how-to-minimally-crop-an-image-to-a-certain-aspect-ratio
+ *
+ * Responsive images are hard :)
+ *
+ * If an image can be compiled -> it start eg. with 1-img.jpg,
+ * then a series of scaled down images by 50% are created. These
+ * images can be used for srcset, where the browser handles the
+ * correct loading of the image
+ *
+ * The user can choose to crop the image or set if a smaller preview
+ * image should be linked to another site.
+ *
+ * 1-img|n=Boat|link.jpg
+ * 1-img|n=Boat|link|crop=16-9.jpg
+ */
 public class HandlerImage implements Handler {
     
     public static final Map<String, String> MAP = new HashMap<String, String>() {{
-        put("image.ftl", "<img src=${path}>");
-        put("image_thumb.ftl", "<img src=${path}>");
-        put("image_norm.ftl", "<img src=${path}>");
-        put("image_orig.ftl", "<img src=${path}>");
+        put("image.ftl",
+                "<figure>"+
+                "<#if link??><a href=\"${path}/${link}\"></#if>" +
+                "<img src=\"${path}/${srcsets?last.src}\" " +
+                    "srcset=\"<#list srcsets as srcset>${path}/${srcset.src} ${srcset.attribute}<#sep>,</#list>\" " +
+                    "sizes=\"90vw\">" +
+                "<figcaption>${name}</figcaption>" +
+                "<#if link??></a></#if></figure>");
+        put("image_detail.ftl",
+                "<figure>"+
+                "<img src=\"${path}/${srcsets?last.src}\" " +
+                    "srcset=\"<#list srcsets as srcset>${path}/${srcset.src} ${srcset.attribute}<#sep>,</#list>\" " +
+                    "sizes=\"90vw\">" +
+                "<figcaption>${name}</figcaption>" +
+                "</figure>");
     }};
     
     private static final Logger LOG = LoggerFactory.getLogger(HandlerImage.class);
@@ -52,186 +73,50 @@ public class HandlerImage implements Handler {
         Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + xPath.extensions());
         Files.createDirectories(generatedFile.getParent());
 
-        TemplateBean templateTextTop = site.getTemplate("image", xPath.getLayoutSuffix());
-        Generator genTop = new XItem.FillGenerator(site, templateTextTop);
-        XItem docTop = new XItem(xPath, genTop);
+        TemplateBean templateImage = site.getTemplate("image", xPath.getLayoutSuffix());
+        Generator genImage = new XItem.FillGenerator(site, templateImage);
+        XItem docTop = new XItem(xPath, genImage);
 
-        XItem doc = convertOrig(xPath, generatedFile, site, false, filesCounter, cache);
-        docTop.addItems(doc);
+        //check if we need to crop
+        List<Pair<Path,String>> resizeList = null;
+        String crop = xPath.getRecursiveProperty("crop");
+        if(crop !=null) {
+            crop = crop.replace("-","/");
+            List<Pair<Path,String>> cropList = HandlerImage.cropImages(xPath, crop, 100);
+            docTop.setSrcSets(convert(xPath, site, filesCounter, cropList));
+        }
+        else {
+            resizeList = HandlerImage.resizeImages(xPath, 100);
+            docTop.setSrcSets(convert(xPath, site, filesCounter, resizeList));
+        }
 
-        // create a thumbnail
-        doc = convertThumb(site, xPath, false, filesCounter, cache);
-        docTop.addItems(doc);
-
-        // create display size image
-        doc = convertNorm(site, xPath, false, filesCounter, cache);
-        docTop.addItems(doc);
-
+        //check if link is required
+        if(xPath.hasRecursiveProperty("link","l") && xPath.getParent().isItemWritten()) {
+            //create file
+            TemplateBean templateLink = site.getTemplate("image_detail", xPath.getLayoutSuffix());
+            Generator genLink = new XItem.FillGenerator(site, templateLink);
+            XItem docDetail = new XItem(xPath, genLink);
+            //set link
+            docTop.setLink(xPath.getTargetURLName() + ".html");
+            if(resizeList == null) {
+                resizeList = HandlerImage.resizeImages(xPath, 100);
+            }
+            docDetail.setSrcSets(convert(xPath, site, filesCounter, resizeList));
+            Path generatedFile2 = xPath
+                    .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+            Utils.writeHTML(xPath, docDetail, generatedFile2);
+            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+        }
         return docTop;
     }
 
-    public XItem convertNorm(Site site, XPath xPath, boolean neverWriteToDisk, Map<Path, Integer> filesCounter, Cache cache)
-            throws InterruptedException, TemplateException, IOException {
-
-        Set<Path> generatedFiles = new HashSet<>();
-        String sizeNorm = xPath.getRecursiveProperty("size_normal", "sn");
-        if (sizeNorm == null) {
-            sizeNorm = "800x600^";
+    private List<SrcSet> convert(XPath xPath, Site site, Map<Path, Integer> filesCounter, List<Pair<Path, String>> resizeList) {
+        List<SrcSet> result = new ArrayList<>();
+        for(Pair<Path, String> pair:resizeList) {
+            Utils.increase(filesCounter, Utils.listPaths(site, pair.element0()));
+            result.add(new SrcSet(pair.element0().getFileName().toString(), pair.element1()));
         }
-
-        if (!sizeNorm.startsWith("0x") && site.hasExactTemplate("image_norm", xPath.getLayoutSuffix())) {
-
-            Path generatedFileNorm = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
-                    + "_n" + xPath.extensions());
-            Path generatedFile2 = xPath
-                        .resolveTargetFromBasePath(xPath.getTargetURL() + "_n.html");
-            
-            final XItem doc;
-            Cache.CacheEntry cached = cache.getCached(xPath, generatedFileNorm);
-            if (cached != null) {
-                doc = cached.xItem();
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFileNorm));
-                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
-                }
-            } else {
-                TemplateBean templateText = site.getTemplate("image_norm", xPath.getLayoutSuffix());
-                Generator gen = new XItem.FillGenerator(site, templateText);
-                doc = new XItem(xPath, gen);
-                generatedFiles.add(generatedFileNorm);
-                if (sizeNorm.endsWith("c")) {
-                    cropResize(xPath, generatedFileNorm, stripMod(sizeNorm, "c"));
-                } else {
-                    resize(xPath, generatedFileNorm, sizeNorm);
-                }
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFileNorm));
-            
-                doc.setTemplate("image_norm");
-                doc.setOriginalPath(xPath.getTargetURL() + "_n" + xPath.extensions());
-
-                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
-                    doc.setOriginalLink(xPath.getTargetURL() + "_n.html");
-                
-                    generatedFiles.add(generatedFile2);
-                    Utils.writeHTML(xPath, doc, generatedFile2);
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
-                }
-                cache.setCached(xPath, doc, generatedFiles.toArray(new Path[generatedFiles.size()]));
-            }
-            return doc;
-        } else {
-            return new XItem(xPath, new XItem.EmptyGenerator());
-        }
-
-    }
-
-    public XItem convertThumb(Site site, XPath xPath, boolean neverWriteToDisk, Map<Path, Integer> filesCounter, Cache cache)
-            throws TemplateException, IOException, InterruptedException {
-
-        Set<Path> generatedFiles = new HashSet<>();
-        
-        String sizeIcon = xPath.getRecursiveProperty("size_icon", "si");
-        if (sizeIcon == null) {
-            sizeIcon = "250x250^c";
-        }
-        if (!sizeIcon.startsWith("0x") && site.hasExactTemplate("image_thumb", xPath.getLayoutSuffix())) {
-            
-            Path generatedFileThumb = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
-                    + "_t" + xPath.extensions());
-            Path generatedFile2 = xPath
-                        .resolveTargetFromBasePath(xPath.getTargetURL() + "_t.html");
-            
-            final XItem doc;
-            Cache.CacheEntry cached = cache.getCached(xPath, generatedFileThumb);
-            if (cached != null) {
-                doc = cached.xItem();
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFileThumb));
-                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
-                }
-                
-            } else {
-                TemplateBean templateText = site.getTemplate("image_thumb", xPath.getLayoutSuffix());
-                Generator gen = new XItem.FillGenerator(site, templateText);
-                doc = new XItem(xPath, gen);
-                generatedFiles.add(generatedFileThumb);
-                if (sizeIcon.endsWith("c")) {
-                    cropResize(xPath, generatedFileThumb, stripMod(sizeIcon, "c"));
-                } else {
-                    resize(xPath, generatedFileThumb, sizeIcon);
-                }
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFileThumb));
-            
-                doc.setTemplate("image_thumb");
-                doc.setOriginalPath(xPath.getTargetURL() + "_t" + xPath.extensions());
-
-                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
-                    doc.setOriginalLink(xPath.getTargetURL() + "_t.html");
-
-                   
-                    generatedFiles.add(generatedFile2);
-                    Utils.writeHTML(xPath, doc, generatedFile2);
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
-                }
-                cache.setCached(xPath, doc, generatedFiles.toArray(new Path[generatedFiles.size()]));
-            }
-            return doc;
-        } else {
-            return new XItem(xPath, new XItem.EmptyGenerator());
-        }
-
-    }
-
-    private XItem convertOrig(XPath xPath, Path generatedFile, Site site, boolean neverWriteToDisk, Map<Path, Integer> filesCounter, Cache cache)
-            throws IOException, TemplateException {
-
-        Set<Path> generatedFiles = new HashSet<>();
-        if (xPath.isKeep()) {
-            Path generatedFile2 = xPath
-                        .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-            
-            final XItem doc;
-            Cache.CacheEntry cached = cache.getCached(xPath, generatedFile);
-            if (cached != null) {
-                doc = cached.xItem();
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
-                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
-                }
-            } else {
-            
-                // copy the original image
-                Files.copy(xPath.path(), generatedFile,
-                    StandardCopyOption.COPY_ATTRIBUTES,
-                    StandardCopyOption.REPLACE_EXISTING,
-                    StandardCopyOption.COPY_ATTRIBUTES,
-                    LinkOption.NOFOLLOW_LINKS);
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
-                //generatedFiles.add(generatedFile);
-            
-                TemplateBean templateText = site.getTemplate("image_orig", xPath.getLayoutSuffix());
-                Generator gen = new XItem.FillGenerator(site, templateText);
-                doc = new XItem(xPath, gen);
-
-                doc.setTemplate("image_orig");
-                doc.setOriginalPath(xPath.getTargetURL() + xPath.extensions());
-
-                if (!neverWriteToDisk && xPath.getParent().isItemWritten()) {
-                    doc.setOriginalLink(xPath.getTargetURL() + ".html");
-                    
-                    generatedFiles.add(generatedFile2);
-                    Utils.writeHTML(xPath, doc, generatedFile2);
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
-                }
-
-                cache.setCached(xPath, doc, generatedFiles.toArray(new Path[generatedFiles.size()]));
-            }
-            return doc;
-
-        } else {
-            return new XItem(xPath, new XItem.EmptyGenerator());
-        }
-
+        return result;
     }
 
     @Override
@@ -240,119 +125,96 @@ public class HandlerImage implements Handler {
             "JPEG", "gif", "GIF"});
     }
 
-    public static void resize(XPath xPath, Path generatedFile, String size)
-            throws IOException, InterruptedException {
-        executeConvert(xPath.toString(), size, generatedFile.toString());
+    public static String executeGetAspectSize(String image, String aspect) throws IOException, InterruptedException {
+        return executeAndOutput(new ProcessBuilder(
+                "/usr/bin/convert",
+                image,
+                "-format",
+                "%[fx:w/h>="+aspect+"?h*"+aspect+":w]x%[fx:w/h<="+aspect+"?w/"+aspect+":h]",
+                "info:"));
     }
 
-    public static void cropResize(XPath xPath, Path generatedFile, String size)
-            throws IOException, InterruptedException {
-        // String sizeRaw = stripMod(size, "^", "!", ">", "<");
-        // String sizeMod = getMod(size, "^", "!", ">", "<");
-        String sizeMod = "^";
-        executeConvertCrop(xPath.toString(), size, sizeMod,
-                generatedFile.toString());
+    public static String executeGetSize(String image) throws IOException, InterruptedException {
+        return executeAndOutput(new ProcessBuilder(
+                "/usr/bin/convert",
+                image,
+                "-format",
+                "%[w]x%[h]",
+                "info:"));
     }
 
-    private static void executeConvert(String image, String size,
-            String resizedImage) throws IOException, InterruptedException {
-        // START OS hack
-        ProcessBuilder pb;
-        switch (Utils.getOSType()) {
-            case LINUX:
-                pb = new ProcessBuilder("/usr/bin/convert", image, "-resize", size,
-                        resizedImage);
-                break;
-            case WIN:
-                pb = new ProcessBuilder("/usr/bin/convert", image, "-resize", size,
-                        resizedImage);
-                break;
-            case MAC:
-                StringTokenizer tokenizer = new StringTokenizer(size);
-                String tmpWidth = tokenizer.nextToken("x");
-                String tmpHeight = tokenizer.nextToken("x");
-                image = image.replace("|", "\\|");
-                image = image.replace(" ", "\\ ");
-                image = image.replace(",", "\\,");
-                image = image.replace("=", "\\=");
-                resizedImage = resizedImage.replace("|", "\\|");
-                resizedImage = resizedImage.replace(" ", "\\ ");
-                resizedImage = resizedImage.replace(",", "\\,");
-                resizedImage = resizedImage.replace("=", "\\=");
-                pb = new ProcessBuilder("/bin/sh", "-c",
-                        "/usr/bin/sips " + image + " -z " + tmpHeight + " " + tmpWidth + " --out " + resizedImage + " > /dev/null");
-                break;
-            case OTHER:
-                pb = new ProcessBuilder("/usr/bin/convert", image, "-resize", size,
-                        resizedImage);
-                break;
-            default:
-                pb = new ProcessBuilder("/usr/bin/convert", image, "-resize", size,
-                        resizedImage);
-                break;
+    public static String executeCropResize(String image, int w, int h, String outputImageName) throws IOException, InterruptedException {
+        return executeAndOutput(new ProcessBuilder(
+                "/usr/bin/convert",
+                image,
+                "-resize", w+"x"+h+"^",
+                "-gravity", "center",
+                "-crop", w+"x"+h+"+0+0",
+                 "+repage",
+                outputImageName));
+    }
+
+    public static String executeResize(String image, int w, int h, String outputImageName) throws IOException, InterruptedException {
+        return executeAndOutput(new ProcessBuilder(
+                "/usr/bin/convert",
+                image,
+                "-resize", w+"x"+h+"^",
+                outputImageName));
+    }
+
+    public static List<Pair<Path,String>> cropImages(XPath xPath, String aspect, int limit) throws IOException, InterruptedException {
+        List<Pair<Path,String>> result = new ArrayList<>();
+        String size = HandlerImage.executeGetAspectSize(xPath.path().toString(), aspect);
+        float w = Float.parseFloat(size.substring(0, size.indexOf("x")));
+        float h = Float.parseFloat(size.substring(size.indexOf("x") + 1));
+        while(w > limit && h > limit) {
+            Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
+                    + "_crop_"+ Math.round(w) + xPath.extensions());
+            Files.createDirectories(dstImage.getParent());
+            String tmp = HandlerImage.executeCropResize(xPath.path().toString(), Math.round(w), Math.round(h), dstImage.toString());
+            result.add(new Pair<>(dstImage,Math.round(w)+"w"));
+            w /= 2;
+            h /= 2;
         }
-        // END OS hack
-        executeAndOutput(pb);
+        return result;
     }
 
-    public static void executeConvertCrop(String image, String size,
-            String sizeMod, String resizedImage) throws IOException,
-            InterruptedException {
-        // START OS hack
-        ProcessBuilder pb;
-        switch (Utils.getOSType()) {
-            case LINUX:
-                pb = new ProcessBuilder("/usr/bin/convert", image, "-resize", size
-                        + sizeMod, "-gravity", "center", "-crop", size + "+0+0",
-                        "+repage", resizedImage);
-                break;
-            case WIN:
-                pb = new ProcessBuilder("/usr/bin/convert", image, "-resize", size
-                        + sizeMod, "-gravity", "center", "-crop", size + "+0+0",
-                        "+repage", resizedImage);
-                break;
-            case MAC:
-                StringTokenizer tokenizer = new StringTokenizer(size);
-                String tmpWidth = tokenizer.nextToken("x");
-                String tmpHeight = tokenizer.nextToken("x");
-                image = image.replace("|", "\\|");
-                image = image.replace(" ", "\\ ");
-                image = image.replace(",", "\\,");
-                image = image.replace("=", "\\=");
-                resizedImage = resizedImage.replace("|", "\\|");
-                resizedImage = resizedImage.replace(" ", "\\ ");
-                resizedImage = resizedImage.replace(",", "\\,");
-                resizedImage = resizedImage.replace("=", "\\=");
-                pb = new ProcessBuilder("/bin/sh", "-c",
-                        "/usr/bin/sips " + image + " -c " + tmpHeight + " " + tmpWidth + " --out " + resizedImage + " > /dev/null");
-                break;
-            case OTHER:
-                pb = new ProcessBuilder("/usr/bin/convert", image, "-resize", size
-                        + sizeMod, "-gravity", "center", "-crop", size + "+0+0",
-                        "+repage", resizedImage);
-                break;
-            default:
-                pb = new ProcessBuilder("/usr/bin/convert", image, "-resize", size
-                        + sizeMod, "-gravity", "center", "-crop", size + "+0+0",
-                        "+repage", resizedImage);
-                break;
+    public static List<Pair<Path,String>> resizeImages(XPath xPath, int limit) throws IOException, InterruptedException {
+        List<Pair<Path,String>> result = new ArrayList<>();
+        String size = HandlerImage.executeGetSize(xPath.path().toString());
+        float w = Float.parseFloat(size.substring(0, size.indexOf("x")));
+        float h = Float.parseFloat(size.substring(size.indexOf("x") + 1));
+        while(w > limit && h > limit) {
+            Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
+                    + "_"+ Math.round(w) + xPath.extensions());
+            Files.createDirectories(dstImage.getParent());
+            String tmp = HandlerImage.executeResize(xPath.path().toString(), Math.round(w), Math.round(h), dstImage.toString());
+            result.add(new Pair<>(dstImage,Math.round(w)+"w"));
+            w /= 2;
+            h /= 2;
         }
-        // END OS hack
-        executeAndOutput(pb);
+        return result;
     }
 
-    private static void executeAndOutput(ProcessBuilder pb) throws IOException,
+    private static String executeAndOutput(ProcessBuilder pb) throws IOException,
             InterruptedException {
         pb.redirectErrorStream(true);
 
         Process p = pb.start();
         BufferedReader br = new BufferedReader(new InputStreamReader(
-                p.getInputStream()));
+                p.getErrorStream()));
         String line = null;
         while ((line = br.readLine()) != null) {
             LOG.error(line);
         }
+        br = new BufferedReader(new InputStreamReader(
+                p.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+        while ((line = br.readLine()) != null) {
+            sb.append(line).append("\n");
+        }
         p.waitFor();
+        return sb.toString().trim();
     }
 
     private static String stripMod(String size, String... mods) {

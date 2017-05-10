@@ -392,6 +392,10 @@ final public class XPath implements Comparable<XPath> {
     }
     public static final String FILENAME = "filename";
 
+    public String getTargetURLName() {
+        String[] paths = Utils.createURLSplit(site.source(), this);
+        return paths[paths.length - 1];
+    }
     
     public String getTargetURLFilename() {
         String[] paths = Utils.createURLSplit(site.source(), this);

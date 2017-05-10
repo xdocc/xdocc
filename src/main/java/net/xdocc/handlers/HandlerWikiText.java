@@ -130,7 +130,7 @@ public class HandlerWikiText implements Handler {
 
         @Override
         public void image(Attributes attributes, String imageUrl) {
-            if (imageUrl != null) {
+            /*if (imageUrl != null) {
                 //if relative only!
                 if (!imageUrl.contains("://")) {
                     if (imageUrl.endsWith(":thumb")) {
@@ -155,14 +155,14 @@ public class HandlerWikiText implements Handler {
                         Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                     }
                 }
-            }
+            }*/
             super.image(attributes, imageUrl);
         }
 
         @Override
         public void imageLink(Attributes linkAttributes, Attributes imageAttributes, String href,
                 String imageUrl) {
-            if (imageUrl != null) {
+            /*if (imageUrl != null) {
                 //if relative only!
                 if (!imageUrl.contains("://")) {
                     if (imageUrl.endsWith(":thumb")) {
@@ -190,7 +190,7 @@ public class HandlerWikiText implements Handler {
                         Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                     }
                 }
-            }
+            }*/
             super.imageLink(linkAttributes, imageAttributes, href, imageUrl);
         }
 

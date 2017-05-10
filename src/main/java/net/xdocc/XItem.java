@@ -40,7 +40,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String CONTENT = "content";
     public static final String TEMPLATE = "template";
     public static final String LINK = "link";
-    public static final String LINK_ORIGINAL = "linkoriganal";
+    public static final String SRC_SETS = "srcsets";
     
     // list
     public static final String ITEMS = "items";
@@ -51,11 +51,6 @@ public class XItem implements Comparable<XItem>, Serializable {
    
     // Utils
     public static final String DEBUG = "debug";
-    
-    // Image
-    public static final String URL_IMG_NORMAL = "imgurl";
-    public static final String URL_IMG_THUMB = "imgurlthumb";
-    public static final String URL_IMG_ORIG = "imgurlorig";
 
     private static final Logger LOG = LoggerFactory.getLogger(XItem.class);
     private static final long serialVersionUID = 136066054966377823L;
@@ -70,7 +65,6 @@ public class XItem implements Comparable<XItem>, Serializable {
      * collection of documents.
      * @param documentGenerator The generator is lazy generating. Thus, paths can be adapted until
      * getContent() is called.
-     * @param url The full URL from the root to this xPath. To be used with relativePathToRoot
      */
     public XItem(XPath xPath, Generator documentGenerator) {
         this.generator = documentGenerator;
@@ -217,15 +211,6 @@ public class XItem implements Comparable<XItem>, Serializable {
         return this;
     }
     
-    public XItem setOriginalLink(String originalLink) {
-        generator.model().put(LINK_ORIGINAL, originalLink);
-        return this;
-    }
-    
-    public String getOriginalLink() {
-        return (String) generator.model().get(LINK_ORIGINAL);
-    }
-    
     public String getLink() {
         return (String) generator.model().get(LINK);
     }
@@ -317,14 +302,17 @@ public class XItem implements Comparable<XItem>, Serializable {
         return (String) generator.model().get(CONTENT);
     }
 
-    /**
-     * @param path Set the content
-     * @return this class
-     */
     public XItem setHTML(String content) {
         generator.model().put(CONTENT, content);
         return this;
     }
+
+    public XItem setSrcSets(List<SrcSet> srcSets) {
+        generator.model().put(SRC_SETS, srcSets);
+        return this;
+    }
+
+
 
     /**
      * @return The type
@@ -349,10 +337,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         return (String) generator.model().get(TEMPLATE);
     }
 
-    /**
-     * @param path Set the template
-     * @return this class
-     */
+
     public XItem setTemplate(String template) {
         generator.model().put(TEMPLATE, template);
         return this;
@@ -365,10 +350,6 @@ public class XItem implements Comparable<XItem>, Serializable {
         return (String) generator.model().get(XPath.LAYOUT);
     }
 
-    /**
-     * @param path Set the layout
-     * @return this class
-     */
     public XItem setLayout(String layout) {
         generator.model().put(XPath.LAYOUT, layout);
         return this;
@@ -451,7 +432,8 @@ public class XItem implements Comparable<XItem>, Serializable {
         setItems(items);
     }
 
-    
+
+
 
     //public void setTemplateBean(Site.TemplateBean templateBean) {
     //    generator.templateBean(templateBean);

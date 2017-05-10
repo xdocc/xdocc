@@ -18,7 +18,7 @@ import java.nio.file.attribute.BasicFileAttributes;
  * @author draft
  */
 public class TestUtils {
-    public static void copyFile(String source, Path src, String dst) throws IOException {
+    public static Path copyFile(String source, Path src, String dst) throws IOException {
         InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(source);
         if(in == null) {
             in = Thread.currentThread().getContextClassLoader().getResourceAsStream("/"+source);
@@ -27,6 +27,7 @@ public class TestUtils {
         Files.createDirectories(dstPath.getParent());
         Files.copy(in, dstPath);
         in.close();
+        return dstPath;
     }
     
     public static void createFile(Path source, String path, String content)

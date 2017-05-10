@@ -1,6 +1,8 @@
 package net.xdocc;
 
 import com.google.common.base.Strings;
+import lombok.Data;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
