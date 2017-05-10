@@ -37,17 +37,13 @@ public class TestDelete {
         TestUtils.createFile(gen, "dir1/del1.me", "h1. A headline");
         TestUtils.createFile(gen, "del2.me", "h1. A headline");
         TestUtils.createFile(gen, "dir1/read.html", "h1. A headline");
-        TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-2.jpg:thumb!");
+        TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-2.jpg!");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
-        TestUtils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_norm.ftl", "norm:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_orig.ftl", "orig:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image.ftl", "");
-        
+
         
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals("<p><a href=\"./label-2_n.html\"><img border=\"0\" src=\"./label-2_t.jpg\"/></a></p>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
+        Assert.assertEquals("<p><img border=\"0\" src=\"label-2.jpg\"/></p>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
         Assert.assertFalse(Files.exists(gen.resolve("dir1/del1.me")));
     }
     
@@ -57,17 +53,13 @@ public class TestDelete {
         TestUtils.createFile(gen, "dir1/del1.me", "h1. A headline");
         TestUtils.createFile(gen, "del2.me", "h1. A headline");
         TestUtils.createFile(gen, "dir1/read.html", "h1. A headline");
-        TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-2.jpg:thumb! \"test\":label-2.jpg");
+        TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-2.jpg! \"test\":label-2.jpg");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
-        TestUtils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_norm.ftl", "norm:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_orig.ftl", "orig:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image.ftl", "");
         
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertTrue(Files.exists(gen.resolve("dir1/label-2.jpg")));
-        Assert.assertEquals("<p><a href=\"./label-2_n.html\"><img border=\"0\" src=\"./label-2_t.jpg\"/></a> <a href=\"./label-2.jpg\">test</a></p>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
+        Assert.assertEquals("<p><img border=\"0\" src=\"label-2.jpg\"/> <a href=\"./label-2.jpg\">test</a></p>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
     }
     
     @Test
@@ -77,17 +69,13 @@ public class TestDelete {
         TestUtils.createFile(gen, "dir1/del1.me", "h1. A headline");
         TestUtils.createFile(gen, "del2.me", "h1. A headline");
         TestUtils.createFile(gen, "dir1/read.html", "h1. A headline");
-        TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-2.jpg:thumb! !label-3.jpg:thumb! \"test\":label-2.jpg");
+        TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-2.jpg! !label-3.jpg! \"test\":label-2.jpg");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
-        TestUtils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_norm.ftl", "norm:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_orig.ftl", "orig:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image.ftl", "");
         
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertTrue(Files.exists(gen.resolve("dir1/label-2.jpg")));
-        Assert.assertFalse(Files.exists(gen.resolve("dir1/label-3.jpg")));
+        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-3.jpg")));
     }
     
     @Test

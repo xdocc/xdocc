@@ -1,5 +1,6 @@
 package net.xdocc;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +43,7 @@ public class Compiler {
         return compile(path, 0, 0);
     }
     
-    public XItem compile(XPath child) throws Exception {
+    private XItem compile(XPath child) throws Exception {
         for (Handler handler : handlers) {
             if (handler.canHandle(site, child)) {
                 final XItem xItem = handler.compile(site, child, filesCounter, cache);
@@ -61,7 +62,14 @@ public class Compiler {
         completableFuture.runAsync(() -> {
 
             try {
-                List<XPath> children = Utils.getNonHiddenChildren(site, path);
+                List<XPath> children;
+                if(Files.isDirectory(path)) {
+                    children = Utils.getNonHiddenChildren(site, path);
+                } else {
+                    XPath child = new XPath(site, path);
+                    children = new ArrayList<>(1);
+                    children.add(child);
+                }
                 List<CompletableFuture<List<XItem>>> futures = new ArrayList<>();
                 List<CompletableFuture<List<XItem>>> futuresNoPromote = new ArrayList<>();
                 final List<XItem> results = new ArrayList<>();
@@ -81,6 +89,7 @@ public class Compiler {
                         }
                     }
                 }
+
                 CompletableFuture.allOf(Stream
                                 .concat(futures.stream(), futuresNoPromote.stream())
                                 .toArray(size -> new CompletableFuture[size])

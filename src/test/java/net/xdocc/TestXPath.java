@@ -168,6 +168,6 @@ public class TestXPath {
         Site site = new Site(service, src, gen);
         Path p = Paths.get(src.toString()+"/1-|n=Frequently Asked Questions|.textile");
         XPath x = new XPath(site, p);
-        Assert.assertFalse(x.isVisible());
+        Assert.assertTrue(x.isVisible());
     }
 }

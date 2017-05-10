@@ -70,8 +70,16 @@ public class HandlerImage implements Handler {
     public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache)
             throws TemplateException, IOException, InterruptedException {
 
-        Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + xPath.extensions());
-        Files.createDirectories(generatedFile.getParent());
+        Path generatedFile2 = xPath
+                .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+
+        Cache.CacheEntry cached = cache.getCached(xPath);
+        if (cached != null) {
+            if(xPath.hasRecursiveProperty("link","l") && xPath.getParent().isItemWritten()) {
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+            }
+            return cached.xItem();
+        }
 
         TemplateBean templateImage = site.getTemplate("image", xPath.getLayoutSuffix());
         Generator genImage = new XItem.FillGenerator(site, templateImage);
@@ -80,13 +88,20 @@ public class HandlerImage implements Handler {
         //check if we need to crop
         List<Pair<Path,String>> resizeList = null;
         String crop = xPath.getRecursiveProperty("crop");
+        List<Path> generated = new ArrayList<>();
         if(crop !=null) {
             crop = crop.replace("-","/");
             List<Pair<Path,String>> cropList = HandlerImage.cropImages(xPath, crop, 100);
+            for(Pair<Path,String> p:cropList) {
+                generated.add(p.element0());
+            }
             docTop.setSrcSets(convert(xPath, site, filesCounter, cropList));
         }
         else {
             resizeList = HandlerImage.resizeImages(xPath, 100);
+            for(Pair<Path,String> p:resizeList) {
+                generated.add(p.element0());
+            }
             docTop.setSrcSets(convert(xPath, site, filesCounter, resizeList));
         }
 
@@ -102,11 +117,13 @@ public class HandlerImage implements Handler {
                 resizeList = HandlerImage.resizeImages(xPath, 100);
             }
             docDetail.setSrcSets(convert(xPath, site, filesCounter, resizeList));
-            Path generatedFile2 = xPath
-                    .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+
             Utils.writeHTML(xPath, docDetail, generatedFile2);
             Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+            generated.add(generatedFile2);
+
         }
+        cache.setCached(xPath, docTop, generated.toArray(new Path[]{}));
         return docTop;
     }
 
@@ -167,7 +184,7 @@ public class HandlerImage implements Handler {
         String size = HandlerImage.executeGetAspectSize(xPath.path().toString(), aspect);
         float w = Float.parseFloat(size.substring(0, size.indexOf("x")));
         float h = Float.parseFloat(size.substring(size.indexOf("x") + 1));
-        while(w > limit && h > limit) {
+        do {
             Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_crop_"+ Math.round(w) + xPath.extensions());
             Files.createDirectories(dstImage.getParent());
@@ -175,7 +192,7 @@ public class HandlerImage implements Handler {
             result.add(new Pair<>(dstImage,Math.round(w)+"w"));
             w /= 2;
             h /= 2;
-        }
+        } while(w > limit && h > limit);
         return result;
     }
 
@@ -184,7 +201,7 @@ public class HandlerImage implements Handler {
         String size = HandlerImage.executeGetSize(xPath.path().toString());
         float w = Float.parseFloat(size.substring(0, size.indexOf("x")));
         float h = Float.parseFloat(size.substring(size.indexOf("x") + 1));
-        while(w > limit && h > limit) {
+        do {
             Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_"+ Math.round(w) + xPath.extensions());
             Files.createDirectories(dstImage.getParent());
@@ -192,7 +209,7 @@ public class HandlerImage implements Handler {
             result.add(new Pair<>(dstImage,Math.round(w)+"w"));
             w /= 2;
             h /= 2;
-        }
+        } while(w > limit && h > limit);
         return result;
     }
 

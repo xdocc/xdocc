@@ -32,7 +32,7 @@ public class HandlerCopy implements Handler {
 
     @Override
     public boolean canHandle(Site site, XPath xPath) {
-        return true;
+        return !xPath.isDirectory();
     }
 
     @Override

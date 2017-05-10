@@ -48,15 +48,6 @@ public class Utils {
         path = pathRelative.toString();
         path = path.isEmpty() ? ".":path;
         doc.setPath(path);
-        
-        String linkOrig = doc.getOriginalLink();
-        if(linkOrig != null) {
-            Path pathRelativeLink = Paths.get(minusPath).relativize(Paths.get(linkOrig));
-            linkOrig = pathRelativeLink.toString();
-            linkOrig = linkOrig.isEmpty() ? ".":linkOrig;
-            doc.setLink(linkOrig);
-        }
-        
         return doc;
     }
     
@@ -272,7 +263,6 @@ public class Utils {
      * Sort the documents according to its number. If a date was provided, the date will be converted to a
      * long. If no number is provided the sort will be by name.
      *
-     * @param documents The documents to sort
      * @param inverted A flag to invert the sort order
      */
     public static void sort2(List<XPath> children, final boolean inverted) {
@@ -496,7 +486,6 @@ public class Utils {
     /**
      * Returns a list of links that goes to the root. This is typically used for breadcrumbs.
      *
-     * @param current The current location
      * @return the list of links
      */
     public static List<Link> linkToRoot(Path root, XPath xPath) {

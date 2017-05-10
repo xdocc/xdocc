@@ -195,7 +195,7 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         
-        Assert.assertEquals("[first item][(test4)][third item]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+        Assert.assertEquals("[first item][([test4])][third item]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
     }
     
     @Test
@@ -229,47 +229,25 @@ public class TestHandler {
         Assert.assertEquals("<h1 id=\"Aheadline\">A headline</h1><a href=\"./../dir2\">Link1</a> to 2", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
         Assert.assertEquals("[([<h1 id=\"Aheadline\">A headline</h1><a href=\"../../dir1/../dir2\">Link1</a> to 2])([<h1 id=\"Title\">Title</h1><a href=\"../../dir2/../dir1\">Link2</a> to 1 ])]", FileUtils.readFileToString(gen.resolve("dir3/dir4/index.html").toFile()));
     }
-    
-    @Test
-    public void testImage() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1.vis.prm/label-1.jpg");
-        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
-        TestUtils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_norm.ftl", "norm:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_orig.ftl", "orig:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image.ftl", "<#if items[0].link??>${items[0].content}</#if>|<#if items[1].link??>${items[1].content}</#if>|<#if items[2].link??>${items[2].content}</#if>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals("[[|thumb:<img src=dir1/label-1_t.jpg>|norm:<img src=dir1/label-1_n.jpg>]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
-        Assert.assertEquals("[|thumb:<img src=label-1_t.jpg>|norm:<img src=label-1_n.jpg>]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
-        
-        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_n.jpg")));
-        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_n.html")));
-        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_t.jpg")));
-        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_t.html")));
-    }
-    
+
     @Test
     public void testTextileImage() throws IOException, InterruptedException, ExecutionException {
         TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1/label-1.jpg");
         TestUtils.copyFile("imgs/label-2.jpg", src, "1-dir2/label-2.jpg");
         TestUtils.copyFile("imgs/label-3.jpg", src, "1-dir3/label-3.jpg");
-        TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-1.jpg!");
-        TestUtils.createFile(src, "1-dir2/1-me.textile", "!label-2.jpg:thumb!");
-        TestUtils.createFile(src, "1-dir3/1-first.textile", "!label-3.jpg:thumb!:../dir1/read.html");
+        TestUtils.createFile(src, "1-dir1/1-read.textile", "!${path}/label-1.jpg!");
+        TestUtils.createFile(src, "1-dir2/1-me.textile", "!${path}/label-2.jpg!");
+        TestUtils.createFile(src, "1-dir3/1-first.textile", "!${path}/label-3.jpg!:../dir1/read.html");
         
         TestUtils.createFile(src, "1-dir4.prm/4-dir5.prm/1-link.link", "url=../../dir1 \nurl=../../dir2 \nurl=../../dir3");
         
         TestUtils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
-        
-        TestUtils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_norm.ftl", "norm:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_orig.ftl", "orig:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image.ftl", "");
+
         
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals("[[[([<p><img border=\"0\" src=\"dir1/label-1.jpg\"/></p>])([<p><a href=\"dir2/label-2_n.html\"><img border=\"0\" src=\"dir2/label-2_t.jpg\"/></a></p>])([<p><a href=\"dir3/../dir1/read.html\"><img border=\"0\" src=\"dir3/label-3_t.jpg\"/></a></p>])]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+        Assert.assertEquals("[[[([<p><img border=\"0\" src=\"dir1/label-1.jpg\"/></p>])([<p><img border=\"0\" src=\"dir2/label-2.jpg\"/></p>])([<p><a href=\"dir3/../dir1/read.html\"><img border=\"0\" src=\"dir3/label-3.jpg\"/></a></p>])]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
     }
     
     @Test
