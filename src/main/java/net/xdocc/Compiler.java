@@ -54,8 +54,6 @@ public class Compiler {
         return null;
     }
 
-
-
     public CompletableFuture<List<XItem>> compile(final Path path, 
             final int depth, final int promoteDepth) {
         final CompletableFuture<List<XItem>> completableFuture = new CompletableFuture<>();

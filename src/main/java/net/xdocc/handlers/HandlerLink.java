@@ -84,7 +84,6 @@ public class HandlerLink implements Handler {
                     if (limit >= 0 && ++counter >= limit) {
                         break;
                     }
-
                 }
 
                 doc = Utils.createDocument(site, xPath, null, "link");

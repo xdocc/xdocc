@@ -88,7 +88,7 @@ public class TestDelete {
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
         TestUtils.copyFile("imgs/label-2.jpg", gen, "dir1/label-2.jpg");
-        
+
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Assert.assertFalse(Files.exists(gen.resolve("dir2")));
         Assert.assertFalse(Files.exists(gen.resolve("dir2/del2.me")));
