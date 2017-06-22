@@ -66,10 +66,15 @@ public class HandlerImage implements Handler {
         Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + xPath.extensions());
         Files.createDirectories(generatedFile.getParent());
 
+        Path generatedFile2 = xPath
+                .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+
         Cache.CacheEntry cached = cache.getCached(xPath);
         if (cached != null) {
             XItem doc = cached.xItem();
-            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+            if (xPath.hasRecursiveProperty("link", "l") && xPath.getParent().isItemWritten()) {
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+            }
             return doc;
 
         } else {
@@ -112,8 +117,7 @@ public class HandlerImage implements Handler {
                     resizeList = HandlerImage.resizeImages(xPath, 100);
                 }
                 docDetail.setSrcSets(convert(xPath, site, filesCounter, resizeList));
-                Path generatedFile2 = xPath
-                        .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+
                 Utils.writeHTML(xPath, docDetail, generatedFile2);
                 Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
                 cache.setCached(xPath, docTop, generatedFile2, docTop.templatePath());
