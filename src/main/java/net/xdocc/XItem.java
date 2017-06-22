@@ -3,6 +3,7 @@ package net.xdocc;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -34,7 +35,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String LOCALNAV = "localnav";
     public static final String LOCALNAV_ISCHILD = "ischildnav";
     public static final String CURRENT_NAV = "currentnav";
-    public static final String PATH_TO_ROOT = "pathtoroot";
+    public static final String ROOT = "root";
     public static final String PATH = "path";
     public static final String BREADCRUMB = "breadcrumb";
     public static final String CONTENT = "content";
@@ -92,7 +93,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.DATE, xPath.date());
         generator.model().put(XPath.NR, xPath.nr());
         generator.model().put(XPath.ORIGINAL_PATH, xPath.originalPath());
-        generator.model().put(XPath.ORIGINAL_PATH_TO_ROOT, xPath.originalPathToRoot());
+        generator.model().put(XPath.ORIGINAL_ROOT, xPath.originalRoot());
         
         generator.model().put(XPath.FILENAME, xPath.fileName());
         generator.model().put(XPath.FILESCOUNT, xPath.filesCount());
@@ -220,16 +221,16 @@ public class XItem implements Comparable<XItem>, Serializable {
         return this;
     }
     
-    public String getOriginalPathToRoot() {
-        return (String) generator.model().get(XPath.ORIGINAL_PATH_TO_ROOT);
+    public String getOriginalRoot() {
+        return (String) generator.model().get(XPath.ORIGINAL_ROOT);
     }
     
-    public String getPathToRoot() {
-        return (String) generator.model().get(PATH_TO_ROOT);
+    public String getRoot() {
+        return (String) generator.model().get(ROOT);
     }
 
     public XItem setPathToRoot(String pathToRoot) {
-        generator.model().put(PATH_TO_ROOT, pathToRoot);
+        generator.model().put(ROOT, pathToRoot);
         return this;
     }
     
@@ -337,6 +338,10 @@ public class XItem implements Comparable<XItem>, Serializable {
         return (String) generator.model().get(TEMPLATE);
     }
 
+    public Path templatePath() {
+        //TODO needs recursion!
+        return generator.templatePath();
+    }
 
     public XItem setTemplate(String template) {
         generator.model().put(TEMPLATE, template);
@@ -440,9 +445,10 @@ public class XItem implements Comparable<XItem>, Serializable {
     //}
     
     public interface Generator {
-        public String generate();
-        public Map<String, Object> model();
-        public Generator templateBean(Site.TemplateBean templateBean);
+        String generate();
+        Map<String, Object> model();
+        Generator templateBean(Site.TemplateBean templateBean);
+        Path templatePath();
     }
 
     public static class EmptyGenerator implements Generator {
@@ -461,6 +467,9 @@ public class XItem implements Comparable<XItem>, Serializable {
         public Generator templateBean(Site.TemplateBean templateBean) {
             return this;
         }
+
+        @Override
+        public Path templatePath() {return null;}
     }
 
     @Accessors(chain = true, fluent = true)
@@ -491,13 +500,18 @@ public class XItem implements Comparable<XItem>, Serializable {
         public String generate() {
             try {
                 String html = Utils.applyTemplate(site, templateBean, model);
-                html = Utils.postApplyTemplate(html, this.model, "path", "pathtoroot");
+                html = Utils.postApplyTemplate(html, this.model, "path", "root");
                 return html;
             } catch (TemplateException | IOException e) {
                 LOG.warn("cannot generate document {}. Model is {}",
                         templateBean.file().getFileName(), model, e);
                 return null;
             }
+        }
+
+        @Override
+        public Path templatePath() {
+            return templateBean.file();
         }
     }
 }

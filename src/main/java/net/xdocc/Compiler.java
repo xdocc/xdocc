@@ -41,7 +41,7 @@ public class Compiler {
     public CompletableFuture<List<XItem>> compile(final Path path) {
         return compile(path, 0, 0);
     }
-    
+
     public XItem compile(XPath child) throws Exception {
         for (Handler handler : handlers) {
             if (handler.canHandle(site, child)) {
@@ -53,6 +53,8 @@ public class Compiler {
         }
         return null;
     }
+
+
 
     public CompletableFuture<List<XItem>> compile(final Path path, 
             final int depth, final int promoteDepth) {
@@ -110,6 +112,8 @@ public class Compiler {
                         if(!xPath.isNoIndex()) {
                             Path generatedFile = xPath.resolveTargetFromPath("index.html");
                             Utils.writeListHTML(xPath, doc, generatedFile);
+                            //TODO: add caching
+                            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                         }
                         
                         List<XItem> results2 = new ArrayList<>(1);

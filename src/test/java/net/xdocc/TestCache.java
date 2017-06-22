@@ -48,14 +48,11 @@ public class TestCache {
     @Test
     public void testImage() throws IOException, InterruptedException, ExecutionException {
         TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1.vis.prm/1-label.jpg");
-        TestUtils.createFile(src, ".templates/image.ftl", "<#if items[0].link??>${items[0].content}</#if>|<#if items[1].link??>${items[1].content}</#if>|<#if items[2].link??>${items[2].content}</#if>");
-        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
-        TestUtils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
         Cache cache =  Service.service().cache();
         
         Service.restart(cache, "-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals(2, cache.hits());
+        Assert.assertEquals(1, cache.hits());
         
     }
 }

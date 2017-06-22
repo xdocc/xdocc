@@ -161,13 +161,4 @@ public class TestXPath {
 
         service.shutdown();
     }
-    
-    @Test
-    public void testEmpty() throws IOException {
-        Service service = new Service();
-        Site site = new Site(service, src, gen);
-        Path p = Paths.get(src.toString()+"/1-|n=Frequently Asked Questions|.textile");
-        XPath x = new XPath(site, p);
-        Assert.assertFalse(x.isVisible());
-    }
 }

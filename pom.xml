@@ -152,9 +152,9 @@ under * the License. -->
             <version>3.1</version>
         </dependency>
         <dependency>
-            <groupId>org.tautua.markdownpapers</groupId>
-            <artifactId>markdownpapers-core</artifactId>
-            <version>1.2.7</version>
+            <groupId>com.atlassian.commonmark</groupId>
+            <artifactId>commonmark</artifactId>
+            <version>0.9.0</version>
         </dependency>
         <dependency>
             <groupId>org.mapdb</groupId>

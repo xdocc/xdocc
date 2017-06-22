@@ -66,7 +66,7 @@ public class HandlerCopy implements Handler {
 
                 if (xPath.isCopy() || xPath.isVisible()) {
                     XItem item = createDocumentBrowse(site, xPath, "");
-                    cache.setCached(xPath, item, generatedFile);
+                    cache.setCached(xPath, item, generatedFile, item.templatePath());
                     return item;
 
                 } else {

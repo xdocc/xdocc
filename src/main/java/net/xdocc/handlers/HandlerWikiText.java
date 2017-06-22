@@ -82,7 +82,7 @@ public class HandlerWikiText implements Handler {
                 Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
             }
 
-            cache.setCached(xPath, doc, generatedFile);
+            cache.setCached(xPath, doc, generatedFile, doc.templatePath());
         }
         return doc;
     }
@@ -130,67 +130,34 @@ public class HandlerWikiText implements Handler {
 
         @Override
         public void image(Attributes attributes, String imageUrl) {
-            /*if (imageUrl != null) {
+            //org.eclipse.mylyn.wikitext does not support srcset, so no responsive images
+            if (imageUrl != null) {
                 //if relative only!
                 if (!imageUrl.contains("://")) {
-                    if (imageUrl.endsWith(":thumb")) {
-                        String tmpImageUrl = imageUrl.replaceAll(":thumb$", "");
-                        //convert
-                        HandlerImage handler = new HandlerImage();
-                        try {
-                            XPath img = xItem.xPath().getParent().resolveSource(tmpImageUrl);
-                            XItem item = handler.convertNorm(site, img, false, filesCounter, cache);
-                            String href = item.getLink();
-                            super.imageLink(attributes, href, imageUrl);
-                            return;
-                        } catch (TemplateException | IOException | InterruptedException ex) {
-                            LOG.error("cannot convert", ex);
-                            imageUrl = imageUrl.replaceAll(":thumb$", "");
-                        }
-                    } else {
                         XPath img = xItem.xPath().getParent().resolveSource(imageUrl);
                         imageUrl = xItem.getPath() + "/" + imageUrl;
                         Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
                                 .extensions());
                         Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
-                    }
                 }
-            }*/
+            }
             super.image(attributes, imageUrl);
         }
 
         @Override
         public void imageLink(Attributes linkAttributes, Attributes imageAttributes, String href,
                 String imageUrl) {
-            /*if (imageUrl != null) {
+            //org.eclipse.mylyn.wikitext does not support srcset, so no responsive images
+            if (imageUrl != null) {
                 //if relative only!
                 if (!imageUrl.contains("://")) {
-                    if (imageUrl.endsWith(":thumb")) {
-                        imageUrl = imageUrl.replaceAll(":thumb$", "");
-                        //convert
-                        HandlerImage handler = new HandlerImage();
-                        try {
-                            XPath img = xItem.xPath().getParent().resolveSource(imageUrl);
-                            XItem item = handler.convertThumb(site, img, true, filesCounter, cache);
-                            item = Utils.adjust(img, item);
-                            imageUrl = xItem.getPath() + "/" + item.getPath();
-                            //the original image gets copied, but we don't want that, since we have requested
-                            //to show a thumbnail with a normal sized image
-                            Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
-                                    .extensions());
-                            Utils.decrease(filesCounter, Utils.listPaths(site, generatedFile));
-                        } catch (TemplateException | IOException | InterruptedException ex) {
-                            LOG.error("cannot convert", ex);
-                        }
-                    } else {
                         XPath img = xItem.xPath().getParent().resolveSource(imageUrl);
                         imageUrl = xItem.getPath() + "/" + imageUrl;
                         Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
                                 .extensions());
                         Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
-                    }
                 }
-            }*/
+            }
             super.imageLink(linkAttributes, imageAttributes, href, imageUrl);
         }
 

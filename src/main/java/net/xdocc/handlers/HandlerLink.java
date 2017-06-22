@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
 import net.xdocc.Cache;
 
 import net.xdocc.XItem;
@@ -71,15 +73,18 @@ public class HandlerLink implements Handler {
 
                 int counter = 0;
                 for (XPath found : founds) {
-                    XItem item = site.compiler().compile(found);
-                    
-                    //Site.TemplateBean templateText = site.getTemplate(template, xPath.getLayoutSuffix());
-                    //item.setTemplateBean(templateText);
-                    documents.add(item);
+
+                    if(found.isDirectory()) {
+                        CompletableFuture<List<XItem>> list = site.compiler().compile(found.path(), 0, 0);
+                        documents.addAll(list.get());
+                    } else {
+                        documents.add(site.compiler().compile(found));
+                    }
                     //enforce limit
-                    if(limit >= 0 && ++counter >= limit ) {
+                    if (limit >= 0 && ++counter >= limit) {
                         break;
                     }
+
                 }
 
                 doc = Utils.createDocument(site, xPath, null, "link");
@@ -90,7 +95,7 @@ public class HandlerLink implements Handler {
                     Utils.writeHTML(xPath, doc, generatedFile);
                     Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                 }
-                cache.setCached(xPath, doc, generatedFile);
+                cache.setCached(xPath, doc, generatedFile, doc.templatePath());
             }
 
         }

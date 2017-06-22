@@ -8,11 +8,8 @@ package net.xdocc;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -82,6 +79,7 @@ public class Cache {
         String key = xPath.getTargetURL();
         CacheEntry c = cache.get(key);
         List<Path> genFiles = new ArrayList<>(Arrays.asList(generatedFile));
+        genFiles.removeIf(Objects::isNull);
         if(c == null) {
             Map<XPath, Long> map = parentMap(xPath);
             c  = new CacheEntry().xItem(item).sourceDirs(map).generatedFiles(genFiles);

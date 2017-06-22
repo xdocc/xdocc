@@ -49,13 +49,6 @@ public class HandlerImage implements Handler {
                     "sizes=\"90vw\">" +
                 "<figcaption>${name}</figcaption>" +
                 "<#if link??></a></#if></figure>");
-        put("image_detail.ftl",
-                "<figure>"+
-                "<img src=\"${path}/${srcsets?last.src}\" " +
-                    "srcset=\"<#list srcsets as srcset>${path}/${srcset.src} ${srcset.attribute}<#sep>,</#list>\" " +
-                    "sizes=\"90vw\">" +
-                "<figcaption>${name}</figcaption>" +
-                "</figure>");
     }};
     
     private static final Logger LOG = LoggerFactory.getLogger(HandlerImage.class);
@@ -73,41 +66,60 @@ public class HandlerImage implements Handler {
         Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + xPath.extensions());
         Files.createDirectories(generatedFile.getParent());
 
-        TemplateBean templateImage = site.getTemplate("image", xPath.getLayoutSuffix());
-        Generator genImage = new XItem.FillGenerator(site, templateImage);
-        XItem docTop = new XItem(xPath, genImage);
+        Cache.CacheEntry cached = cache.getCached(xPath);
+        if (cached != null) {
+            XItem doc = cached.xItem();
+            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+            return doc;
 
-        //check if we need to crop
-        List<Pair<Path,String>> resizeList = null;
-        String crop = xPath.getRecursiveProperty("crop");
-        if(crop !=null) {
-            crop = crop.replace("-","/");
-            List<Pair<Path,String>> cropList = HandlerImage.cropImages(xPath, crop, 100);
-            docTop.setSrcSets(convert(xPath, site, filesCounter, cropList));
-        }
-        else {
-            resizeList = HandlerImage.resizeImages(xPath, 100);
-            docTop.setSrcSets(convert(xPath, site, filesCounter, resizeList));
-        }
+        } else {
 
-        //check if link is required
-        if(xPath.hasRecursiveProperty("link","l") && xPath.getParent().isItemWritten()) {
-            //create file
-            TemplateBean templateLink = site.getTemplate("image_detail", xPath.getLayoutSuffix());
-            Generator genLink = new XItem.FillGenerator(site, templateLink);
-            XItem docDetail = new XItem(xPath, genLink);
-            //set link
-            docTop.setLink(xPath.getTargetURLName() + ".html");
-            if(resizeList == null) {
+            TemplateBean templateImage = site.getTemplate("image", xPath.getLayoutSuffix());
+            Generator genImage = new XItem.FillGenerator(site, templateImage);
+            XItem docTop = new XItem(xPath, genImage);
+
+            //check if we need to crop
+            List<Pair<Path, String>> resizeList = null;
+            String crop = xPath.getRecursiveProperty("crop");
+            if (crop != null) {
+                crop = crop.replace("-", "/");
+                List<Pair<Path, String>> cropList = HandlerImage.cropImages(xPath, crop, 100);
+                docTop.setSrcSets(convert(xPath, site, filesCounter, cropList));
+                for(Pair<Path, String> cropPair:cropList) {
+                    Utils.increase(filesCounter, Utils.listPaths(site, cropPair.element0()));
+                    cache.setCached(xPath, docTop, cropPair.element0(), docTop.templatePath());
+                }
+
+            } else {
                 resizeList = HandlerImage.resizeImages(xPath, 100);
+                docTop.setSrcSets(convert(xPath, site, filesCounter, resizeList));
+                for(Pair<Path, String> resizePair:resizeList) {
+                    Utils.increase(filesCounter, Utils.listPaths(site, resizePair.element0()));
+                    cache.setCached(xPath, docTop, resizePair.element0(), docTop.templatePath());
+                }
+
             }
-            docDetail.setSrcSets(convert(xPath, site, filesCounter, resizeList));
-            Path generatedFile2 = xPath
-                    .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-            Utils.writeHTML(xPath, docDetail, generatedFile2);
-            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+
+            //check if link is required
+            if (xPath.hasRecursiveProperty("link", "l") && xPath.getParent().isItemWritten()) {
+                //create file
+                TemplateBean templateLink = site.getTemplate("image", xPath.getLayoutSuffix());
+                Generator genLink = new XItem.FillGenerator(site, templateLink);
+                XItem docDetail = new XItem(xPath, genLink);
+                //set link
+                docTop.setLink(xPath.getTargetURLName() + ".html");
+                if (resizeList == null) {
+                    resizeList = HandlerImage.resizeImages(xPath, 100);
+                }
+                docDetail.setSrcSets(convert(xPath, site, filesCounter, resizeList));
+                Path generatedFile2 = xPath
+                        .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
+                Utils.writeHTML(xPath, docDetail, generatedFile2);
+                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+                cache.setCached(xPath, docTop, generatedFile2, docTop.templatePath());
+            }
+            return docTop;
         }
-        return docTop;
     }
 
     private List<SrcSet> convert(XPath xPath, Site site, Map<Path, Integer> filesCounter, List<Pair<Path, String>> resizeList) {
@@ -167,7 +179,7 @@ public class HandlerImage implements Handler {
         String size = HandlerImage.executeGetAspectSize(xPath.path().toString(), aspect);
         float w = Float.parseFloat(size.substring(0, size.indexOf("x")));
         float h = Float.parseFloat(size.substring(size.indexOf("x") + 1));
-        while(w > limit && h > limit) {
+        do {
             Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_crop_"+ Math.round(w) + xPath.extensions());
             Files.createDirectories(dstImage.getParent());
@@ -175,7 +187,7 @@ public class HandlerImage implements Handler {
             result.add(new Pair<>(dstImage,Math.round(w)+"w"));
             w /= 2;
             h /= 2;
-        }
+        } while(w > limit && h > limit);
         return result;
     }
 
@@ -184,7 +196,7 @@ public class HandlerImage implements Handler {
         String size = HandlerImage.executeGetSize(xPath.path().toString());
         float w = Float.parseFloat(size.substring(0, size.indexOf("x")));
         float h = Float.parseFloat(size.substring(size.indexOf("x") + 1));
-        while(w > limit && h > limit) {
+        do {
             Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_"+ Math.round(w) + xPath.extensions());
             Files.createDirectories(dstImage.getParent());
@@ -192,7 +204,7 @@ public class HandlerImage implements Handler {
             result.add(new Pair<>(dstImage,Math.round(w)+"w"));
             w /= 2;
             h /= 2;
-        }
+        } while(w > limit && h > limit);
         return result;
     }
 

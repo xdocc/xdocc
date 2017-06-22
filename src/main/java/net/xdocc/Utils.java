@@ -49,12 +49,12 @@ public class Utils {
         path = path.isEmpty() ? ".":path;
         doc.setPath(path);
         
-        String linkOrig = doc.getOriginalLink();
-        if(linkOrig != null) {
-            Path pathRelativeLink = Paths.get(minusPath).relativize(Paths.get(linkOrig));
-            linkOrig = pathRelativeLink.toString();
-            linkOrig = linkOrig.isEmpty() ? ".":linkOrig;
-            doc.setLink(linkOrig);
+        String link = doc.getLink();
+        if(link != null) {
+            Path pathRelativeLink = Paths.get(minusPath).relativize(Paths.get(link));
+            link = pathRelativeLink.toString();
+            link = link.isEmpty() ? ".":link;
+            doc.setLink(link);
         }
         
         return doc;
@@ -272,7 +272,6 @@ public class Utils {
      * Sort the documents according to its number. If a date was provided, the date will be converted to a
      * long. If no number is provided the sort will be by name.
      *
-     * @param documents The documents to sort
      * @param inverted A flag to invert the sort order
      */
     public static void sort2(List<XPath> children, final boolean inverted) {
@@ -496,7 +495,6 @@ public class Utils {
     /**
      * Returns a list of links that goes to the root. This is typically used for breadcrumbs.
      *
-     * @param current The current location
      * @return the list of links
      */
     public static List<Link> linkToRoot(Path root, XPath xPath) {
@@ -580,7 +578,7 @@ public class Utils {
         //adjust path in current item
         String minusPath = xPath.getTargetURL();
         doc = Utils.adjustPath(doc, minusPath);
-        String minusPathToRoot = xPath.originalPathToRoot();
+        String minusPathToRoot = xPath.originalRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
         doc = Utils.adjustPromotedDepth(doc, doc.getPromoteDepthOriginal());
         
@@ -600,18 +598,18 @@ public class Utils {
     public static XItem adjust(XPath xPath, XItem doc) {
         String minusPath = xPath.getTargetURLPath();
         doc = Utils.adjustPath(doc, minusPath);
-        String minusPathToRoot = xPath.originalPathToRoot();
+        String minusPathToRoot = xPath.originalRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
         return doc;
     }
 
-    public static void writeHTML(XPath xPath, XItem doc, Path generatedFile) 
+    public static void writeHTML(XPath xPath, XItem doc, Path generatedFile)
             throws IOException, TemplateException {
         
          //adjust path in current item
         String minusPath = xPath.getTargetURLPath();
         doc = Utils.adjustPath(doc, minusPath);
-        String minusPathToRoot = xPath.originalPathToRoot();
+        String minusPathToRoot = xPath.originalRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
         
         

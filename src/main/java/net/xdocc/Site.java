@@ -108,6 +108,7 @@ public class Site {
         }
 
         if (templateBean.isDirty()) {
+            System.out.println("template is dirty: "+templateBean.file());
             templateBean = loadTemplate(templateBean.file());
             templates.put(templateBean.file().getFileName().toString(), templateBean);
         }
@@ -167,9 +168,11 @@ public class Site {
 
         }
         for(Map.Entry<String,String> entry:defaults().entrySet()) {
-            TemplateBean templateBean = new TemplateBean()
-                .template(freemakerEngine.getTemplate(entry.getKey()));
-        templates.put(entry.getKey(), templateBean);
+            if(!templates.containsKey(entry.getKey())) {
+                TemplateBean templateBean = new TemplateBean()
+                        .template(freemakerEngine.getTemplate(entry.getKey()));
+                templates.put(entry.getKey(), templateBean);
+            }
         }
         
 

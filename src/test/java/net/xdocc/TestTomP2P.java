@@ -37,6 +37,7 @@ public class TestTomP2P {
     
     @Test
         public void testCache() throws IOException, InterruptedException, ExecutionException {
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Service.main("-w", src.toString(), "-o", gen.toString());
+        //Thread.sleep(1000000000);
     }
 }

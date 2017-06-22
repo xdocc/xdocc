@@ -851,10 +851,10 @@ final public class XPath implements Comparable<XPath> {
     }
     public static final String ORIGINAL_PATH = "originalpath";
     
-    public String originalPathToRoot() {
+    public String originalRoot() {
         return Utils.relativePathToRoot(site.source(), path);
     }
-    public static final String ORIGINAL_PATH_TO_ROOT = "originalpathtoroot";
+    public static final String ORIGINAL_ROOT = "originalroot";
 
     private void extractName() {
         if(url.contains(":")) {

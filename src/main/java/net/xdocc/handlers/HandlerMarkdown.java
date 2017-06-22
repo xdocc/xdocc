@@ -1,7 +1,5 @@
 package net.xdocc.handlers;
 
-import static org.tautua.markdownpapers.util.Utils.escape;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -19,12 +17,9 @@ import net.xdocc.XItem;
 import net.xdocc.Site;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
-
-import org.tautua.markdownpapers.HtmlEmitter;
-import org.tautua.markdownpapers.ast.Image;
-import org.tautua.markdownpapers.ast.Resource;
-import org.tautua.markdownpapers.parser.ParseException;
-import org.tautua.markdownpapers.parser.Parser;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 
 public class HandlerMarkdown implements Handler {
     
@@ -65,63 +60,16 @@ public class HandlerMarkdown implements Handler {
                     Utils.writeHTML(xPath, doc, generatedFile);
                     Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                 }
-                cache.setCached(xPath, doc, generatedFile);
+                cache.setCached(xPath, doc, generatedFile, doc.templatePath());
             }
         }
         return doc;
     }
 
-    private void transform(Reader in, Writer out) throws ParseException {
-        Parser parser = new Parser(in);
-        HtmlEmitter emitter = new MyHtmlEmitter(out);
-        org.tautua.markdownpapers.ast.Document document = parser.parse();
-        document.accept(emitter);
-    }
-
-    private static class MyHtmlEmitter extends HtmlEmitter {
-
-        private Appendable buffer;
-
-        public MyHtmlEmitter(Appendable buffer) {
-            super(buffer);
-            this.buffer = buffer;
-        }
-
-        public void visit(Image node) {
-            Resource resource = node.getResource();
-            if (resource == null) {
-                myAppend("<img src=\"\" alt=\"");
-                myEscapeAndAppend(node.getText());
-                myAppend("\"/>");
-            } else {
-                myAppend("<img");
-                myAppend(" src=\"");
-                myEscapeAndAppend(resource.getLocation());
-                if (node.getText() != null) {
-                    myAppend("\" alt=\"");
-                    myEscapeAndAppend(node.getText());
-                }
-                if (resource.getHint() != null) {
-                    myAppend("\" title=\"");
-                    myEscapeAndAppend(resource.getHint());
-                }
-                myAppend("\"/>");
-            }
-        }
-
-        private void myAppend(String val) {
-            try {
-                buffer.append(val);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private void myEscapeAndAppend(String val) {
-            for (char character : val.toCharArray()) {
-                myAppend(escape(character));
-            }
-        }
-
+    private void transform(Reader in, Writer out) throws IOException {
+        Parser parser = Parser.builder().build();
+        Node document = parser.parseReader(in);
+        HtmlRenderer renderer = HtmlRenderer.builder().build();
+        renderer.render(document, out);
     }
 }

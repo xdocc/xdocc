@@ -33,12 +33,12 @@ public class TestHandler {
     
     @Test
     public void testHeader() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.createFile(src, "1-test.txt", "this is a text file <a href=\"${path}\">current</a>(<a href=\"${pathtoroot}\">back</a>)");
+        TestUtils.createFile(src, "1-test.txt", "this is a text file <a href=\"${path}\">current</a>(<a href=\"${root}\">back</a>)");
         TestUtils.createFile(src, ".xdocc", "page=true");
-        TestUtils.createFile(src, "2-dir1.nav/1-test.txt", "this is a 3rd text file <a href=\"${path}\">current</a>(<a href=\"${pathtoroot}\">back</a>)");
+        TestUtils.createFile(src, "2-dir1.nav/1-test.txt", "this is a 3rd text file <a href=\"${path}\">current</a>(<a href=\"${root}\">back</a>)");
         TestUtils.createFile(src, "2-dir1.nav/.xdocc", "page=true");
         
-        TestUtils.createFile(src, ".templates/header.ftl", "[header in path: ${pathtoroot}]");
+        TestUtils.createFile(src, ".templates/header.ftl", "[header in path: ${root}]");
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/page.ftl", "<#include \"header.ftl\">${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>${item.content}</#list>");
@@ -52,7 +52,7 @@ public class TestHandler {
         TestUtils.createFile(src, "h2h.png", "this is an image");
         TestUtils.createFile(src, ".xdocc", "page=true");
         
-        TestUtils.createFile(src, ".templates/header.ftl", "[header in path: ${pathtoroot}]");
+        TestUtils.createFile(src, ".templates/header.ftl", "[header in path: ${root}]");
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/page.ftl", "<#include \"header.ftl\">${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>${item.content}</#list>");
@@ -63,10 +63,10 @@ public class TestHandler {
     
     @Test
     public void testPath() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.createFile(src, "1-test.txt", "this is a text file <a href=\"${path}\">current</a>(<a href=\"${pathtoroot}\">back</a>)");
-        TestUtils.createFile(src, "2-dir1.nav/1-test.txt", "this is a 2nd text file <a href=\"${path}\">current</a>(<a href=\"${pathtoroot}\">back</a>)");
+        TestUtils.createFile(src, "1-test.txt", "this is a text file <a href=\"${path}\">current</a>(<a href=\"${root}\">back</a>)");
+        TestUtils.createFile(src, "2-dir1.nav/1-test.txt", "this is a 2nd text file <a href=\"${path}\">current</a>(<a href=\"${root}\">back</a>)");
         TestUtils.createFile(src, "2-dir1.nav/.xdocc", "promote=true");
-        TestUtils.createFile(src, "2-dir1.nav/2-subdir1.nav/1-test.txt", "this is a 3rd text file <a href=\"${path}\">current</a>(<a href=\"${pathtoroot}\">back</a>)");
+        TestUtils.createFile(src, "2-dir1.nav/2-subdir1.nav/1-test.txt", "this is a 3rd text file <a href=\"${path}\">current</a>(<a href=\"${root}\">back</a>)");
         TestUtils.createFile(src, "2-dir1.nav/2-subdir1.nav/.xdocc", "promote=true");
         
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
@@ -231,31 +231,13 @@ public class TestHandler {
     }
     
     @Test
-    public void testImage() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1.vis.prm/label-1.jpg");
-        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
-        TestUtils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_norm.ftl", "norm:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_orig.ftl", "orig:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image.ftl", "<#if items[0].link??>${items[0].content}</#if>|<#if items[1].link??>${items[1].content}</#if>|<#if items[2].link??>${items[2].content}</#if>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals("[[|thumb:<img src=dir1/label-1_t.jpg>|norm:<img src=dir1/label-1_n.jpg>]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
-        Assert.assertEquals("[|thumb:<img src=label-1_t.jpg>|norm:<img src=label-1_n.jpg>]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
-        
-        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_n.jpg")));
-        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_n.html")));
-        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_t.jpg")));
-        Assert.assertTrue(Files.exists(gen.resolve("dir1/label-1_t.html")));
-    }
-    
-    @Test
     public void testTextileImage() throws IOException, InterruptedException, ExecutionException {
         TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1/label-1.jpg");
         TestUtils.copyFile("imgs/label-2.jpg", src, "1-dir2/label-2.jpg");
         TestUtils.copyFile("imgs/label-3.jpg", src, "1-dir3/label-3.jpg");
         TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-1.jpg!");
-        TestUtils.createFile(src, "1-dir2/1-me.textile", "!label-2.jpg:thumb!");
-        TestUtils.createFile(src, "1-dir3/1-first.textile", "!label-3.jpg:thumb!:../dir1/read.html");
+        TestUtils.createFile(src, "1-dir2/1-me.textile", "!label-2.jpg!");
+        TestUtils.createFile(src, "1-dir3/1-first.textile", "!label-3.jpg!:../dir1/read.html");
         
         TestUtils.createFile(src, "1-dir4.prm/4-dir5.prm/1-link.link", "url=../../dir1 \nurl=../../dir2 \nurl=../../dir3");
         
@@ -263,18 +245,13 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
         
-        TestUtils.createFile(src, ".templates/image_thumb.ftl", "thumb:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_norm.ftl", "norm:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image_orig.ftl", "orig:<img src=${path}>");
-        TestUtils.createFile(src, ".templates/image.ftl", "");
-        
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals("[[[([<p><img border=\"0\" src=\"dir1/label-1.jpg\"/></p>])([<p><a href=\"dir2/label-2_n.html\"><img border=\"0\" src=\"dir2/label-2_t.jpg\"/></a></p>])([<p><a href=\"dir3/../dir1/read.html\"><img border=\"0\" src=\"dir3/label-3_t.jpg\"/></a></p>])]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+        Assert.assertEquals("[[[([<p><img border=\"0\" src=\"dir1/label-1.jpg\"/></p>])([<p><img border=\"0\" src=\"dir2/label-2.jpg\"/></p>])([<p><a href=\"dir3/../dir1/read.html\"><img border=\"0\" src=\"dir3/label-3.jpg\"/></a></p>])]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
     }
     
     @Test
     public void testMarkdown() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.createFile(src, "1-dir1/1-read.md", "#A headline");
+        TestUtils.createFile(src, "1-dir1/1-read.md", "# A headline");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/markdown.ftl", "${content}");
         Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
