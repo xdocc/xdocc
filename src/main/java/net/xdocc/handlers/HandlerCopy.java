@@ -32,7 +32,7 @@ public class HandlerCopy implements Handler {
 
     @Override
     public boolean canHandle(Site site, XPath xPath) {
-        return !xPath.isDirectory();
+        return true;
     }
 
     @Override
@@ -58,23 +58,25 @@ public class HandlerCopy implements Handler {
             } else {
                 //copy ignores the page/isItemWritten flag
                 Files.createDirectories(generatedFile.getParent());
-                Files.copy(xPath.path(), generatedFile,
-                        StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
+                if(!xPath.isDirectory()) {
+                    Files.copy(xPath.path(), generatedFile,
+                            StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING,
+                            StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
+                }
                 Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                 LOG.debug("copy {} to {}", xPath.path(), generatedFile);
 
                 if (xPath.isCopy() || xPath.isVisible()) {
                     XItem item = createDocumentBrowse(site, xPath, "");
-                    cache.setCached(xPath, item, generatedFile, item.templatePath());
+                    cache.setCached(xPath, item.templatePath(), item, generatedFile);
                     return item;
 
                 } else {
-                    cache.setCached(xPath, null, generatedFile);
+                    cache.setCached(xPath, null,null, generatedFile);
                 }
             }
         } catch (IOException e) {
-            LOG.error("Copy handler faild, cannot copy from {} to {}", xPath.path(), generatedFile, e);
+            LOG.error("Copy handler failed, cannot copy from {} to {}", xPath.path(), generatedFile, e);
         }
 
         return null;

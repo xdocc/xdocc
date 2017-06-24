@@ -94,7 +94,7 @@ public class HandlerLink implements Handler {
                     Utils.writeHTML(xPath, doc, generatedFile);
                     Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
                 }
-                cache.setCached(xPath, doc, generatedFile, doc.templatePath());
+                cache.setCached(xPath, doc.templatePath(), doc, generatedFile);
             }
 
         }

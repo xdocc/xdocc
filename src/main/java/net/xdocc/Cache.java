@@ -13,6 +13,8 @@ import java.util.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -26,6 +28,8 @@ public class Cache {
     public Cache(Map<String, CacheEntry> cache) {
         this.cache = cache;
     }
+
+    private static final Logger LOG = LoggerFactory.getLogger(Cache.class);
     
     public CacheEntry getCached(XPath xPath) {
         return getCached(xPath, null);
@@ -38,10 +42,18 @@ public class Cache {
             return null;
         }
         //check if sources have same modification time
-        Map<XPath, Long> map = parentMap(xPath);
-        if(!map.equals(c.sourceDirs)) {
-            return null;
+        for(Map.Entry<Path, Long> entry: c.sourceDirs.entrySet()) {
+            try {
+                if(!Files.exists(entry.getKey()) ||
+                        Files.getLastModifiedTime(entry.getKey()).toMillis() != entry.getValue()) {
+                    return null;
+                }
+            } catch (IOException e) {
+                LOG.error("caching exception",e);
+                return null;
+            }
         }
+
         
         //check if generated files are there, don't care about the time
         boolean found = false;
@@ -75,27 +87,36 @@ public class Cache {
         return total;
     }
 
-    public Cache setCached(XPath xPath, XItem item, Path... generatedFile) {
+    public Cache setCached(XPath xPath, Path sourceFile, XItem item, Path... generatedFile) {
         String key = xPath.getTargetURL();
         CacheEntry c = cache.get(key);
+
         List<Path> genFiles = new ArrayList<>(Arrays.asList(generatedFile));
         genFiles.removeIf(Objects::isNull);
+
         if(c == null) {
-            Map<XPath, Long> map = parentMap(xPath);
+            Map<Path, Long> map = parentMap(xPath.path());
             c  = new CacheEntry().xItem(item).sourceDirs(map).generatedFiles(genFiles);
             cache.put(key, c);
         } else {
-            c.generatedFiles().addAll(genFiles);  
+            c.generatedFiles().addAll(genFiles);
+        }
+        if(sourceFile != null) {
+            try {
+                c.sourceDirs.put(sourceFile, Files.getLastModifiedTime(sourceFile).toMillis());
+            } catch (IOException e) {
+                LOG.error("cannot cache", e);
+            }
         }
         return this;
     }
 
-    private static Map<XPath, Long> parentMap(XPath xPath) {
-        XPath current = xPath;
-        Map<XPath, Long> map = new HashMap<>();
+    private static Map<Path, Long> parentMap(Path xPath) {
+        Path current = xPath;
+        Map<Path, Long> map = new HashMap<>();
         while(current != null) {
             try {
-                map.put(current, Files.getLastModifiedTime(current.path()).toMillis());
+                map.put(current, Files.getLastModifiedTime(current).toMillis());
                 current = current.getParent();
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -109,7 +130,7 @@ public class Cache {
         @Getter @Setter
         private XItem xItem;
         @Getter @Setter
-        private Map<XPath, Long> sourceDirs;
+        private Map<Path, Long> sourceDirs;
         @Getter @Setter
         private List<Path> generatedFiles;
     }

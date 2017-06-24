@@ -62,12 +62,23 @@ public class Compiler {
 
             try {
                 List<XPath> children = Utils.getNonHiddenChildren(site, path);
+
+                LOG.info("compiling: "+children);
+
                 List<CompletableFuture<List<XItem>>> futures = new ArrayList<>();
                 List<CompletableFuture<List<XItem>>> futuresNoPromote = new ArrayList<>();
                 final List<XItem> results = new ArrayList<>();
 
                 for (XPath child : children) {
                     if (child.isDirectory()) {
+                        //show folders when set to copy
+                        if(child.isCopy()) {
+                            final XItem xItem = compile(child);
+                            if(xItem != null) {
+                                xItem.setDepth(depth, promoteDepth);
+                                results.add(xItem);
+                            }
+                        }
                         if(child.isPromoted()) {
                             futures.add(compile(child.path(), depth + 1, promoteDepth + 1));
                         } else {
@@ -101,6 +112,8 @@ public class Compiler {
                         ascending = xPath.isAscending();
                     }
                     Utils.sort3(results, ascending);
+
+
 
                     try {
                         XItem doc = Utils.createDocument(site, xPath, null, "list");

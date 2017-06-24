@@ -82,7 +82,7 @@ public class HandlerWikiText implements Handler {
                 Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
             }
 
-            cache.setCached(xPath, doc, generatedFile, doc.templatePath());
+            cache.setCached(xPath, doc.templatePath(), doc, generatedFile);
         }
         return doc;
     }
