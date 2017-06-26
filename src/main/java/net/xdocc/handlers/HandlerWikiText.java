@@ -65,7 +65,7 @@ public class HandlerWikiText implements Handler {
         if (cached != null) {
             doc = cached.xItem();
             if (xPath.getParent().isItemWritten()) {
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
 
@@ -79,10 +79,10 @@ public class HandlerWikiText implements Handler {
             // always create a single page for that
             if (xPath.getParent().isItemWritten()) {                
                 Utils.writeHTML(xPath, doc, generatedFile);
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
 
-            cache.setCached(xPath, doc.templatePath(), doc, generatedFile);
+            cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
         }
         return doc;
     }
@@ -138,7 +138,7 @@ public class HandlerWikiText implements Handler {
                         imageUrl = xItem.getPath() + "/" + imageUrl;
                         Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
                                 .extensions());
-                        Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                        Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                 }
             }
             super.image(attributes, imageUrl);
@@ -155,7 +155,7 @@ public class HandlerWikiText implements Handler {
                         imageUrl = xItem.getPath() + "/" + imageUrl;
                         Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
                                 .extensions());
-                        Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                        Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                 }
             }
             super.imageLink(linkAttributes, imageAttributes, href, imageUrl);
@@ -170,7 +170,7 @@ public class HandlerWikiText implements Handler {
                         XPath img = xItem.xPath().getParent().resolveSource(href);
                         href = xItem.getPath() + "/" + href;
                         Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img.extensions());
-                        Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                        Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                     } catch (IllegalArgumentException e) {
                         //try to find a source to for conversion, TODO: check what to do here
                     }

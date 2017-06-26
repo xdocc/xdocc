@@ -47,7 +47,7 @@ public class HandlerMarkdown implements Handler {
         if (cached != null) {
             doc = cached.xItem();
             if (xPath.getParent().isItemWritten()) {
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
             try (Writer out = new StringWriter();
@@ -58,9 +58,9 @@ public class HandlerMarkdown implements Handler {
                 doc = Utils.createDocument(site, xPath, htmlContent, "markdown");
                 if (xPath.getParent().isItemWritten()) {
                     Utils.writeHTML(xPath, doc, generatedFile);
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                    Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                 }
-                cache.setCached(xPath, doc.templatePath(), doc, generatedFile);
+                cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
             }
         }
         return doc;

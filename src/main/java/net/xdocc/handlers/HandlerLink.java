@@ -44,7 +44,7 @@ public class HandlerLink implements Handler {
         if (cached != null) {
             doc = cached.xItem();
             if (xPath.getParent().isItemWritten()) {
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
 
@@ -92,9 +92,9 @@ public class HandlerLink implements Handler {
                 // always create a single page for that
                 if (xPath.getParent().isItemWritten()) {
                     Utils.writeHTML(xPath, doc, generatedFile);
-                    Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                    Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                 }
-                cache.setCached(xPath, doc.templatePath(), doc, generatedFile);
+                cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
             }
 
         }

@@ -87,7 +87,7 @@ public class Cache {
         return total;
     }
 
-    public Cache setCached(XPath xPath, Path sourceFile, XItem item, Path... generatedFile) {
+    public Cache setCached(Site site, XPath xPath, Path sourceFile, XItem item, Path... generatedFile) {
         String key = xPath.getTargetURL();
         CacheEntry c = cache.get(key);
 
@@ -95,7 +95,7 @@ public class Cache {
         genFiles.removeIf(Objects::isNull);
 
         if(c == null) {
-            Map<Path, Long> map = parentMap(xPath.path());
+            Map<Path, Long> map = parentMap(site, xPath.path());
             c  = new CacheEntry().xItem(item).sourceDirs(map).generatedFiles(genFiles);
             cache.put(key, c);
         } else {
@@ -111,13 +111,14 @@ public class Cache {
         return this;
     }
 
-    private static Map<Path, Long> parentMap(Path xPath) {
+    private static Map<Path, Long> parentMap(Site site, Path xPath) {
+
+
         Path current = xPath;
         Map<Path, Long> map = new HashMap<>();
-        while(current != null) {
+        for(Path p:Utils.listPathsSrc(site, xPath)) {
             try {
-                map.put(current, Files.getLastModifiedTime(current).toMillis());
-                current = current.getParent();
+                map.put(p, Files.getLastModifiedTime(p).toMillis());
             } catch (IOException ex) {
                 ex.printStackTrace();
             }

@@ -44,7 +44,7 @@ public class HandlerHTML implements Handler {
         if (cached != null) {
             doc = cached.xItem();
             if (xPath.getParent().isItemWritten()) {
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
             Charset charset = HandlerUtils.detectCharset(xPath.path());
@@ -59,9 +59,9 @@ public class HandlerHTML implements Handler {
 
             if (xPath.getParent().isItemWritten()) {
                 Utils.writeHTML(xPath, doc, generatedFile);
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
-            cache.setCached(xPath, doc.templatePath(), doc, generatedFile);
+            cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
         }
         return doc;
     }

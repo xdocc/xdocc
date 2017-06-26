@@ -70,25 +70,17 @@ public class Compiler {
                 final List<XItem> results = new ArrayList<>();
 
                 for (XPath child : children) {
+                    final XItem xItem = compile(child);
+                    if(xItem != null) {
+                        xItem.setDepth(depth, promoteDepth);
+                        results.add(xItem);
+                    }
                     if (child.isDirectory()) {
-                        //show folders when set to copy
-                        if(child.isCopy()) {
-                            final XItem xItem = compile(child);
-                            if(xItem != null) {
-                                xItem.setDepth(depth, promoteDepth);
-                                results.add(xItem);
-                            }
-                        }
+                        //recursion
                         if(child.isPromoted()) {
                             futures.add(compile(child.path(), depth + 1, promoteDepth + 1));
                         } else {
                             futuresNoPromote.add(compile(child.path(), depth + 1, 0));
-                        }
-                    } else {
-                        final XItem xItem = compile(child);
-                        if(xItem != null) {
-                            xItem.setDepth(depth, promoteDepth);
-                            results.add(xItem);
                         }
                     }
                 }
@@ -124,7 +116,7 @@ public class Compiler {
                             Path generatedFile = xPath.resolveTargetFromPath("index.html");
                             Utils.writeListHTML(xPath, doc, generatedFile);
                             //TODO: add caching
-                            Utils.increase(filesCounter, Utils.listPaths(site, generatedFile));
+                            Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                         }
                         
                         List<XItem> results2 = new ArrayList<>(1);

@@ -86,7 +86,7 @@ public class Utils {
         return doc;
     }
 
-    public static Collection<Path> listPaths(Site site, Path generatedFile) {
+    public static Collection<Path> listPathsGen(Site site, Path generatedFile) {
         
         generatedFile = generatedFile.normalize();
         
@@ -100,6 +100,23 @@ public class Utils {
             generatedFile = generatedFile.getParent();
         }
         retVal.add(generatedFile);
+        return retVal;
+    }
+
+    public static Collection<Path> listPathsSrc(Site site, Path srcFile) {
+
+        srcFile = srcFile.normalize();
+
+        if (!isChild(srcFile, site.source())) {
+            return null;
+        }
+
+        Collection<Path> retVal = new ArrayList<>();
+        while(!srcFile.equals(site.source())) {
+            retVal.add(srcFile);
+            srcFile = srcFile.getParent();
+        }
+        retVal.add(srcFile);
         return retVal;
     }
 

@@ -73,7 +73,7 @@ public class HandlerImage implements Handler {
         if (cached != null) {
             XItem doc = cached.xItem();
             if (xPath.hasRecursiveProperty("link", "l") && xPath.getParent().isItemWritten()) {
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
+                Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile2));
             }
             return doc;
 
@@ -91,16 +91,16 @@ public class HandlerImage implements Handler {
                 List<Pair<Path, String>> cropList = HandlerImage.cropImages(xPath, crop, 100);
                 docTop.setSrcSets(convert(xPath, site, filesCounter, cropList));
                 for(Pair<Path, String> cropPair:cropList) {
-                    Utils.increase(filesCounter, Utils.listPaths(site, cropPair.element0()));
-                    cache.setCached(xPath, docTop.templatePath(), docTop, cropPair.element0());
+                    Utils.increase(filesCounter, Utils.listPathsGen(site, cropPair.element0()));
+                    cache.setCached(site, xPath, docTop.templatePath(), docTop, cropPair.element0());
                 }
 
             } else {
                 resizeList = HandlerImage.resizeImages(xPath, 100);
                 docTop.setSrcSets(convert(xPath, site, filesCounter, resizeList));
                 for(Pair<Path, String> resizePair:resizeList) {
-                    Utils.increase(filesCounter, Utils.listPaths(site, resizePair.element0()));
-                    cache.setCached(xPath, docTop.templatePath(), docTop, resizePair.element0());
+                    Utils.increase(filesCounter, Utils.listPathsGen(site, resizePair.element0()));
+                    cache.setCached(site, xPath, docTop.templatePath(), docTop, resizePair.element0());
                 }
 
             }
@@ -119,8 +119,8 @@ public class HandlerImage implements Handler {
                 docDetail.setSrcSets(convert(xPath, site, filesCounter, resizeList));
 
                 Utils.writeHTML(xPath, docDetail, generatedFile2);
-                Utils.increase(filesCounter, Utils.listPaths(site, generatedFile2));
-                cache.setCached(xPath, docTop.templatePath(), docTop, generatedFile2);
+                Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile2));
+                cache.setCached(site, xPath, docTop.templatePath(), docTop, generatedFile2);
             }
             return docTop;
         }
@@ -129,7 +129,7 @@ public class HandlerImage implements Handler {
     private List<SrcSet> convert(XPath xPath, Site site, Map<Path, Integer> filesCounter, List<Pair<Path, String>> resizeList) {
         List<SrcSet> result = new ArrayList<>();
         for(Pair<Path, String> pair:resizeList) {
-            Utils.increase(filesCounter, Utils.listPaths(site, pair.element0()));
+            Utils.increase(filesCounter, Utils.listPathsGen(site, pair.element0()));
             result.add(new SrcSet(pair.element0().getFileName().toString(), pair.element1()));
         }
         return result;
