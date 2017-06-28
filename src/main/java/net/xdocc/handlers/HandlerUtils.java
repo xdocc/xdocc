@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,10 +22,7 @@ import com.ibm.icu.text.CharsetMatch;
 
 public class HandlerUtils {
     
-    public static final Map<String, String> MAP = new HashMap<String, String>() {{
-        put("list.ftl", "<#list items as item>${item.content}</#list>");
-        put("page.ftl", "${content}");
-    }};
+
 
     final private static Object lock = new Object();
 
@@ -85,12 +83,12 @@ public class HandlerUtils {
 
     public static Map<String, Object> fillPage(Site site, XPath xPath,
             XItem document) throws IOException {
-        String relativePathToRoot = Utils.relativePathToRoot(site.source(),
-                xPath.path());
+        String relativePathToRoot = Utils.relativePathToRoot(Paths.get(site.source()),
+                Paths.get(xPath.path()));
         Map<String, Object> model = new HashMap<>();
         //model.put(XItem.DOCUMENT, document);
         Link current = Utils.find(xPath.getParent(), site.globalNavigation());
-        List<Link> pathToRoot = Utils.linkToRoot(site.source(), xPath);
+        List<Link> pathToRoot = Utils.linkToRoot(Paths.get(site.source()), xPath);
         model.put(XItem.CURRENT_NAV, current);
         model.put(XItem.BREADCRUMB, pathToRoot);
         //model.put(XItem.NAVIGATION, site.globalNavigation());

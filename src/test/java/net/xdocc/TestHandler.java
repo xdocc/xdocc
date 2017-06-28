@@ -18,17 +18,19 @@ import org.junit.Test;
 public class TestHandler {
     private static Path gen;
     private static Path src;
+    private static Path cache;
 
     @Before
     public void setup() throws IOException {
         src = Files.createTempDirectory("src");
         gen = Files.createTempDirectory("gen");
+        cache = Files.createTempDirectory("cache").resolve("cache");
         Files.createDirectories(src.resolve(".templates"));
     }
 
     @After
     public void tearDown() throws IOException {
-        TestUtils.deleteDirectories(gen, src);
+        TestUtils.deleteDirectories(gen, src, cache);
     }
     
     @Test
@@ -42,7 +44,8 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/page.ftl", "<#include \"header.ftl\">${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>${item.content}</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("[header in path: ../]this is a 3rd text file <a href=\".\">current</a>(<a href=\"../\">back</a>)", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
     }
     
@@ -56,7 +59,8 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/page.ftl", "<#include \"header.ftl\">${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>${item.content}</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertTrue(Files.exists(gen.resolve("h2h.png")));
     }
     
@@ -71,7 +75,8 @@ public class TestHandler {
         
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("[this is a text file <a href=\".\">current</a>(<a href=\".\">back</a>)][[this is a 2nd text file <a href=\"dir1\">current</a>(<a href=\".\">back</a>)][[this is a 3rd text file <a href=\"dir1/subdir1\">current</a>(<a href=\".\">back</a>)]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
         Assert.assertEquals("[this is a 2nd text file <a href=\".\">current</a>(<a href=\"../\">back</a>)][[this is a 3rd text file <a href=\"subdir1\">current</a>(<a href=\"../\">back</a>)]]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
         Assert.assertEquals("[this is a 3rd text file <a href=\".\">current</a>(<a href=\"../../\">back</a>)]", FileUtils.readFileToString(gen.resolve("dir1/subdir1/index.html").toFile()));
@@ -87,7 +92,8 @@ public class TestHandler {
         
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("0/0[this is a text file][1/1[this is a 2nd text file][2/2[this is a 3rd text file]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
         Assert.assertEquals("1/0[this is a 2nd text file][2/1[this is a 3rd text file]]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
         Assert.assertEquals("2/0[this is a 3rd text file]", FileUtils.readFileToString(gen.resolve("dir1/subdir1/index.html").toFile()));
@@ -102,7 +108,8 @@ public class TestHandler {
         
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("0/0[this is a text file]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
         Assert.assertEquals("1/0[this is a 2nd text file][2/1[this is a 3rd text file]]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
         Assert.assertEquals("2/0[this is a 3rd text file]", FileUtils.readFileToString(gen.resolve("dir1/subdir1/index.html").toFile()));
@@ -119,7 +126,8 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/list_m.ftl", "MM ${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("0/0[this is a text file][MM 1/1[this is a 2nd text file][2/2[this is a 3rd text file]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
         Assert.assertEquals("MM 1/0[this is a 2nd text file][2/1[this is a 3rd text file]]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
         Assert.assertEquals("2/0[this is a 3rd text file]", FileUtils.readFileToString(gen.resolve("dir1/subdir1/index.html").toFile()));
@@ -137,7 +145,8 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/text_m.ftl", "MX ${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/list_m.ftl", "MM ${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("0/0[this is a text file][MM 1/1[MX this is a 2nd text file][MM 2/2[this is a 3rd text file]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
         Assert.assertEquals("MM 1/0[MX this is a 2nd text file][MM 2/1[this is a 3rd text file]]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
         Assert.assertEquals("MM 2/0[this is a 3rd text file]", FileUtils.readFileToString(gen.resolve("dir1/subdir1/index.html").toFile()));
@@ -153,7 +162,8 @@ public class TestHandler {
         //Utils.createFile(src, ".templates/list.ftl", "${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("[this is a text file][([<a href=\"dir1/hallo.html\">hallo</a>][<a href=\"dir1/test.html\">test</a>])]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
         Assert.assertEquals("[<a href=\"./hallo.html\">hallo</a>][<a href=\"./test.html\">test</a>]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
     }
@@ -170,7 +180,8 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("[([[<a href=\"../../dir1/subdir/hallo.html\">hallo</a>][<a href=\"../../dir1/subdir/test.html\">test</a>]])][([[<a href=\"../../dir1/subdir/hallo.html\">hallo</a>][<a href=\"../../dir1/subdir/test.html\">test</a>]])]", FileUtils.readFileToString(gen.resolve("dir3/subdir/index.html").toFile()));
         Assert.assertEquals("([[<a href=\"../../dir1/subdir/hallo.html\">hallo</a>][<a href=\"../../dir1/subdir/test.html\">test</a>]])", FileUtils.readFileToString(gen.resolve("dir3/subdir/linkabs.html").toFile()));
         Assert.assertEquals("([[<a href=\"../../dir1/subdir/hallo.html\">hallo</a>][<a href=\"../../dir1/subdir/test.html\">test</a>]])", FileUtils.readFileToString(gen.resolve("dir3/subdir/linkrel.html").toFile()));
@@ -193,8 +204,8 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/page.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("[first item][(test4)][third item]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
     }
     
@@ -202,7 +213,8 @@ public class TestHandler {
     public void testCopy() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-dir1/read.me", "copy this data 1:1");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("copy this data 1:1", FileUtils.readFileToString(gen.resolve("dir1/read.me").toFile()));
     }
     
@@ -211,7 +223,8 @@ public class TestHandler {
         TestUtils.createFile(src, "1-dir1/1-read.textile", "h1. A headline");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("<h1 id=\"Aheadline\">A headline</h1>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
     }
     
@@ -225,7 +238,8 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/link.ftl", "<#list items as item>(${item.content})</#list>");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("<h1 id=\"Aheadline\">A headline</h1><a href=\"./../dir2\">Link1</a> to 2", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
         Assert.assertEquals("[([<h1 id=\"Aheadline\">A headline</h1><a href=\"../../dir1/../dir2\">Link1</a> to 2])([<h1 id=\"Title\">Title</h1><a href=\"../../dir2/../dir1\">Link2</a> to 1 ])]", FileUtils.readFileToString(gen.resolve("dir3/dir4/index.html").toFile()));
     }
@@ -245,7 +259,7 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
 
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("[[[([<p><img border=\"0\" src=\"dir1/label-1.jpg\"/></p>])([<p><img border=\"0\" src=\"dir2/label-2.jpg\"/></p>])([<p><a href=\"dir3/../dir1/read.html\"><img border=\"0\" src=\"dir3/label-3.jpg\"/></a></p>])]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
     }
     
@@ -254,7 +268,8 @@ public class TestHandler {
         TestUtils.createFile(src, "1-dir1/1-read.md", "# A headline");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/markdown.ftl", "${content}");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("<h1>A headline</h1>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()).trim());
     }
             

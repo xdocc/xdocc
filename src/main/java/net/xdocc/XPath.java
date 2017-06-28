@@ -1,9 +1,6 @@
 package net.xdocc;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 @Accessors(chain = true, fluent = true)
-final public class XPath implements Comparable<XPath> {
+final public class XPath implements Comparable<XPath>, Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(XPath.class);
 
@@ -47,7 +44,7 @@ final public class XPath implements Comparable<XPath> {
     private final static List<String> KNOWN_EXTENSIONS = new ArrayList<>();
 
     @Getter
-    private final Path path;
+    private final String path;
 
     @Getter
     private final Site site; 
@@ -96,11 +93,11 @@ final public class XPath implements Comparable<XPath> {
      * @throws IllegalArgumentException if the path is not inside the context of site
      */
     public XPath(Site site, Path path) {
-        if (!Utils.isChild(path, site.source())) {
+        if (!Utils.isChild(path, Paths.get(site.source()))) {
             throw new IllegalArgumentException(path + " is not a child of "
                     + site.source());
         }
-        this.path = path;
+        this.path = path.toString();
         this.site = site;
         
         String extensionFilteredFileName = findKnownExtensions(site, fileName());
@@ -127,7 +124,7 @@ final public class XPath implements Comparable<XPath> {
     }
 
     private void readFrontmatter() {
-        Path frontmatter = path.resolve(".xdocc");
+        Path frontmatter = Paths.get(path).resolve(".xdocc");
         if (Files.exists(frontmatter)) {
             try {
                 String content = FileUtils.readFileToString(frontmatter
@@ -163,8 +160,7 @@ final public class XPath implements Comparable<XPath> {
      * As seen in http://stackoverflow.com/questions/11770077/parsing-yaml-front- matter-in-java
      */
     private void parseFrontmatter() {
-        try (BufferedReader br = new BufferedReader(new FileReader(
-                path.toFile()))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             String line = br.readLine();
             while (line != null && line.isEmpty()) {
                 line = br.readLine();
@@ -378,27 +374,23 @@ final public class XPath implements Comparable<XPath> {
         return value;
     }
     
-    @Override
-    public String toString() {
-        return path.toString();
-    }
-    
     public String fileName() {
-        if (path.getFileName() == null) {
+        Path p = Paths.get(path);
+        if (p.getFileName() == null) {
             LOG.error("[" + path + "], cannot deal with an empty path");
             throw new RuntimeException("cannot deal with an empty path");
         }
-        return path.getFileName().toString();
+        return p.getFileName().toString();
     }
     public static final String FILENAME = "filename";
 
     public String getTargetURLName() {
-        String[] paths = Utils.createURLSplit(site.source(), this);
+        String[] paths = Utils.createURLSplit(Paths.get(site.source()), this);
         return paths[paths.length - 1];
     }
     
     public String getTargetURLFilename() {
-        String[] paths = Utils.createURLSplit(site.source(), this);
+        String[] paths = Utils.createURLSplit(Paths.get(site.source()), this);
         paths[paths.length - 1] = fileName();
         String url = Utils.createURL(paths);
         return url;
@@ -408,18 +400,18 @@ final public class XPath implements Comparable<XPath> {
      * @return The url of the file that have been compiled
      */
     public String getTargetURL() {
-        String[] paths = Utils.createURLSplit(site.source(), this);
+        String[] paths = Utils.createURLSplit(Paths.get(site.source()), this);
         String url = Utils.createURL(paths);
         return url;
     }
     
     public int getTargetDepth() {
-        String[] paths = Utils.createURLSplit(site.source(), this);
+        String[] paths = Utils.createURLSplit(Paths.get(site.source()), this);
         return paths.length - (isDirectory() ? 0 : 1);
     }
 
     public String getTargetURLPath() {
-        String[] paths = Utils.createURLSplit(site.source(), this);
+        String[] paths = Utils.createURLSplit(Paths.get(site.source()), this);
 
         String[] tmp = new String[paths.length - 1];
         for (int i = 0; i < tmp.length; i++) {
@@ -434,21 +426,25 @@ final public class XPath implements Comparable<XPath> {
      * @return The path of the file in the web folder for files that have been compiled
      */
     public Path resolveTargetFromBasePath(String url) {
-        Path tmp = site.generated().resolve(url);
+        Path gen = Paths.get(site.generated());
+        Path tmp = gen.resolve(url);
         return tmp;
     }
     
     public Path resolveTargetFromPath(String url) {
+        Path p = Paths.get(path);
         Path target = Paths.get(getTargetURL());
-        if(Files.isDirectory(path)) {
-            return site.generated().resolve(target.resolve(url));
+        Path gen = Paths.get(site.generated());
+        if(Files.isDirectory(p)) {
+            return gen.resolve(target.resolve(url));
         } else {
-            return site.generated().resolve(target.getParent().resolve(url));
+            return gen.resolve(target.getParent().resolve(url));
         }
     }
     
     public XPath resolveSource(String url) {
-        return new XPath(site, this.path.resolve(url));
+        Path p = Paths.get(path);
+        return new XPath(site, p.resolve(url));
     }
 
     /**
@@ -460,10 +456,11 @@ final public class XPath implements Comparable<XPath> {
     }
     
     public XPath getParent() {
-        if (!Utils.isChild(path.getParent(), site.source())) {
+        Path p = Paths.get(path);
+        if (!Utils.isChild(p.getParent(), Paths.get(site.source()))) {
             return null;
         }
-        return new XPath(site, path.getParent());
+        return new XPath(site, p.getParent());
     }
     
     /**
@@ -491,7 +488,8 @@ final public class XPath implements Comparable<XPath> {
 
     
     public boolean isDirectory() {
-        return Files.isDirectory(path);
+        Path p = Paths.get(path);
+        return Files.isDirectory(p);
     }
     public static final String IS_DIRECTORY = "isdirectory";
 
@@ -817,9 +815,10 @@ final public class XPath implements Comparable<XPath> {
     }
 
     public long fileSize() {
+        Path p = Paths.get(path);
         try {
-            if (!Files.isDirectory(path)) {
-                return Files.size(path);
+            if (!Files.isDirectory(p)) {
+                return Files.size(p);
             } else {
                 return 0;
             }
@@ -831,9 +830,10 @@ final public class XPath implements Comparable<XPath> {
     public static final String FILESIZE = "filesize";
     
     public long filesCount() {
+        Path p = Paths.get(path);
         try {
-            if (Files.isDirectory(path)) {
-                return Files.walk(path).count();
+            if (Files.isDirectory(p)) {
+                return Files.walk(p).count();
             } else {
                 return 1;
             }
@@ -852,7 +852,8 @@ final public class XPath implements Comparable<XPath> {
     public static final String ORIGINAL_PATH = "originalpath";
     
     public String originalRoot() {
-        return Utils.relativePathToRoot(site.source(), path);
+        Path p = Paths.get(path);
+        return Utils.relativePathToRoot(Paths.get(site.source()), p);
     }
     public static final String ORIGINAL_ROOT = "originalroot";
 
@@ -863,8 +864,4 @@ final public class XPath implements Comparable<XPath> {
             this.name = tmp[1];
         }
     }
-
-   
-
-    
 }

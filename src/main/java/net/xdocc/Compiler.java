@@ -1,6 +1,7 @@
 package net.xdocc;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,6 +13,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.xdocc.handlers.Handler;
 
+import net.xdocc.handlers.HandlerDirectory;
+import net.xdocc.handlers.HandlerLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,20 +28,24 @@ public class Compiler {
 
     final private ExecutorService executorServiceCompiler;
     
-    final private Map<Path, Integer> filesCounter;
+    final private Map<String, Integer> filesCounter;
     
     final private Cache cache;
 
-    public Compiler(ExecutorService executorServiceCompiler, Site site, Map<Path, Integer> filesCounter, Cache cache) {
+    public Compiler(ExecutorService executorServiceCompiler, Site site, Map<String, Integer> filesCounter, Cache cache) {
         this.executorServiceCompiler = executorServiceCompiler;
         this.handlers = site.handlers();
+        for(Handler h:handlers) {
+            if(h instanceof HandlerLink) {
+                ((HandlerLink)h).compiler(this);
+            }
+        }
         this.site = site;
-        this.site.compiler(this);
         this.filesCounter = filesCounter;
         this.cache = cache;
     }
     
-    public CompletableFuture<List<XItem>> compile(final Path path) {
+    public CompletableFuture<XItem> compile(final Path path) {
         return compile(path, 0, 0);
     }
 
@@ -54,9 +61,9 @@ public class Compiler {
         return null;
     }
 
-    public CompletableFuture<List<XItem>> compile(final Path path, 
+    public CompletableFuture<XItem> compile(final Path path,
             final int depth, final int promoteDepth) {
-        final CompletableFuture<List<XItem>> completableFuture = new CompletableFuture<>();
+        final CompletableFuture<XItem> completableFuture = new CompletableFuture<>();
 
         completableFuture.runAsync(() -> {
 
@@ -65,8 +72,8 @@ public class Compiler {
 
                 LOG.info("compiling: "+children);
 
-                List<CompletableFuture<List<XItem>>> futures = new ArrayList<>();
-                List<CompletableFuture<List<XItem>>> futuresNoPromote = new ArrayList<>();
+                List<CompletableFuture<XItem>> futures = new ArrayList<>();
+                List<CompletableFuture<XItem>> futuresNoPromote = new ArrayList<>();
                 final List<XItem> results = new ArrayList<>();
 
                 for (XPath child : children) {
@@ -78,9 +85,9 @@ public class Compiler {
                     if (child.isDirectory()) {
                         //recursion
                         if(child.isPromoted()) {
-                            futures.add(compile(child.path(), depth + 1, promoteDepth + 1));
+                            futures.add(compile(Paths.get(child.path()), depth + 1, promoteDepth + 1));
                         } else {
-                            futuresNoPromote.add(compile(child.path(), depth + 1, 0));
+                            futuresNoPromote.add(compile(Paths.get(child.path()), depth + 1, 0));
                         }
                     }
                 }
@@ -90,38 +97,13 @@ public class Compiler {
                 ).thenRunAsync(() -> {
                     results.addAll(
                         futures.stream()
-                            .map(v -> v.getNow(Collections.emptyList()))
-                            .flatMap(List::stream)
+                            .map(v -> v.join())
                             .collect(Collectors.toList())
                     );
                     
-                    XPath xPath = new XPath(site, path);
-                    
-                    final boolean ascending;
-                    if (xPath.isAutoSort()) {
-                        ascending = Utils.guessAutoSort1(results);
-                    } else {
-                        ascending = xPath.isAscending();
-                    }
-                    Utils.sort3(results, ascending);
-
-
-
                     try {
-                        XItem doc = Utils.createDocument(site, xPath, null, "list");
-                        doc.setItems(results);
-                        doc.setDepth(depth, promoteDepth);
-                        
-                        if(!xPath.isNoIndex()) {
-                            Path generatedFile = xPath.resolveTargetFromPath("index.html");
-                            Utils.writeListHTML(xPath, doc, generatedFile);
-                            //TODO: add caching
-                            Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
-                        }
-                        
-                        List<XItem> results2 = new ArrayList<>(1);
-                        results2.add(doc);
-                        completableFuture.complete(results2); // or result for flat
+                        XItem doc = HandlerDirectory.compileList(site,path, results, filesCounter, cache, depth, promoteDepth);
+                        completableFuture.complete(doc); // or result for flat
                         
                     } catch (Throwable t) {
                         LOG.error("compiler error", t);

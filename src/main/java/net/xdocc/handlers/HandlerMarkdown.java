@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -40,10 +41,10 @@ public class HandlerMarkdown implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache) throws Exception {
+    public XItem compile(Site site, XPath xPath, Map<String, Integer> filesCounter, Cache cache) throws Exception {
         final XItem doc;
         final Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-        Cache.CacheEntry cached = cache.getCached(xPath);
+        Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             doc = cached.xItem();
             if (xPath.getParent().isItemWritten()) {
@@ -51,7 +52,7 @@ public class HandlerMarkdown implements Handler {
             }
         } else {
             try (Writer out = new StringWriter();
-                    Reader in = new BufferedReader(new FileReader(xPath.path()
+                    Reader in = new BufferedReader(new FileReader(Paths.get(xPath.path())
                             .toFile()))) {
                 transform(in, out);
                 String htmlContent = out.toString();

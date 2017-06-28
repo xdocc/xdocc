@@ -4,6 +4,7 @@ import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -74,8 +75,21 @@ public class XItem implements Comparable<XItem>, Serializable {
         initNavigation();
         initDepth();
     }
+
+    public void init(Site site) {
+        this.xPath.site().init(site);
+        try {
+            this.generator.site().init(site);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            this.generator.site().init(site);
+        }
+        for(XItem item:getItems()) {
+            item.init(site);
+        }
+    }
     
-    Generator documentGenerator() {
+    public Generator documentGenerator() {
         return generator;
     }
     
@@ -129,10 +143,16 @@ public class XItem implements Comparable<XItem>, Serializable {
         Link local = xPath.site().loadLocalNavigation(xPath);
         generator.model().put(LOCALNAV_ISCHILD, Utils.isChild(global, local));
         generator.model().put(LOCALNAV, local.getChildren());
-        List<Link> pathToRoot = Utils.linkToRoot(xPath.site().source(), xPath);
+        List<Link> pathToRoot = Utils.linkToRoot(Paths.get(xPath.site().source()), xPath);
         generator.model().put(BREADCRUMB, pathToRoot);
-        Link current = Utils.find(xPath.isDirectory()? xPath: xPath.getParent(), xPath.site().globalNavigation());
-        generator.model().put(XItem.CURRENT_NAV, current);
+        XPath toFind = xPath.isDirectory()? xPath: xPath.getParent();
+        if(toFind.isNavigation()) {
+            Link current = Utils.find(toFind, global);
+            if (current == null) {
+                current = Utils.find(toFind, local);
+            }
+            generator.model().put(XItem.CURRENT_NAV, current);
+        }
     }
     
     /**
@@ -447,8 +467,9 @@ public class XItem implements Comparable<XItem>, Serializable {
     public interface Generator {
         String generate();
         Map<String, Object> model();
-        Generator templateBean(Site.TemplateBean templateBean);
+        Generator templateBean(TemplateBean templateBean);
         Path templatePath();
+        Site site();
     }
 
     public static class EmptyGenerator implements Generator {
@@ -464,12 +485,17 @@ public class XItem implements Comparable<XItem>, Serializable {
         }
 
         @Override
-        public Generator templateBean(Site.TemplateBean templateBean) {
+        public Generator templateBean(TemplateBean templateBean) {
             return this;
         }
 
         @Override
         public Path templatePath() {return null;}
+
+        @Override
+        public Site site() {
+            return null;
+        }
     }
 
     @Accessors(chain = true, fluent = true)
@@ -480,21 +506,16 @@ public class XItem implements Comparable<XItem>, Serializable {
         private static final long serialVersionUID = -8512427831292951263L;
 
         @Getter @Setter
-        private Site.TemplateBean templateBean;
+        private TemplateBean templateBean;
 
         @Getter
         final private Map<String, Object> model;
         final private Site site;
 
-        public FillGenerator(Site site, Site.TemplateBean templateBean) {
+        public FillGenerator(Site site, TemplateBean templateBean) {
             this.site = site;
             this.templateBean = templateBean;
             this.model = new HashMap<String, Object>();
-        }
-
-        public FillGenerator(Site site, Site.TemplateBean templateBean, Map<String, Object> model) {
-            this(site, templateBean);
-            this.model.putAll(model);
         }
 
         public String generate() {
@@ -504,14 +525,19 @@ public class XItem implements Comparable<XItem>, Serializable {
                 return html;
             } catch (TemplateException | IOException e) {
                 LOG.warn("cannot generate document {}. Model is {}",
-                        templateBean.file().getFileName(), model, e);
+                        templateBean.file(), model, e);
                 return null;
             }
         }
 
         @Override
         public Path templatePath() {
-            return templateBean.file();
+            return templateBean.internal() ? null : Paths.get(templateBean.file());
+        }
+
+        @Override
+        public Site site() {
+            return site;
         }
     }
 }

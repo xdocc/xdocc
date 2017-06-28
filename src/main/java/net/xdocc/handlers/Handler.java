@@ -15,5 +15,5 @@ public interface Handler {
 
     public List<String> knownExtensions();
 
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache) throws Exception;
+    public XItem compile(Site site, XPath xPath, Map<String, Integer> filesCounter, Cache cache) throws Exception;
 }

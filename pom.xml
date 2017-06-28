@@ -159,7 +159,7 @@ under * the License. -->
         <dependency>
             <groupId>org.mapdb</groupId>
             <artifactId>mapdb</artifactId>
-            <version>0.9.10</version>
+            <version>3.0.4</version>
         </dependency>
         <dependency>
             <!-- jsoup HTML parser library @ http://jsoup.org/ -->
@@ -185,7 +185,15 @@ under * the License. -->
             <version>1.16.10</version> 
             <scope>provided</scope> 
         </dependency>
-        
+
+        <!-- https://mvnrepository.com/artifact/com.google.inject/guice -->
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>

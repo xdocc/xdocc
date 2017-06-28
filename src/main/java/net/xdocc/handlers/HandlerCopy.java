@@ -1,10 +1,7 @@
 package net.xdocc.handlers;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,7 +12,7 @@ import net.xdocc.Cache;
 import net.xdocc.XItem;
 import net.xdocc.XItem.Generator;
 import net.xdocc.Site;
-import net.xdocc.Site.TemplateBean;
+import net.xdocc.TemplateBean;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
 
@@ -36,7 +33,7 @@ public class HandlerCopy implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache) {
+    public XItem compile(Site site, XPath xPath, Map<String, Integer> filesCounter, Cache cache) {
         final Path generatedFile;
         if (xPath.isVisible()) {
             String filename = xPath.fileName();
@@ -49,7 +46,7 @@ public class HandlerCopy implements Handler {
         }
 
         try {
-            Cache.CacheEntry cached = cache.getCached(xPath);
+            Cache.CacheEntry cached = cache.getCached(site, xPath);
             if (cached != null) {
                 XItem doc = cached.xItem();
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
@@ -59,7 +56,7 @@ public class HandlerCopy implements Handler {
                 //copy ignores the page/isItemWritten flag
                 Files.createDirectories(generatedFile.getParent());
                 if(!xPath.isDirectory()) {
-                    Files.copy(xPath.path(), generatedFile,
+                    Files.copy(Paths.get(xPath.path()), generatedFile,
                             StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING,
                             StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
                 }
@@ -93,7 +90,7 @@ public class HandlerCopy implements Handler {
         Generator documentGenerator = new XItem.FillGenerator(site,
                 templateText);
         XItem document = new XItem(xPath, documentGenerator);
-        Date lastModified = new Date(Files.getLastModifiedTime(xPath.path())
+        Date lastModified = new Date(Files.getLastModifiedTime(Paths.get(xPath.path()))
                 .toMillis());
         document.setDate(lastModified);
         document.setName(xPath.fileName());

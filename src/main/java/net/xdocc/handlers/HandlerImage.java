@@ -10,7 +10,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import net.xdocc.*;
-import net.xdocc.Site.TemplateBean;
+import net.xdocc.TemplateBean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ public class HandlerImage implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache)
+    public XItem compile(Site site, XPath xPath, Map<String, Integer> filesCounter, Cache cache)
             throws TemplateException, IOException, InterruptedException {
 
         Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + xPath.extensions());
@@ -69,7 +69,7 @@ public class HandlerImage implements Handler {
         Path generatedFile2 = xPath
                 .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
 
-        Cache.CacheEntry cached = cache.getCached(xPath);
+        Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             XItem doc = cached.xItem();
             if (xPath.hasRecursiveProperty("link", "l") && xPath.getParent().isItemWritten()) {
@@ -126,7 +126,7 @@ public class HandlerImage implements Handler {
         }
     }
 
-    private List<SrcSet> convert(XPath xPath, Site site, Map<Path, Integer> filesCounter, List<Pair<Path, String>> resizeList) {
+    private List<SrcSet> convert(XPath xPath, Site site, Map<String, Integer> filesCounter, List<Pair<Path, String>> resizeList) {
         List<SrcSet> result = new ArrayList<>();
         for(Pair<Path, String> pair:resizeList) {
             Utils.increase(filesCounter, Utils.listPathsGen(site, pair.element0()));

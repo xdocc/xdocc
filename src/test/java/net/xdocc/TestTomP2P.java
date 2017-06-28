@@ -22,11 +22,13 @@ import org.junit.Test;
 public class TestTomP2P {
     private static Path gen;
     private static Path src;
+    private static Path cache;
 
     @Before
     public void setup() throws IOException {
         src = Paths.get("/home/draft/Downloads/tomp2p-min");
         gen = Files.createTempDirectory("gen");
+        cache = Files.createTempDirectory("cache").resolve("cache");
         Files.createDirectories(src.resolve(".templates"));
     }
 
@@ -37,7 +39,7 @@ public class TestTomP2P {
     
     @Test
         public void testCache() throws IOException, InterruptedException, ExecutionException {
-        Service.main("-w", src.toString(), "-o", gen.toString());
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         //Thread.sleep(1000000000);
     }
 }

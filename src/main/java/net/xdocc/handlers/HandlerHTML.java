@@ -2,6 +2,7 @@ package net.xdocc.handlers;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -36,19 +37,19 @@ public class HandlerHTML implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache) throws Exception {
+    public XItem compile(Site site, XPath xPath, Map<String, Integer> filesCounter, Cache cache) throws Exception {
 
         final XItem doc;
         final Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-        Cache.CacheEntry cached = cache.getCached(xPath);
+        Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             doc = cached.xItem();
             if (xPath.getParent().isItemWritten()) {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
-            Charset charset = HandlerUtils.detectCharset(xPath.path());
-            String all = FileUtils.readFileToString(xPath.path().toFile(), charset);
+            Charset charset = HandlerUtils.detectCharset(Paths.get(xPath.path()));
+            String all = FileUtils.readFileToString(Paths.get(xPath.path()).toFile(), charset);
 
             org.jsoup.nodes.Document docj = Jsoup.parse(all);
             Elements e = docj.getElementsByTag("body");

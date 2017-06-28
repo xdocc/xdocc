@@ -1,6 +1,7 @@
 package net.xdocc.handlers;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,17 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import net.xdocc.Cache;
+import net.xdocc.*;
 
-import net.xdocc.XItem;
-import net.xdocc.Site;
-import net.xdocc.Utils;
-import net.xdocc.XPath;
-
+import net.xdocc.Compiler;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 public class HandlerLink implements Handler {
+
+    private Compiler compiler;
     
     public static final Map<String, String> MAP = new HashMap<String, String>() {{
         put("link.ftl", "<#list items as item>${item.content}</#list>");
@@ -36,11 +35,11 @@ public class HandlerLink implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache) throws Exception {
+    public XItem compile(Site site, XPath xPath, Map<String, Integer> filesCounter, Cache cache) throws Exception {
 
         final XItem doc;
         final Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-        Cache.CacheEntry cached = cache.getCached(xPath);
+        Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             doc = cached.xItem();
             if (xPath.getParent().isItemWritten()) {
@@ -48,7 +47,7 @@ public class HandlerLink implements Handler {
             }
         } else {
 
-            Configuration config = new PropertiesConfiguration(xPath.path().toFile());
+            Configuration config = new PropertiesConfiguration(Paths.get(xPath.path()).toFile());
 
             List<Object> urls = config.getList("url", new ArrayList<>());
             int limit = config.getInt("limit", -1);
@@ -75,10 +74,10 @@ public class HandlerLink implements Handler {
                 for (XPath found : founds) {
 
                     if(found.isDirectory()) {
-                        CompletableFuture<List<XItem>> list = site.compiler().compile(found.path(), 0, 0);
-                        documents.addAll(list.get());
+                        CompletableFuture<XItem> list = compiler.compile(Paths.get(found.path()), 0, 0);
+                        documents.add(list.get());
                     } else {
-                        documents.add(site.compiler().compile(found));
+                        documents.add(compiler.compile(found));
                     }
                     //enforce limit
                     if (limit >= 0 && ++counter >= limit) {
@@ -99,5 +98,9 @@ public class HandlerLink implements Handler {
 
         }
         return doc;
+    }
+
+    public void compiler(Compiler compiler) {
+        this.compiler = compiler;
     }
 }

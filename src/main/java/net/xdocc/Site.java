@@ -4,15 +4,17 @@ import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.MultiTemplateLoader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import net.xdocc.handlers.Handler;
+import net.xdocc.handlers.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,70 +31,50 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.xdocc.handlers.HandlerCopy;
-import net.xdocc.handlers.HandlerHTML;
-import net.xdocc.handlers.HandlerImage;
-import net.xdocc.handlers.HandlerLink;
-import net.xdocc.handlers.HandlerMarkdown;
-import net.xdocc.handlers.HandlerText;
-import net.xdocc.handlers.HandlerUtils;
-import net.xdocc.handlers.HandlerWikiText;
 import org.reflections.Reflections;
 
 @Accessors(chain = true, fluent = true)
-public class Site {
+public class Site implements Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Site.class);
 
     @Getter @Setter
-    private Path source;
+    private String source;
 
     @Getter @Setter
-    private Path generated;
-
-    @Getter @Setter
-    private List<Handler> handlers;
-
-    @Getter @Setter
-    private Properties properties;
-
-    @Getter @Setter
-    private Service service;
-
-    @Getter @Setter
-    private Configuration freemakerEngine;
+    private String generated;
 
     @Getter @Setter
     private Link globalNavigation;
 
-    @Getter @Setter
-    private Path templatePath;
-    
-    @Getter @Setter
-    private Compiler compiler;
+    transient private Configuration freemakerEngine;
+    transient private List<Handler> handlers;
 
     final private Map<String, TemplateBean> templates = new HashMap<>();
-    
-    public Site(Service service, Path source, Path generated) throws IOException {
-        this(service, source, generated, findHandlers(), new Properties());
-    }
 
-    public Site(Service service, Path source, Path generated,
-            List<Handler> handlers, Properties properties) throws IOException {
-        this.service = service;
-        this.source = source;
-        this.generated = generated;
-        this.handlers = handlers;
-        this.properties = properties;
-        this.templatePath = this.source.resolve(".templates");
-        freemakerEngine = createTemplateEngine(templatePath);
-        loadTemplates(templatePath);
+    public Site(Path source, Path generated) throws IOException {
+        this.source = source.toString();
+        this.generated = generated.toString();
+        this.handlers = findHandlers();
+        Path p=source.resolve(".templates");
+        freemakerEngine = createTemplateEngine(p);
+        loadTemplates(p);
         this.globalNavigation = loadGlobalNavigation();
     }
-    
-    public boolean hasExactTemplate(final String name, final String suffix) {
-        return templates.containsKey(name + suffix + ".ftl");
+
+    public void init(Site site) {
+        this.handlers = site.handlers();
+        this.freemakerEngine = site.freemakerEngine();
     }
+
+    public List<Handler> handlers() {
+        return handlers;
+    }
+
+    public Configuration freemakerEngine() {
+        return freemakerEngine;
+    }
+
 
     public TemplateBean getTemplate(final String name, final String suffix)
             throws IOException {
@@ -108,9 +90,8 @@ public class Site {
         }
 
         if (templateBean.isDirty()) {
-            System.out.println("template is dirty: "+templateBean.file());
-            templateBean = loadTemplate(templateBean.file());
-            templates.put(templateBean.file().getFileName().toString(), templateBean);
+            templateBean = loadTemplate(Paths.get(templateBean.file()));
+            templates.put(templateBean.file(), templateBean);
         }
         return templateBean;
     }
@@ -122,7 +103,7 @@ public class Site {
         map.putAll(HandlerLink.MAP);
         map.putAll(HandlerMarkdown.MAP);
         map.putAll(HandlerText.MAP);
-        map.putAll(HandlerUtils.MAP);
+        map.putAll(HandlerDirectory.MAP);
         map.putAll(HandlerWikiText.MAP);
         map.putAll(HandlerCopy.MAP);
         return map;
@@ -169,27 +150,19 @@ public class Site {
         }
         for(Map.Entry<String,String> entry:defaults().entrySet()) {
             if(!templates.containsKey(entry.getKey())) {
-                TemplateBean templateBean = new TemplateBean()
-                        .template(freemakerEngine.getTemplate(entry.getKey()));
+                TemplateBean templateBean = new TemplateBean(this)
+                        .file(entry.getKey()).internal(true);
                 templates.put(entry.getKey(), templateBean);
             }
         }
-        
-
     }
 
     private TemplateBean loadTemplate(Path p) throws IOException {
         final FileTime fileTime = Files.getLastModifiedTime(p);
         final long filesize = Files.size(p);
 
-        final Template template;
-        synchronized (Utils.lock) {
-            template = freemakerEngine.getTemplate(p.getFileName().toString());
-        }
-
-        TemplateBean templateBean = new TemplateBean()
-                .file(p)
-                .template(template)
+        TemplateBean templateBean = new TemplateBean(this)
+                .file(p.toString())
                 .timestamp(fileTime.toMillis())
                 .filesize(filesize);
 
@@ -197,7 +170,8 @@ public class Site {
     }
 
     private Link loadGlobalNavigation() throws IOException {
-        return loadNavigation(new XPath(this, source()));
+        Path p = Paths.get(this.source);
+        return loadNavigation(new XPath(this, p));
     }
     
     public Link loadLocalNavigation(XPath source) /*throws IOException*/ {
@@ -212,7 +186,8 @@ public class Site {
         Link root = new Link(source, null);
         List<XPath> children;
         try {
-            children = Utils.getNonHiddenChildren(this, source.path());
+            Path p = Paths.get(source.path());
+            children = Utils.getNonHiddenChildren(this, p);
         } catch (IOException ex) {
             LOG.error("cannot load navigation", ex);
             return root;
@@ -228,7 +203,7 @@ public class Site {
             if (xPath.isNavigation()) {
                 Link link = new Link(xPath, root);
                 root.addChildren(link);
-                loadNavigation(this, link, xPath.path());
+                loadNavigation(this, link, Paths.get(xPath.path()));
             }
         }
         return root;
@@ -255,44 +230,12 @@ public class Site {
             if (xPath.isNavigation()) {
                 Link link = new Link(xPath, parent);
                 parent.addChildren(link);
-                loadNavigation(site, link, xPath.path());
+                loadNavigation(site, link, Paths.get(xPath.path()));
             }
         }
     }
 
-    public static class TemplateBean {
 
-        @Getter @Setter
-        private Template template;
-        @Getter @Setter
-        private long timestamp;
-        @Getter @Setter
-        private long filesize;
-        @Getter @Setter
-        private Path file;
-
-        public boolean isDirty() {
-            if(file == null) {
-                //its loaded from memory, so never refresh
-                return false;
-            }
-            try {
-                final FileTime fileTime = Files.getLastModifiedTime(this.file);
-                final long filesize = Files.size(this.file);
-                boolean dirty = this.timestamp != fileTime.toMillis()
-                        || this.filesize != filesize;
-                return dirty;
-            } catch (IOException e) {
-                LOG.info("file removed?: {}", file, e);
-                return true;
-            }
-        }
-
-    }
-
-    public String getProperty(String key) {
-        return properties.getProperty(key);
-    }
 
     @Override
     public boolean equals(Object obj) {

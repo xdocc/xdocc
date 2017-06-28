@@ -23,9 +23,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.xdocc.Site.TemplateBean;
-import freemarker.cache.FileTemplateLoader;
-import freemarker.cache.NullCacheStorage;
 import freemarker.template.TemplateException;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -90,12 +87,12 @@ public class Utils {
         
         generatedFile = generatedFile.normalize();
         
-        if (!isChild(generatedFile, site.generated())) {
+        if (!isChild(generatedFile, Paths.get(site.generated()))) {
             return null;
         }
         
         Collection<Path> retVal = new ArrayList<>();
-        while(!generatedFile.equals(site.generated())) {
+        while(!generatedFile.equals(Paths.get(site.generated()))) {
             retVal.add(generatedFile);
             generatedFile = generatedFile.getParent();
         }
@@ -107,12 +104,12 @@ public class Utils {
 
         srcFile = srcFile.normalize();
 
-        if (!isChild(srcFile, site.source())) {
+        if (!isChild(srcFile, Paths.get(site.source()))) {
             return null;
         }
 
         Collection<Path> retVal = new ArrayList<>();
-        while(!srcFile.equals(site.source())) {
+        while(!srcFile.equals(Paths.get(site.source()))) {
             retVal.add(srcFile);
             srcFile = srcFile.getParent();
         }
@@ -120,7 +117,7 @@ public class Utils {
         return retVal;
     }
 
-    public static void increase(Map<Path, Integer> filesCounter, Collection<Path> listPaths) {
+    public static void increase(Map<String, Integer> filesCounter, Collection<Path> listPaths) {
         for(Path path:listPaths) {
             synchronized(filesCounter) {
                 Integer i = filesCounter.get(path);
@@ -129,10 +126,8 @@ public class Utils {
                 } else {
                     i++;
                 }
-                /*if(path.toString().endsWith("dir1/label-2.jpg")) {
-                    System.out.println("path increase to: " +i);
-                }*/
-                filesCounter.put(path, i);
+
+                filesCounter.put(path.toString(), i);
             }
         }
     }
@@ -146,9 +141,7 @@ public class Utils {
                 } else {
                     i--;
                 }
-                /*if(path.toString().endsWith("dir1/label-2.jpg")) {
-                    System.out.println("path decreos to: " +i);
-                }*/
+
                 filesCounter.put(path, i);
             }
         }
@@ -220,9 +213,9 @@ public class Utils {
 
     public static String[] createURLSplit(Path source, XPath xPath) {
         List<String> paths = new ArrayList<>();
-        while (!source.equals(xPath.path())) {
+        while (!source.equals(Paths.get(xPath.path()))) {
             paths.add(0, xPath.url());
-            xPath = new XPath(xPath.site(), xPath.path().getParent());
+            xPath = new XPath(xPath.site(), Paths.get(xPath.path()).getParent());
         }
         return paths.toArray(new String[0]);
     }
@@ -319,8 +312,8 @@ public class Utils {
 
         Path alreadyGeneratedSource = created.get(generatedFile);
         if (alreadyGeneratedSource == null) {
-            created.put(generatedFile, xPath.path());
-        } else if (alreadyGeneratedSource.equals(xPath.path())) {
+            created.put(generatedFile, Paths.get(xPath.path()));
+        } else if (alreadyGeneratedSource.equals(Paths.get(xPath.path()))) {
             throw new IOException("create " + generatedFile
                     + ", but it was already created by "
                     + alreadyGeneratedSource + ". Anyway we will overwrite");
@@ -379,7 +372,7 @@ public class Utils {
         StringWriter sw = new StringWriter();
         synchronized (lock) {
 
-            templateText
+            /*templateText
                     .template()
                     .getConfiguration()
                     .setDirectoryForTemplateLoading(site.templatePath().toFile());
@@ -389,11 +382,12 @@ public class Utils {
                     .template()
                     .getConfiguration()
                     .setTemplateLoader(
-                            new FileTemplateLoader(site.templatePath().toFile()));
+                            new FileTemplateLoader(site.templatePath().toFile()));*/
             try {
                 templateText.template().process(model, sw);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
+                templateText.template().process(model, sw);
                 LOG.debug("available data:");
                 for (Map.Entry<String, Object> entry : model.entrySet()) {
                     LOG.debug("key:[" + entry.getKey() + "]=["
@@ -426,7 +420,7 @@ public class Utils {
     }
 
     public static void createDirectory(Site site) throws IOException {
-        Files.createDirectories(site.generated());
+        Files.createDirectories(Paths.get(site.generated()));
     }
 
     /**
@@ -461,7 +455,7 @@ public class Utils {
         boolean root = url.startsWith("/");
         XPath rootPath;
         if (root) {
-            rootPath = new XPath(site, site.source());
+            rootPath = new XPath(site, Paths.get(site.source()));
             url = url.substring(1);
         } else if (current.isDirectory()) {
             rootPath = current;
@@ -484,7 +478,7 @@ public class Utils {
             matches.add(current);
         }
         else {
-            List<XPath> children = Utils.getNonHiddenChildren(site, current.path());
+            List<XPath> children = Utils.getNonHiddenChildren(site, Paths.get(current.path()));
             if(url[i].equals("*")) {
                 matches.addAll(children);
             } else {
@@ -523,9 +517,9 @@ public class Utils {
             xPath = xPath.getParent();
         }
         List<XPath> xPaths = new ArrayList<>();
-        while (!root.equals(xPath.path())) {
+        while (!root.equals(Paths.get(xPath.path()))) {
             xPaths.add(0, xPath);
-            xPath = new XPath(xPath.site(), xPath.path().getParent());
+            xPath = new XPath(xPath.site(), Paths.get(xPath.path()).getParent());
         }
 
         List<Link> retVal = new ArrayList<>();
@@ -567,8 +561,8 @@ public class Utils {
         }
         return true;
     }
-    
-    static boolean guessAutoSort1(List<XItem> results) {
+
+    public static boolean guessAutoSort1(List<XItem> results) {
         for (XItem xItem : results) {
             if (xItem.xPath().nr() > 1000) {
                 return false;

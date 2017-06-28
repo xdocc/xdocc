@@ -10,17 +10,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionHandlerFilter;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
+
 import java.util.stream.Collectors;
 
 public class Service {
@@ -32,10 +32,10 @@ public class Service {
 
     private final List<RecursiveWatcherService> watchServices = new ArrayList<>();
 
-    @Option(name = "-w", required = true, usage = "set the directory to watch and recompile on the fly.")
+    @Option(name = "-s", required = true, usage = "set the source directory to watch and recompile on the fly.")
     private String watchDirectory = ".";
 
-    @Option(name = "-o", required = true, usage = "set the directory to store generated files.")
+    @Option(name = "-g", required = true, usage = "set the directory to store generated files.")
     private String outputDirectory = "/tmp";
 
     @Option(name = "-c", usage = "set the directory to store the cached data")
@@ -49,30 +49,27 @@ public class Service {
     
     private Cache cache;
     private static Service service;
+    private DB db;
 
     public static void main(String... args) throws IOException, InterruptedException, ExecutionException {
-        service = new Service();
-        service.addShutdownHook();
-        service.cmdLine(args);
-        service.doMain();
-    }
-    
-    public static void restart(Cache cache, String... args) throws IOException, InterruptedException, ExecutionException {
-        service = new Service(cache);
-        service.addShutdownHook();
-        service.cmdLine(args);
-        service.doMain();
+        service = new Service()
+                .addShutdownHook()
+                .cmdLine(args)
+                .initCache()
+                .doMain();
     }
 
-    private Service(Cache cache) {
-        this.cache = cache;
+    private Service initCache() {
+        db = DBMaker.fileDB(cacheDirectory).make();
+        ConcurrentMap map = db.hashMap("map").createOrOpen();
+        if(clearCache) {
+            map.clear();
+        }
+        this.cache = new Cache(map);
+        return this;
     }
-    
-    public Service() {
-        this.cache = new Cache(new HashMap<>());
-    }
-    
-    public void cmdLine(String[] args) {
+
+    public Service cmdLine(String[] args) {
         CmdLineParser parser = new CmdLineParser(this);
         try {
             parser.parseArgument(args);
@@ -86,16 +83,16 @@ public class Service {
             // print option sample. This is useful some time
             System.err.println("  Example: xdocc" + parser.printExample(OptionHandlerFilter.ALL));
             shutdown();
-            return;
         }
+        return this;
     }
 
-    public void doMain() throws IOException, InterruptedException, ExecutionException {
+    public Service doMain() throws IOException, InterruptedException, ExecutionException {
         
         final CountDownLatch startAfterFirstRun = new CountDownLatch(1);
-        final Site site = new Site(this, Paths.get(watchDirectory), Paths.get(outputDirectory));
+        final Site site = new Site(Paths.get(watchDirectory), Paths.get(outputDirectory));
         final boolean isDaemon = !runOnce;
-        
+
         if (isDaemon) {
             startWatch(site, new RecursiveWatcherService.Listener() {
                 @Override
@@ -105,13 +102,13 @@ public class Service {
                         startAfterFirstRun.await();
                         LOG.info("compiling start: {}", site);
                         final long start = System.currentTimeMillis();
-                        Map<Path, Integer> filesCounter = Collections.synchronizedMap(Files.walk(site.
-                                generated()).collect(Collectors.toMap(p -> p, p -> 0)));
+                        Map<String, Integer> filesCounter = Collections.synchronizedMap(Files.walk(Paths.get(site.
+                                generated())).collect(Collectors.toMap(p -> p.toString(), p -> 0)));
                         compile(site, filesCounter, cache).get();
                         filesCounter.entrySet().stream().
                                 sorted((f1, f2) -> f2.getKey().compareTo(f1.getKey())).filter(f1 -> f1.
-                                getValue() <= 0 && Utils.isChild(f1.getKey(), site.generated())).forEach(
-                                        f1 -> {try {Files.delete(f1.getKey());} catch (IOException ex) {LOG.error("cannot delete", ex);}});
+                                getValue() <= 0 && Utils.isChild(Paths.get(f1.getKey()), Paths.get(site.generated()))).forEach(
+                                        f1 -> {try {Files.delete(Paths.get(f1.getKey()));} catch (IOException ex) {LOG.error("cannot delete", ex);}});
 
                         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
                     } catch (Throwable t) {
@@ -123,12 +120,12 @@ public class Service {
         }
         LOG.info("compiling start: {}", site);
         final long start = System.currentTimeMillis();
-        Map<Path, Integer> filesCounter = Collections.synchronizedMap(Files.walk(site.generated()).collect(
-                Collectors.toMap(p -> p, p -> 0)));
+        Map<String, Integer> filesCounter = Collections.synchronizedMap(Files.walk(Paths.get(site.generated())).collect(
+                Collectors.toMap(p -> p.toString(), p -> 0)));
         compile(site, filesCounter, cache).get();
         filesCounter.entrySet().stream().sorted((f1, f2) -> f2.getKey().compareTo(f1.getKey())).filter(
-                f1 -> f1.getValue() <= 0 && Utils.isChild(f1.getKey(), site.generated())).forEach(
-                        f1 -> {try {Files.delete(f1.getKey());} catch (IOException ex) {LOG.error("cannot delete", ex);}});
+                f1 -> f1.getValue() <= 0 && Utils.isChild(Paths.get(f1.getKey()), Paths.get(site.generated()))).forEach(
+                        f1 -> {try {Files.delete(Paths.get(f1.getKey()));} catch (IOException ex) {LOG.error("cannot delete", ex);}});
 
         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
         if (isDaemon) {
@@ -136,22 +133,24 @@ public class Service {
         } else {
             shutdown();
         }
-    }
-    
-    public Cache cache() {
-        return cache;
+        return this;
     }
     
     public static Service service() {
         return service;
     }
 
-    private void addShutdownHook() {
+    public Cache cache() {
+        return cache;
+    }
+
+    private Service addShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 shutdown();
             }
         });
+        return this;
     }
 
     public void startWatch(Site site, RecursiveWatcherService.Listener listener) throws IOException {
@@ -164,10 +163,11 @@ public class Service {
             recursiveWatcherService.shutdown();
         }
         executorServiceCompiler.shutdown();
+        db.close();
     }
 
-    public CompletableFuture<List<XItem>> compile(Site site, Map<Path, Integer> filesCounter, Cache cache) throws IOException, InterruptedException, ExecutionException {
+    public CompletableFuture<XItem> compile(Site site, Map<String, Integer> filesCounter, Cache cache) throws IOException, InterruptedException, ExecutionException {
         Compiler c = new Compiler(executorServiceCompiler, site, filesCounter, cache);
-        return c.compile(site.source());
+        return c.compile(Paths.get(site.source()));
     }
 }

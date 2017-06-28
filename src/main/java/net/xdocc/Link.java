@@ -3,11 +3,12 @@ package net.xdocc;
 import com.google.common.base.Strings;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Link {
+public class Link implements Serializable {
 	final private String url;
 
 	final private String name;

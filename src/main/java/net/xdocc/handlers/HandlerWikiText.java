@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +16,7 @@ import net.xdocc.Cache;
 
 import net.xdocc.XItem;
 import net.xdocc.Site;
-import net.xdocc.Site.TemplateBean;
+import net.xdocc.TemplateBean;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
 
@@ -57,13 +58,15 @@ public class HandlerWikiText implements Handler {
     }
 
     @Override
-    public XItem compile(Site site, XPath xPath, Map<Path, Integer> filesCounter, Cache cache)
+    public XItem compile(Site site, XPath xPath, Map<String, Integer> filesCounter, Cache cache)
             throws Exception {
         final XItem doc;
         final Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
-        Cache.CacheEntry cached = cache.getCached(xPath);
+        Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             doc = cached.xItem();
+            //we need to reset the generator, as the files counter needs to be set correctly
+            ((WikiTextDocumentGenerator)doc.documentGenerator()).filesCounter(filesCounter);
             if (xPath.getParent().isItemWritten()) {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
@@ -71,9 +74,9 @@ public class HandlerWikiText implements Handler {
 
             TemplateBean templateText = site.getTemplate("wikitext", xPath.getLayoutSuffix());
             WikiTextDocumentGenerator documentGenerator = new WikiTextDocumentGenerator(
-                    templateText, site, xPath, filesCounter, cache);
+                    templateText, site, xPath, filesCounter);
 
-            doc = documentGenerator.xItem();
+            doc = new XItem(xPath, documentGenerator);
             doc.setTemplate("wikitext");
 
             // always create a single page for that
@@ -115,17 +118,16 @@ public class HandlerWikiText implements Handler {
     private static class XdoccHtmlDocumentBuilder extends HtmlDocumentBuilder {
 
         final private Site site;
-        final private XItem xItem;
-        final private Map<Path, Integer> filesCounter;
-        final private Cache cache;
+        final private XPath xPath;
+        final private Map<String, Integer> filesCounter;
+        final private Map<String, Object> model;
 
-        public XdoccHtmlDocumentBuilder(Writer out, Site site, XItem xItem, Map<Path, Integer> filesCounter,
-                Cache cache) {
+        public XdoccHtmlDocumentBuilder(Writer out, Site site, XPath xPath, Map<String, Integer> filesCounter, Map<String, Object> model) {
             super(out);
             this.site = site;
-            this.xItem = xItem;
+            this.xPath = xPath;
             this.filesCounter = filesCounter;
-            this.cache = cache;
+            this.model = model;
         }
 
         @Override
@@ -134,8 +136,8 @@ public class HandlerWikiText implements Handler {
             if (imageUrl != null) {
                 //if relative only!
                 if (!imageUrl.contains("://")) {
-                        XPath img = xItem.xPath().getParent().resolveSource(imageUrl);
-                        imageUrl = xItem.getPath() + "/" + imageUrl;
+                        XPath img = xPath.getParent().resolveSource(imageUrl);
+                        imageUrl = model.get(XItem.PATH) + "/" + imageUrl;
                         Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
                                 .extensions());
                         Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
@@ -151,8 +153,8 @@ public class HandlerWikiText implements Handler {
             if (imageUrl != null) {
                 //if relative only!
                 if (!imageUrl.contains("://")) {
-                        XPath img = xItem.xPath().getParent().resolveSource(imageUrl);
-                        imageUrl = xItem.getPath() + "/" + imageUrl;
+                        XPath img = xPath.getParent().resolveSource(imageUrl);
+                        imageUrl = model.get(XItem.PATH) + "/" + imageUrl;
                         Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
                                 .extensions());
                         Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
@@ -167,8 +169,8 @@ public class HandlerWikiText implements Handler {
                 //if relative only!
                 if (!href.contains("://")) {
                     try {
-                        XPath img = xItem.xPath().getParent().resolveSource(href);
-                        href = xItem.getPath() + "/" + href;
+                        XPath img = xPath.getParent().resolveSource(href);
+                        href = model.get(XItem.PATH) + "/" + href;
                         Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img.extensions());
                         Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                     } catch (IllegalArgumentException e) {
@@ -180,23 +182,22 @@ public class HandlerWikiText implements Handler {
         }
     }
 
-    private class WikiTextDocumentGenerator extends XItem.FillGenerator {
+    private static class WikiTextDocumentGenerator extends XItem.FillGenerator {
 
         private static final long serialVersionUID = -6008311072604987744L;
-        final private Site site;
         final private XPath xPath;
-        final private XItem xItem;
-        final private Map<Path, Integer> filesCounter;
-        final private Cache cache;
+
+        private Map<String, Integer> filesCounter;
 
         public WikiTextDocumentGenerator(TemplateBean templateText, Site site, XPath xPath,
-                Map<Path, Integer> filesCounter, Cache cache) {
+                Map<String, Integer> filesCounter) {
             super(site, templateText);
-            this.site = site;
             this.xPath = xPath;
-            this.xItem = new XItem(xPath, this);
             this.filesCounter = filesCounter;
-            this.cache = cache;
+        }
+
+        public void filesCounter(Map<String, Integer> filesCounter) {
+            this.filesCounter = filesCounter;
         }
 
         public String generate() {
@@ -204,7 +205,7 @@ public class HandlerWikiText implements Handler {
                 fillModel();
                 return super.generate();
             } catch (IOException e) {
-                LOG.warn("cannot generate wiki document {}.", templateBean().file().getFileName(), e);
+                LOG.warn("cannot generate wiki document {}.", templateBean().file(), e);
             }
             return null;
         }
@@ -212,7 +213,7 @@ public class HandlerWikiText implements Handler {
         private void fillModel() throws IOException {
             StringWriter writer = new StringWriter();
             HtmlDocumentBuilder builder = new XdoccHtmlDocumentBuilder(writer,
-                    site, xItem, filesCounter, cache);
+                    site(), xPath, filesCounter, model());
 
             // avoid the <html> and <body> tags
             MarkupParser parser = null;
@@ -252,8 +253,8 @@ public class HandlerWikiText implements Handler {
                 return;
             }
             parser.setBuilder(builder);
-            Charset charset = HandlerUtils.detectCharset(xPath.path());
-            String rawFileContent = FileUtils.readFileToString(xPath.path()
+            Charset charset = HandlerUtils.detectCharset(Paths.get(xPath.path()));
+            String rawFileContent = FileUtils.readFileToString(Paths.get(xPath.path())
                     .toFile(), charset);
             parser.parse(rawFileContent);
             model().put(XItem.CONTENT, writer.toString());
@@ -264,8 +265,6 @@ public class HandlerWikiText implements Handler {
             return "WIKI" + super.toString();
         }
 
-        private XItem xItem() {
-            return xItem;
-        }
+
     }
 }

@@ -19,17 +19,19 @@ public class TestCache {
     
     private static Path gen;
     private static Path src;
+    private static Path cache;
 
     @Before
     public void setup() throws IOException {
         src = Files.createTempDirectory("src");
         gen = Files.createTempDirectory("gen");
+        cache = Files.createTempDirectory("cache").resolve("cache");
         Files.createDirectories(src.resolve(".templates"));
     }
 
     @After
     public void tearDown() throws IOException {
-        TestUtils.deleteDirectories(gen, src);
+        TestUtils.deleteDirectories(gen, src, cache);
     }
     
     @Test
@@ -37,22 +39,19 @@ public class TestCache {
         TestUtils.createFile(src, "1-test.txt", "this is a text file");
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Cache cache =  Service.service().cache();
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         for(int i=0;i<100;i++) {
-            Service.restart(cache, "-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-            Assert.assertEquals(i+1, cache.hits());
+            Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r");
+            Assert.assertEquals(2, Service.service().cache().hits());
         }
     }
     
     @Test
     public void testImage() throws IOException, InterruptedException, ExecutionException {
         TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1.vis.prm/1-label.jpg");
-        Service.main("-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Cache cache =  Service.service().cache();
-        
-        Service.restart(cache, "-w", src.toString(), "-o", gen.toString(), "-r", "-x");
-        Assert.assertEquals(1, cache.hits());
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r");
+        Assert.assertEquals(3, Service.service().cache().hits());
         
     }
 }
