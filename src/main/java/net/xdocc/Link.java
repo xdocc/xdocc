@@ -1,26 +1,30 @@
 package net.xdocc;
 
 import com.google.common.base.Strings;
-import lombok.Data;
+
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+@Getter
 public class Link implements Serializable {
+
+	private static final long serialVersionUID = 3858186167015394059L;
+
+	final private String nr;
 	final private String url;
-
 	final private String name;
-
 	final private List<Link> children = new ArrayList<>();
-
 	final private Link parent;
-
 	final private XPath target;
-
 	final private Map<String, String> properties;
-
+	@Setter
 	private boolean selected;
 
 	public Link(XPath target, Link parent) {
@@ -30,34 +34,12 @@ public class Link implements Serializable {
 				.name();
 		this.parent = parent;
 		this.properties = target.properties();
+		this.nr = Long.toString(target.nr());
 	}
 
-	public String getUrl() {
-		return url;
-	}
-
-	public String getName() {
-		return name;
-	}
-
+	
 	public void addChildren(Link link) {
 		children.add(link);
-	}
-
-	public List<Link> getChildren() {
-		return children;
-	}
-
-	public Link getParent() {
-		return parent;
-	}
-
-	public XPath getTarget() {
-		return target;
-	}
-
-	public Map<String, String> getProperties() {
-		return properties;
 	}
 
 	public String getProperty(String key) {
@@ -111,12 +93,13 @@ public class Link implements Serializable {
                 }        
                 return sb.toString();
 	}
-
-	public void setSelected(boolean selected) {
-		this.selected = selected;
-	}
-
-	public boolean isSelected() {
-		return selected;
-	}
+        
+        public Stream<Link> flattened() {
+            return Stream.concat(
+                    Stream.of(this),
+                    children.stream().flatMap(Link::flattened));
+        }
+        public List<Link> flat() {
+        	return flattened().collect(Collectors.toList());
+        }
 }

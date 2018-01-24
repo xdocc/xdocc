@@ -16,8 +16,9 @@ import java.nio.file.attribute.FileTime;
 
 @Accessors(chain = true, fluent = true)
 public class TemplateBean implements Serializable {
-
-    private static final Logger LOG = LoggerFactory.getLogger(TemplateBean.class);
+	
+	private static final long serialVersionUID = 2193521832344660637L;
+	private static final Logger LOG = LoggerFactory.getLogger(TemplateBean.class);
 
     @Getter @Setter
     private long timestamp;
@@ -46,7 +47,7 @@ public class TemplateBean implements Serializable {
                     || this.filesize != filesize;
             return dirty;
         } catch (IOException e) {
-            LOG.info("file removed?: {}", file, e);
+            LOG.info("file removed: {}", file);
             return true;
         }
     }

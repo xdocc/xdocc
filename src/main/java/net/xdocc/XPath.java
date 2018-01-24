@@ -28,7 +28,9 @@ import org.yaml.snakeyaml.Yaml;
 @Accessors(chain = true, fluent = true)
 final public class XPath implements Comparable<XPath>, Serializable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(XPath.class);
+	private static final long serialVersionUID = -3757002496981209774L;
+
+	private static final Logger LOG = LoggerFactory.getLogger(XPath.class);
 
     private final static Pattern PATTERN_NUMBER = Pattern.compile("^([0-9]+)");
 
@@ -131,12 +133,20 @@ final public class XPath implements Comparable<XPath>, Serializable {
                         .toFile());
                 try {
                     Yaml yaml = new Yaml();
-                    Map<String, Object> map = (Map<String, Object>) yaml
-                        .load(content);
-                    for (Map.Entry<String, Object> entry : map.entrySet()) {
-                        properties.put(entry.getKey(), entry.getValue().toString());
+                    Object obj = yaml.load(content);
+                    if(obj == null) {
+                        LOG.debug("frontmatter is empty");
+                    } else if(!(obj instanceof Map)) {
+                        LOG.debug("frontmatter is not a map");
+                    } else {
+                        @SuppressWarnings("unchecked")
+						Map<String, Object> map = (Map<String, Object>) obj;
+                        for (Map.Entry<String, Object> entry : map.entrySet()) {
+                            properties.put(entry.getKey(), entry.getValue().toString());
+                        }
+                        return;
                     }
-                    return;
+
                 } catch (Exception e) {
                     LOG.debug("cannot parse frontmatter", e);
                 }
@@ -184,7 +194,8 @@ final public class XPath implements Comparable<XPath>, Serializable {
                 return;
             }
             Yaml yaml = new Yaml();
-            Map<String, Object> map = (Map<String, Object>) yaml.load(sb
+            @SuppressWarnings("unchecked")
+			Map<String, Object> map = (Map<String, Object>) yaml.load(sb
                     .toString());
             for (Map.Entry<String, Object> entry : map.entrySet()) {
                 properties.put(entry.getKey(), entry.getValue().toString());
@@ -549,13 +560,12 @@ final public class XPath implements Comparable<XPath>, Serializable {
                 }
                 if (depth >= level) {
                     if (!StringUtils.isEmpty(layoutSuffix[0])) {
-                        return "_" + layoutSuffix[0];
+                        return layoutSuffix[0];
                     } else {
                         return "";
                     }
                 }
             }
-            XPath old = parent;
             parent = parent.getParent();
             level++;
         }
@@ -863,5 +873,16 @@ final public class XPath implements Comparable<XPath>, Serializable {
             this.url = tmp[0];
             this.name = tmp[1];
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(nr);
+        sb.append("-");
+        sb.append(name);
+        sb.append("/u:");
+        sb.append(url);
+        return sb.toString();
     }
 }

@@ -83,38 +83,67 @@ public class Cache {
         return hits;
     }
 
-    public Cache setCached(Site site, XPath xPath, Path sourceFile, XItem item, Path... generatedFile) {
+    public Cache setCached(Site site, XPath xPath, Path sourceFile, XItem item,  Path genFile) {
+        List<Path> sourceFiles = new ArrayList<>(1);
+        if(sourceFile != null) {
+            sourceFiles.add(sourceFile);
+        }
+        List<String> genFiles = new ArrayList<>(1);
+        genFiles.add(genFile.toString());
+        return setCached(site,xPath, sourceFiles, item, genFiles);
+    }
+
+    public Cache setCached(Site site, XPath xPath, List<Path> sourceFiles, XItem item,  List<String> genFiles) {
         String key = xPath.getTargetURL();
         CacheEntry c = cache.get(key);
-
-        List<String> genFiles = new ArrayList<>();
-        for(Path p:generatedFile) {
-            if(p!=null) {
-                genFiles.add(p.toString());
-            }
-        }
 
         if(c == null) {
             Map<String, Long> map = parentMap(site, Paths.get(xPath.path()));
             c  = new CacheEntry().xItem(item).sourceDirs(map).generatedFiles(genFiles);
             cache.put(key, c);
         } else {
+            //sanity check
+            //if(item != null && !item.equals(c.xItem())) {
+            //    throw new RuntimeException("tried to cache different things! "+item+"//"+c.xItem());
+            //}
             c.generatedFiles().addAll(genFiles);
         }
-        if(sourceFile != null) {
+        if(sourceFiles != null) {
+                for(Path sourceFile : sourceFiles) {
+                    try {
+                        c.sourceDirs().put(sourceFile.toString(), Files.getLastModifiedTime(sourceFile).toMillis());
+                    } catch (IOException e) {
+                        LOG.error("cannot cache", e);
+                    }
+                }
+        }
+        //put in all templates as sources
+        for(Path sourceFile : site.templates()) {
             try {
-                c.sourceDirs.put(sourceFile.toString(), Files.getLastModifiedTime(sourceFile).toMillis());
+            	if(Files.exists(sourceFile)) {
+            		c.sourceDirs().put(sourceFile.toString(), Files.getLastModifiedTime(sourceFile).toMillis());
+            	}
             } catch (IOException e) {
                 LOG.error("cannot cache", e);
             }
         }
+        //put in all the global navigation sources
+        for(Link link: site.globalNavigation().flat()) {
+        	try {
+        		Path sourceFile = Paths.get(link.getTarget().path());
+        		if(Files.exists(sourceFile)) {
+        			c.sourceDirs().put(sourceFile.toString(), Files.getLastModifiedTime(sourceFile).toMillis());
+        		}
+            } catch (IOException e) {
+                LOG.error("cannot cache", e);
+            }
+        }
+        
+        cache.put(key, c); //mapdb specific, values are immutable
         return this;
     }
 
     private static Map<String, Long> parentMap(Site site, Path xPath) {
-
-
-        Path current = xPath;
         Map<String, Long> map = new HashMap<>();
         for(Path p:Utils.listPathsSrc(site, xPath)) {
             try {
@@ -128,7 +157,8 @@ public class Cache {
     
     @Accessors(chain = true, fluent = true)
     public static class CacheEntry implements Serializable {
-        @Getter @Setter
+        private static final long serialVersionUID = -5976223970753740658L;
+		@Getter @Setter
         private XItem xItem;
         @Getter @Setter
         private Map<String, Long> sourceDirs;

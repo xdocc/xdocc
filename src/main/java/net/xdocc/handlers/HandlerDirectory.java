@@ -6,21 +6,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 public class HandlerDirectory implements Handler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(HandlerDirectory.class);
 
-    public static final Map<String, String> MAP = new HashMap<String, String>() {{
-        put("list.ftl", "<#list items as item>${item.content}</#list>");
-        put("page.ftl", "${content}");
-    }};
+    public static final Map<String, String> MAP = new HashMap<String, String>();
+    static{
+        MAP.put("list.ftl", "<#list items as item>${item.content}</#list>");
+        MAP.put("page.ftl", "${content}");
+    }
 
 	@Override
 	public boolean canHandle(Site site, XPath xPath) {return xPath.isDirectory() && xPath.isCopy();}
@@ -50,7 +48,7 @@ public class HandlerDirectory implements Handler {
             LOG.debug("copy {} to {}", xPath.path(), generatedFile);
             doc = HandlerCopy.createDocumentBrowse(site, xPath, "");
             Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
-            cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
+            cache.setCached(site, xPath, null, doc, generatedFile);
         }
         return doc;
 	}
@@ -82,12 +80,12 @@ public class HandlerDirectory implements Handler {
             doc.setItems(results);
             doc.setDepth(depth, promoteDepth);
 
-            if (!xPath.isNoIndex()) {
+            if (!xPath.isNoIndex() && xPath.isVisible()) {
                 Utils.writeListHTML(xPath, doc, generatedFile);
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         }
-        cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
+        cache.setCached(site, xPath, null, doc, generatedFile);
         return doc;
 
     }

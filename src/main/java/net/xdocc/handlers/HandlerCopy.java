@@ -21,9 +21,11 @@ import org.slf4j.LoggerFactory;
 
 public class HandlerCopy implements Handler {
     
-    public static final Map<String, String> MAP = new HashMap<String, String>() {{
-        put("file.ftl", "<a href=\"${url}\">${name}</a>");
-    }};
+    public static final Map<String, String> MAP = new HashMap<String, String>();
+    static {
+    	MAP.put("file.ftl", "<a href=\"${url}\">${name}</a>");
+    }
+    
 
     private static final Logger LOG = LoggerFactory.getLogger(HandlerCopy.class);
 
@@ -65,7 +67,7 @@ public class HandlerCopy implements Handler {
 
                 if (xPath.isCopy() || xPath.isVisible()) {
                     XItem item = createDocumentBrowse(site, xPath, "");
-                    cache.setCached(site, xPath, item.templatePath(), item, generatedFile);
+                    cache.setCached(site, xPath, null, item, generatedFile);
                     return item;
 
                 } else {
@@ -86,7 +88,7 @@ public class HandlerCopy implements Handler {
 
     public static XItem createDocumentBrowse(Site site, XPath xPath,
             String path) throws IOException {
-        TemplateBean templateText = site.getTemplate("file", xPath.getLayoutSuffix());
+        TemplateBean templateText = site.getTemplate("file");
         Generator documentGenerator = new XItem.FillGenerator(site,
                 templateText);
         XItem document = new XItem(xPath, documentGenerator);
@@ -95,6 +97,7 @@ public class HandlerCopy implements Handler {
         document.setDate(lastModified);
         document.setName(xPath.fileName());
         document.setTemplate("file");
+        document.setLayout(xPath.getLayoutSuffix());
         return document;
     }
 

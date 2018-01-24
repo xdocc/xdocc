@@ -1,12 +1,12 @@
 package net.xdocc;
 
 import lombok.Data;
-import lombok.experimental.Wither;
 
 import java.io.Serializable;
 
 @Data
 public class SrcSet implements Serializable {
-    final private String src;
+	private static final long serialVersionUID = -178753802538671256L;
+	final private String src;
     final private String attribute;
 }

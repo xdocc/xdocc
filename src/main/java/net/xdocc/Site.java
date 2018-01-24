@@ -12,7 +12,6 @@ import java.nio.file.attribute.FileTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import net.xdocc.handlers.*;
 
@@ -24,7 +23,6 @@ import freemarker.cache.StringTemplateLoader;
 import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
-import freemarker.template.Template;
 import java.nio.file.DirectoryStream;
 import java.util.ArrayList;
 import java.util.Set;
@@ -36,7 +34,8 @@ import org.reflections.Reflections;
 @Accessors(chain = true, fluent = true)
 public class Site implements Serializable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Site.class);
+    private static final long serialVersionUID = 1713078455424279658L;
+	private static final Logger LOG = LoggerFactory.getLogger(Site.class);
 
     @Getter @Setter
     private String source;
@@ -66,6 +65,15 @@ public class Site implements Serializable {
         this.handlers = site.handlers();
         this.freemakerEngine = site.freemakerEngine();
     }
+    
+    public void reloadGlobalNavigation() throws IOException {
+    	this.globalNavigation = loadGlobalNavigation();
+    }
+    
+    public void reloadTemplates() throws IOException {
+    	Path p=Paths.get(source).resolve(".templates");
+    	loadTemplates(p);
+    }
 
     public List<Handler> handlers() {
         return handlers;
@@ -75,18 +83,26 @@ public class Site implements Serializable {
         return freemakerEngine;
     }
 
-
-    public TemplateBean getTemplate(final String name, final String suffix)
-            throws IOException {
-        TemplateBean templateBean = templates.get(
-                name + suffix + ".ftl");
-        if (templateBean == null || templateBean.file() == null) {
-            templateBean = templates.get(name + ".ftl");
-            if (templateBean == null) {
-                throw new FileNotFoundException("Template " + name
-                        + ".ftl not found, there should be a file called "
-                        + (source + "/.templates/" + name + suffix + ".ftl"));
+    public List<Path> templates() {
+        List<Path> retVal = new ArrayList<>();
+        for(TemplateBean t:templates.values()) {
+            if(!t.internal()) {
+                Path p = Paths.get(t.file());
+                if(Files.exists(p)) {
+                    retVal.add(p);
+                }
             }
+        }
+        return retVal;
+    }
+
+
+    public TemplateBean getTemplate(final String name)
+            throws IOException {
+        TemplateBean templateBean = templates.get(name + ".ftl");
+        
+        if (templateBean == null) {
+             throw new FileNotFoundException("Template " + name + ".ftl not found");
         }
 
         if (templateBean.isDirty()) {
@@ -135,6 +151,7 @@ public class Site implements Serializable {
 
     private void loadTemplates(Path templatePath) throws IOException {
 
+    	templates.clear();
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(templatePath)) {
             for (Path p : ds) {
                 if (!Files.isRegularFile(p)) {

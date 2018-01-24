@@ -18,9 +18,10 @@ import net.xdocc.XPath;
 
 public class HandlerText implements Handler {
 
-    public static final Map<String, String> MAP = new HashMap<String, String>() {{
-        put("text.ftl", "${content}");
-    }};
+    public static final Map<String, String> MAP = new HashMap<String, String>();
+    static{
+        MAP.put("text.ftl", "${content}");
+    }
 
 
     @Override
@@ -49,7 +50,7 @@ public class HandlerText implements Handler {
                 Utils.writeHTML(xPath, doc, generatedFile);
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
-            cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
+            cache.setCached(site, xPath, null, doc, generatedFile);
         }
         return doc;
     }

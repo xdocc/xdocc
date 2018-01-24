@@ -4,9 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import net.xdocc.*;
@@ -40,8 +38,9 @@ import net.xdocc.XItem.Generator;
  */
 public class HandlerImage implements Handler {
     
-    public static final Map<String, String> MAP = new HashMap<String, String>() {{
-        put("image.ftl",
+    public static final Map<String, String> MAP = new HashMap<String, String>();
+    static {
+        MAP.put("image.ftl",
                 "<figure>"+
                 "<#if link??><a href=\"${path}/${link}\"></#if>" +
                 "<img src=\"${path}/${srcsets?last.src}\" " +
@@ -49,7 +48,7 @@ public class HandlerImage implements Handler {
                     "sizes=\"90vw\">" +
                 "<figcaption>${name}</figcaption>" +
                 "<#if link??></a></#if></figure>");
-    }};
+    }
     
     private static final Logger LOG = LoggerFactory.getLogger(HandlerImage.class);
 
@@ -79,7 +78,7 @@ public class HandlerImage implements Handler {
 
         } else {
 
-            TemplateBean templateImage = site.getTemplate("image", xPath.getLayoutSuffix());
+            TemplateBean templateImage = site.getTemplate("image");
             Generator genImage = new XItem.FillGenerator(site, templateImage);
             XItem docTop = new XItem(xPath, genImage);
 
@@ -92,7 +91,7 @@ public class HandlerImage implements Handler {
                 docTop.setSrcSets(convert(xPath, site, filesCounter, cropList));
                 for(Pair<Path, String> cropPair:cropList) {
                     Utils.increase(filesCounter, Utils.listPathsGen(site, cropPair.element0()));
-                    cache.setCached(site, xPath, docTop.templatePath(), docTop, cropPair.element0());
+                    cache.setCached(site, xPath, null, docTop, cropPair.element0());
                 }
 
             } else {
@@ -100,7 +99,7 @@ public class HandlerImage implements Handler {
                 docTop.setSrcSets(convert(xPath, site, filesCounter, resizeList));
                 for(Pair<Path, String> resizePair:resizeList) {
                     Utils.increase(filesCounter, Utils.listPathsGen(site, resizePair.element0()));
-                    cache.setCached(site, xPath, docTop.templatePath(), docTop, resizePair.element0());
+                    cache.setCached(site, xPath, null, docTop, resizePair.element0());
                 }
 
             }
@@ -108,7 +107,7 @@ public class HandlerImage implements Handler {
             //check if link is required
             if (xPath.hasRecursiveProperty("link", "l") && xPath.getParent().isItemWritten()) {
                 //create file
-                TemplateBean templateLink = site.getTemplate("image", xPath.getLayoutSuffix());
+                TemplateBean templateLink = site.getTemplate("image");
                 Generator genLink = new XItem.FillGenerator(site, templateLink);
                 XItem docDetail = new XItem(xPath, genLink);
                 //set link
@@ -120,7 +119,7 @@ public class HandlerImage implements Handler {
 
                 Utils.writeHTML(xPath, docDetail, generatedFile2);
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile2));
-                cache.setCached(site, xPath, docTop.templatePath(), docTop, generatedFile2);
+                cache.setCached(site, xPath, null, docTop, generatedFile2);
             }
             return docTop;
         }
@@ -187,7 +186,7 @@ public class HandlerImage implements Handler {
             Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_crop_"+ Math.round(w) + xPath.extensions());
             Files.createDirectories(dstImage.getParent());
-            String tmp = HandlerImage.executeCropResize(xPath.path().toString(), Math.round(w), Math.round(h), dstImage.toString());
+            HandlerImage.executeCropResize(xPath.path().toString(), Math.round(w), Math.round(h), dstImage.toString());
             result.add(new Pair<>(dstImage,Math.round(w)+"w"));
             w /= 2;
             h /= 2;
@@ -204,7 +203,7 @@ public class HandlerImage implements Handler {
             Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_"+ Math.round(w) + xPath.extensions());
             Files.createDirectories(dstImage.getParent());
-            String tmp = HandlerImage.executeResize(xPath.path().toString(), Math.round(w), Math.round(h), dstImage.toString());
+            HandlerImage.executeResize(xPath.path().toString(), Math.round(w), Math.round(h), dstImage.toString());
             result.add(new Pair<>(dstImage,Math.round(w)+"w"));
             w /= 2;
             h /= 2;
@@ -232,12 +231,4 @@ public class HandlerImage implements Handler {
         p.waitFor();
         return sb.toString().trim();
     }
-
-    private static String stripMod(String size, String... mods) {
-        for (String mod : mods) {
-            size = size.replace(mod, "");
-        }
-        return size;
-    }
-
 }

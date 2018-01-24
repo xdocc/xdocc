@@ -21,12 +21,17 @@ import net.xdocc.XPath;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HandlerMarkdown implements Handler {
+
+    private static final Logger LOG = LoggerFactory.getLogger(HandlerMarkdown.class);
     
-    public static final Map<String, String> MAP = new HashMap<String, String>() {{
-        put("md.ftl", "${content}");
-    }};
+    public static final Map<String, String> MAP = new HashMap<String, String>();
+    static{
+        MAP.put("markdown.ftl", "${content}");
+    }
 
     @Override
     public boolean canHandle(Site site, XPath xPath) {
@@ -46,6 +51,7 @@ public class HandlerMarkdown implements Handler {
         final Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
         Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
+            LOG.debug("returning cached markedown entry");
             doc = cached.xItem();
             if (xPath.getParent().isItemWritten()) {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
@@ -61,7 +67,7 @@ public class HandlerMarkdown implements Handler {
                     Utils.writeHTML(xPath, doc, generatedFile);
                     Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                 }
-                cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
+                cache.setCached(site, xPath, null, doc, generatedFile);
             }
         }
         return doc;

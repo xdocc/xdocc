@@ -11,22 +11,23 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  *
- * @author draft
+ * @author Thomas Bocek
  */
-public class TestTomP2P {
+public class TestRun {
     private static Path gen;
     private static Path src;
     private static Path cache;
 
     @Before
     public void setup() throws IOException {
-        src = Paths.get("/home/draft/Downloads/tomp2p-min");
+        //src = Paths.get("/home/draft/Downloads/tomp2p-min");
+        src = Paths.get("/home/draft/git/xdocc/src/site");
         gen = Files.createTempDirectory("gen");
         cache = Files.createTempDirectory("cache").resolve("cache");
         Files.createDirectories(src.resolve(".templates"));
@@ -38,8 +39,9 @@ public class TestTomP2P {
     }
     
     @Test
-        public void testCache() throws IOException, InterruptedException, ExecutionException {
-        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
-        //Thread.sleep(1000000000);
+    @Ignore
+    public void testRun() throws IOException, InterruptedException, ExecutionException {
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString(), "-x");
+        Thread.sleep(100000000);
     }
 }

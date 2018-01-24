@@ -19,9 +19,10 @@ public class HandlerLink implements Handler {
 
     private Compiler compiler;
     
-    public static final Map<String, String> MAP = new HashMap<String, String>() {{
-        put("link.ftl", "<#list items as item>${item.content}</#list>");
-    }};
+    public static final Map<String, String> MAP = new HashMap<String, String>();
+    static{
+        MAP.put("link.ftl", "<#list items as item>${item.content}</#list>");
+    }
 
     @Override
     public boolean canHandle(Site site, XPath xPath) {
@@ -93,7 +94,7 @@ public class HandlerLink implements Handler {
                     Utils.writeHTML(xPath, doc, generatedFile);
                     Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                 }
-                cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
+                cache.setCached(site, xPath, null, doc, generatedFile);
             }
 
         }

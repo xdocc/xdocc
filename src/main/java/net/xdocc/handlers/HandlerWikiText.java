@@ -1,6 +1,5 @@
 package net.xdocc.handlers;
 
-import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -11,7 +10,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import net.xdocc.Cache;
 
 import net.xdocc.XItem;
@@ -34,9 +32,10 @@ import org.slf4j.LoggerFactory;
 
 public class HandlerWikiText implements Handler {
     
-    public static final Map<String, String> MAP = new HashMap<String, String>() {{
-        put("wikitext.ftl", "${content}");
-    }};
+    public static final Map<String, String> MAP = new HashMap<String, String>();
+    static{
+        MAP.put("wikitext.ftl", "${content}");
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(HandlerWikiText.class);
 
@@ -72,12 +71,13 @@ public class HandlerWikiText implements Handler {
             }
         } else {
 
-            TemplateBean templateText = site.getTemplate("wikitext", xPath.getLayoutSuffix());
+            TemplateBean templateText = site.getTemplate("wikitext");
             WikiTextDocumentGenerator documentGenerator = new WikiTextDocumentGenerator(
                     templateText, site, xPath, filesCounter);
 
             doc = new XItem(xPath, documentGenerator);
             doc.setTemplate("wikitext");
+            doc.setLayout(xPath.getLayoutSuffix());
 
             // always create a single page for that
             if (xPath.getParent().isItemWritten()) {                
@@ -85,7 +85,7 @@ public class HandlerWikiText implements Handler {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
 
-            cache.setCached(site, xPath, doc.templatePath(), doc, generatedFile);
+            cache.setCached(site, xPath, null, doc, generatedFile);
         }
         return doc;
     }

@@ -1,6 +1,5 @@
 package net.xdocc.handlers;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import net.xdocc.Cache;

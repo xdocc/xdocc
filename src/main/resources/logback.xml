@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
   
-  <logger name="net.xdocc" level="WARN"/>
+  <logger name="net.xdocc" level="TRACE"/>
   
   <!-- default is OFF, options are: TRACE, DEBUG, INFO, WARN, ERROR, OFF. 
        See http://logback.qos.ch/manual/architecture.html for more information-->

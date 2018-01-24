@@ -1,13 +1,10 @@
 package net.xdocc;
 
-import com.google.common.collect.HashBiMap;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -18,8 +15,12 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionHandlerFilter;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
+import org.mapdb.serializer.SerializerJava;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.xdocc.Cache.CacheEntry;
 
 import java.util.stream.Collectors;
 
@@ -33,13 +34,13 @@ public class Service {
     private final List<RecursiveWatcherService> watchServices = new ArrayList<>();
 
     @Option(name = "-s", required = true, usage = "set the source directory to watch and recompile on the fly.")
-    private String watchDirectory = ".";
+    private String watchDirectory = null;
 
-    @Option(name = "-g", required = true, usage = "set the directory to store generated files.")
-    private String outputDirectory = "/tmp";
+    @Option(name = "-g", usage = "set the directory to store generated files.")
+    private String outputDirectory = null;
 
     @Option(name = "-c", usage = "set the directory to store the cached data")
-    private String cacheDirectory = "/tmp";
+    private String cacheDirectory = null; //set in the constructor
 
     @Option(name = "-r", usage = "run only once")
     private boolean runOnce = false;
@@ -59,9 +60,15 @@ public class Service {
                 .doMain();
     }
 
+    public Service() throws IOException {
+        cacheDirectory = Files.createTempDirectory("cache").resolve("cache").toString();
+        outputDirectory = Files.createTempDirectory("xdocc").toString();
+    }
+
     private Service initCache() {
         db = DBMaker.fileDB(cacheDirectory).make();
-        ConcurrentMap map = db.hashMap("map").createOrOpen();
+        @SuppressWarnings("unchecked")
+		ConcurrentMap<String, CacheEntry> map = db.hashMap("map", Serializer.STRING, new SerializerJava()).createOrOpen();
         if(clearCache) {
             map.clear();
         }
@@ -82,7 +89,7 @@ public class Service {
             System.err.println();
             // print option sample. This is useful some time
             System.err.println("  Example: xdocc" + parser.printExample(OptionHandlerFilter.ALL));
-            shutdown();
+            System.exit(0);
         }
         return this;
     }
@@ -101,6 +108,10 @@ public class Service {
                         LOG.debug("file changed");
                         startAfterFirstRun.await();
                         LOG.info("compiling start: {}", site);
+                        //load global navigation, otherwise when we change the name of a navigation
+                        //item or we rename, then the old name will be visible
+                        site.reloadGlobalNavigation();
+                        site.reloadTemplates();
                         final long start = System.currentTimeMillis();
                         Map<String, Integer> filesCounter = Collections.synchronizedMap(Files.walk(Paths.get(site.
                                 generated())).collect(Collectors.toMap(p -> p.toString(), p -> 0)));
@@ -109,7 +120,6 @@ public class Service {
                                 sorted((f1, f2) -> f2.getKey().compareTo(f1.getKey())).filter(f1 -> f1.
                                 getValue() <= 0 && Utils.isChild(Paths.get(f1.getKey()), Paths.get(site.generated()))).forEach(
                                         f1 -> {try {Files.delete(Paths.get(f1.getKey()));} catch (IOException ex) {LOG.error("cannot delete", ex);}});
-
                         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
                     } catch (Throwable t) {
                         LOG.error("file changed, but could not compile", t);
@@ -163,7 +173,9 @@ public class Service {
             recursiveWatcherService.shutdown();
         }
         executorServiceCompiler.shutdown();
-        db.close();
+        if(db!=null) {
+            db.close();
+        }
     }
 
     public CompletableFuture<XItem> compile(Site site, Map<String, Integer> filesCounter, Cache cache) throws IOException, InterruptedException, ExecutionException {

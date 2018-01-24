@@ -5,7 +5,6 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.URI;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -24,12 +23,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.template.TemplateException;
+
 import java.nio.file.Paths;
 import java.util.Collection;
 
 public class Utils {
 
     private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+    private static Map<Path, Path> created = new HashMap<Path, Path>();
 
     private static XItem adjustPath(XItem doc, String minusPath) {
         adjustPath0(doc, minusPath);
@@ -120,7 +121,7 @@ public class Utils {
     public static void increase(Map<String, Integer> filesCounter, Collection<Path> listPaths) {
         for(Path path:listPaths) {
             synchronized(filesCounter) {
-                Integer i = filesCounter.get(path);
+                Integer i = filesCounter.get(path.toString());
                 if(i == null) {
                     i = 1;
                 } else {
@@ -304,21 +305,21 @@ public class Utils {
             }
         });
     }
-
+    
+    
     public static void write(String html, XPath xPath, Path generatedFile)
             throws TemplateException, IOException {
-        // not in use yet
-        Map<Path, Path> created = new HashMap<Path, Path>();
-
         Path alreadyGeneratedSource = created.get(generatedFile);
         if (alreadyGeneratedSource == null) {
             created.put(generatedFile, Paths.get(xPath.path()));
-        } else if (alreadyGeneratedSource.equals(Paths.get(xPath.path()))) {
-            throw new IOException("create " + generatedFile
+        } else if (!alreadyGeneratedSource.equals(Paths.get(xPath.path()))) {
+        	LOG.warn("create " + generatedFile
                     + ", but it was already created by "
                     + alreadyGeneratedSource + ". Anyway we will overwrite");
+        } else {
+        	LOG.debug("overwriting with a new version for {}", generatedFile);
         }
-
+        
         try (FileWriter fw = new FileWriter(generatedFile.toFile())) {
             fw.write(html);
         }
@@ -573,13 +574,14 @@ public class Utils {
 
     public static XItem createDocument(Site site, XPath xPath,
             String htmlContent, String template) throws IOException {
-        TemplateBean templateText = site.getTemplate(template, xPath.getLayoutSuffix());
+        TemplateBean templateText = site.getTemplate(template);
         // create the document
         XItem.Generator documentGenerator = new XItem.FillGenerator(site, templateText);
        
         XItem doc = new XItem(xPath, documentGenerator);
         doc.setHTML(htmlContent);
         doc.setTemplate(template);
+        doc.setLayout(xPath.getLayoutSuffix());
         return doc;
     }
     

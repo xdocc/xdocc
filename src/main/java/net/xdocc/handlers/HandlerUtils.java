@@ -5,16 +5,11 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import net.xdocc.XItem;
-import net.xdocc.Link;
-import net.xdocc.Site;
-import net.xdocc.Utils;
 import net.xdocc.XPath;
 
 import com.ibm.icu.text.CharsetDetector;
@@ -22,8 +17,6 @@ import com.ibm.icu.text.CharsetMatch;
 
 public class HandlerUtils {
     
-
-
     final private static Object lock = new Object();
 
     public static boolean knowsExtension(List<String> knownExtensions,
@@ -78,21 +71,6 @@ public class HandlerUtils {
         model.put(XPath.DATE, documentDate);
         model.put(XPath.NR, documentNr);
         model.put(XPath.FILENAME, documentFilename);
-        return model;
-    }
-
-    public static Map<String, Object> fillPage(Site site, XPath xPath,
-            XItem document) throws IOException {
-        String relativePathToRoot = Utils.relativePathToRoot(Paths.get(site.source()),
-                Paths.get(xPath.path()));
-        Map<String, Object> model = new HashMap<>();
-        //model.put(XItem.DOCUMENT, document);
-        Link current = Utils.find(xPath.getParent(), site.globalNavigation());
-        List<Link> pathToRoot = Utils.linkToRoot(Paths.get(site.source()), xPath);
-        model.put(XItem.CURRENT_NAV, current);
-        model.put(XItem.BREADCRUMB, pathToRoot);
-        //model.put(XItem.NAVIGATION, site.globalNavigation());
-        //model.put(XPath.PATH, relativePathToRoot);
         return model;
     }
 }

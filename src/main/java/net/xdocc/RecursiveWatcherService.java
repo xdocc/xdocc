@@ -5,8 +5,6 @@
  */
 package net.xdocc;
 
-import com.sun.nio.file.SensitivityWatchEventModifier;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,8 +70,7 @@ public class RecursiveWatcherService {
                     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                         LOG.info("registering {} in watcher service", dir);
                         WatchKey watchKey = dir.register(watcher,
-                                new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY},
-                                SensitivityWatchEventModifier.HIGH);
+                                new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY});
                         keys.put(watchKey, dir);
                         return FileVisitResult.CONTINUE;
                     }
@@ -102,9 +99,9 @@ public class RecursiveWatcherService {
 
                 key.pollEvents().stream()
                         .filter(e -> (e.kind() != OVERFLOW))
-                        .map(e -> ((WatchEvent<Path>) e).context())
+                        .map(e -> ((WatchEvent<?>) e).context())
                         .forEach(p -> {
-                            final Path absPath = dir.resolve(p);
+                            final Path absPath = dir.resolve((Path)p);
                             if (absPath.toFile().isDirectory()) {
                                 register.accept(absPath);
                             }

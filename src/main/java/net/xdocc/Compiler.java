@@ -3,10 +3,8 @@ package net.xdocc;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -65,7 +63,7 @@ public class Compiler {
             final int depth, final int promoteDepth) {
         final CompletableFuture<XItem> completableFuture = new CompletableFuture<>();
 
-        completableFuture.runAsync(() -> {
+        CompletableFuture.runAsync(() -> {
 
             try {
                 List<XPath> children = Utils.getNonHiddenChildren(site, path);

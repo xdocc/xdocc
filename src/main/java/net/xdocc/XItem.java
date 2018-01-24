@@ -3,9 +3,7 @@ package net.xdocc;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -77,13 +75,9 @@ public class XItem implements Comparable<XItem>, Serializable {
     }
 
     public void init(Site site) {
+    	LOG.debug("init site: {}", site);
         this.xPath.site().init(site);
-        try {
-            this.generator.site().init(site);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            this.generator.site().init(site);
-        }
+        this.generator.site().init(site);
         for(XItem item:getItems()) {
             item.init(site);
         }
@@ -358,11 +352,6 @@ public class XItem implements Comparable<XItem>, Serializable {
         return (String) generator.model().get(TEMPLATE);
     }
 
-    public Path templatePath() {
-        //TODO needs recursion!
-        return generator.templatePath();
-    }
-
     public XItem setTemplate(String template) {
         generator.model().put(TEMPLATE, template);
         return this;
@@ -446,29 +435,10 @@ public class XItem implements Comparable<XItem>, Serializable {
         return sb.toString();
     }    
 
-    
-
-    public void addItems(XItem doc) {
-        List<XItem> items = (List<XItem>) documentGenerator().model().get(ITEMS);
-        if(items == null) {
-            items = new ArrayList<XItem>(1);
-        }
-        items.add(doc);
-        setItems(items);
-    }
-
-
-
-
-    //public void setTemplateBean(Site.TemplateBean templateBean) {
-    //    generator.templateBean(templateBean);
-    //}
-    
     public interface Generator {
         String generate();
         Map<String, Object> model();
         Generator templateBean(TemplateBean templateBean);
-        Path templatePath();
         Site site();
     }
 
@@ -488,9 +458,6 @@ public class XItem implements Comparable<XItem>, Serializable {
         public Generator templateBean(TemplateBean templateBean) {
             return this;
         }
-
-        @Override
-        public Path templatePath() {return null;}
 
         @Override
         public Site site() {
@@ -528,11 +495,6 @@ public class XItem implements Comparable<XItem>, Serializable {
                         templateBean.file(), model, e);
                 return null;
             }
-        }
-
-        @Override
-        public Path templatePath() {
-            return templateBean.internal() ? null : Paths.get(templateBean.file());
         }
 
         @Override
