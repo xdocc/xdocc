@@ -67,11 +67,11 @@ public class HandlerCopy implements Handler {
 
                 if (xPath.isCopy() || xPath.isVisible()) {
                     XItem item = createDocumentBrowse(site, xPath, "");
-                    cache.setCached(site, xPath, null, item, generatedFile);
+                    cache.setCached(site, xPath, (Path)null, item, generatedFile);
                     return item;
 
                 } else {
-                    cache.setCached(site, xPath, null,null, generatedFile);
+                    cache.setCached(site, xPath, (Path)null,null, generatedFile);
                 }
             }
         } catch (IOException e) {

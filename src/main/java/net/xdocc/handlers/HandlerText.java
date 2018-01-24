@@ -50,7 +50,7 @@ public class HandlerText implements Handler {
                 Utils.writeHTML(xPath, doc, generatedFile);
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
-            cache.setCached(site, xPath, null, doc, generatedFile);
+            cache.setCached(site, xPath, (Path)null, doc, generatedFile);
         }
         return doc;
     }

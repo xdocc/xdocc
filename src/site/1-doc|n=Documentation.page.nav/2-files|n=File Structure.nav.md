@@ -1,3 +1,3 @@
 # File Structure
 
-tdb
+visible: root is always visible

@@ -39,7 +39,7 @@ public class TestRun {
     }
     
     @Test
-    @Ignore
+    //@Ignore
     public void testRun() throws IOException, InterruptedException, ExecutionException {
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString(), "-x");
         Thread.sleep(100000000);

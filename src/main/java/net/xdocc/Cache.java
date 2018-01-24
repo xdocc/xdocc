@@ -92,8 +92,18 @@ public class Cache {
         genFiles.add(genFile.toString());
         return setCached(site,xPath, sourceFiles, item, genFiles);
     }
+    
+    public Cache setCached(Site site, XPath xPath, List<Path> sourceFiles, XItem item,  Path genFile) {
+        List<String> genFiles = new ArrayList<>(1);
+        genFiles.add(genFile.toString());
+        return setCached(site,xPath, sourceFiles, item, genFiles);
+    }
 
     public Cache setCached(Site site, XPath xPath, List<Path> sourceFiles, XItem item,  List<String> genFiles) {
+    	
+    	if(xPath.path().equals("/home/draft/git/xdocc/src/site")) {
+        	System.err.println("test");
+        }
         String key = xPath.getTargetURL();
         CacheEntry c = cache.get(key);
 

@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.template.TemplateException;
+import javassist.compiler.SyntaxError;
 
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -319,6 +320,8 @@ public class Utils {
         } else {
         	LOG.debug("overwriting with a new version for {}", generatedFile);
         }
+        
+        System.err.println("writing "+xPath+" for "+generatedFile);
         
         try (FileWriter fw = new FileWriter(generatedFile.toFile())) {
             fw.write(html);

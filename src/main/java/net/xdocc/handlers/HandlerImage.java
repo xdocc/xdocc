@@ -91,7 +91,7 @@ public class HandlerImage implements Handler {
                 docTop.setSrcSets(convert(xPath, site, filesCounter, cropList));
                 for(Pair<Path, String> cropPair:cropList) {
                     Utils.increase(filesCounter, Utils.listPathsGen(site, cropPair.element0()));
-                    cache.setCached(site, xPath, null, docTop, cropPair.element0());
+                    cache.setCached(site, xPath, (Path)null, docTop, cropPair.element0());
                 }
 
             } else {
@@ -99,7 +99,7 @@ public class HandlerImage implements Handler {
                 docTop.setSrcSets(convert(xPath, site, filesCounter, resizeList));
                 for(Pair<Path, String> resizePair:resizeList) {
                     Utils.increase(filesCounter, Utils.listPathsGen(site, resizePair.element0()));
-                    cache.setCached(site, xPath, null, docTop, resizePair.element0());
+                    cache.setCached(site, xPath, (Path)null, docTop, resizePair.element0());
                 }
 
             }
@@ -119,7 +119,7 @@ public class HandlerImage implements Handler {
 
                 Utils.writeHTML(xPath, docDetail, generatedFile2);
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile2));
-                cache.setCached(site, xPath, null, docTop, generatedFile2);
+                cache.setCached(site, xPath, (Path)null, docTop, generatedFile2);
             }
             return docTop;
         }

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class HandlerDirectory implements Handler {
@@ -48,7 +49,7 @@ public class HandlerDirectory implements Handler {
             LOG.debug("copy {} to {}", xPath.path(), generatedFile);
             doc = HandlerCopy.createDocumentBrowse(site, xPath, "");
             Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
-            cache.setCached(site, xPath, null, doc, generatedFile);
+            cache.setCached(site, xPath, (Path)null, doc, generatedFile);
         }
         return doc;
 	}
@@ -63,6 +64,10 @@ public class HandlerDirectory implements Handler {
         Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             doc = cached.xItem();
+            System.err.println("cache still valid for "+path);
+            if(path.toString().equals("/home/draft/git/xdocc/src/site")) {
+            	Cache.CacheEntry cached2 = cache.getCached(site, xPath);
+            }
             if (!xPath.isNoIndex()) {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
@@ -85,10 +90,18 @@ public class HandlerDirectory implements Handler {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         }
-        cache.setCached(site, xPath, null, doc, generatedFile);
+        cache.setCached(site, xPath, fromXPathList(results), doc, generatedFile);
         return doc;
 
     }
+	
+	private static List<Path> fromXPathList(final List<XItem> results) {
+		List<Path> retVal = new ArrayList<>();
+		for(XItem item:results) {
+			retVal.add(Paths.get(item.xPath().path()));
+		}
+		return retVal;
+	}
 
     @Override
     public List<String> knownExtensions() {

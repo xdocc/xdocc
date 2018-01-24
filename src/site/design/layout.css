@@ -10,12 +10,21 @@
     height: calc(20vh);
 }
 
-#logo-small {
+[alt="logo-small"],#logo-small {
     height: 1em;
 }
 
-[alt="logo-small"] {
-    height: 1em;
+[alt="logo-small2"],#logo-small2 {
+    height: 1.5em;
+}
+
+[alt="logo-medium"],#logo-medium {
+    height: 5em;
+}
+
+.centered {
+	vertical-align: middle;
+    text-align: center;
 }
 
 #logo-center {
