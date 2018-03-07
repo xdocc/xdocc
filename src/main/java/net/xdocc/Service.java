@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import com.google.common.base.Strings;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -116,10 +117,14 @@ public class Service {
                         Map<String, Integer> filesCounter = Collections.synchronizedMap(Files.walk(Paths.get(site.
                                 generated())).collect(Collectors.toMap(p -> p.toString(), p -> 0)));
                         compile(site, filesCounter, cache).get();
+
                         filesCounter.entrySet().stream().
                                 sorted((f1, f2) -> f2.getKey().compareTo(f1.getKey())).filter(f1 -> f1.
                                 getValue() <= 0 && Utils.isChild(Paths.get(f1.getKey()), Paths.get(site.generated()))).forEach(
                                         f1 -> {try {Files.delete(Paths.get(f1.getKey()));} catch (IOException ex) {LOG.error("cannot delete", ex);}});
+
+                        postProcessing(site);
+
                         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
                     } catch (Throwable t) {
                         LOG.error("file changed, but could not compile", t);
@@ -137,6 +142,7 @@ public class Service {
                 f1 -> f1.getValue() <= 0 && Utils.isChild(Paths.get(f1.getKey()), Paths.get(site.generated()))).forEach(
                         f1 -> {try {Files.delete(Paths.get(f1.getKey()));} catch (IOException ex) {LOG.error("cannot delete", ex);}});
 
+        postProcessing(site);
         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
         if (isDaemon) {
             startAfterFirstRun.countDown();
@@ -145,7 +151,17 @@ public class Service {
         }
         return this;
     }
-    
+
+    private void postProcessing(Site site) throws IOException, InterruptedException {
+        XPath xPath = new XPath(site, Paths.get(site.source()));
+        String command = xPath.getPostProcessing();
+        System.err.println("command is: "+command);
+        if(!Strings.isNullOrEmpty(command)) {
+            String cmdOutput = Utils.executeAndOutput(new ProcessBuilder(command, xPath.path()), site.generated());
+            LOG.info("cmd output: {}", cmdOutput);
+        }
+    }
+
     public static Service service() {
         return service;
     }

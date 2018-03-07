@@ -141,7 +141,7 @@ public class HandlerImage implements Handler {
     }
 
     public static String executeGetAspectSize(String image, String aspect) throws IOException, InterruptedException {
-        return executeAndOutput(new ProcessBuilder(
+        return Utils.executeAndOutput(new ProcessBuilder(
                 "/usr/bin/convert",
                 image,
                 "-format",
@@ -150,7 +150,7 @@ public class HandlerImage implements Handler {
     }
 
     public static String executeGetSize(String image) throws IOException, InterruptedException {
-        return executeAndOutput(new ProcessBuilder(
+        return Utils.executeAndOutput(new ProcessBuilder(
                 "/usr/bin/convert",
                 image,
                 "-format",
@@ -159,7 +159,7 @@ public class HandlerImage implements Handler {
     }
 
     public static String executeCropResize(String image, int w, int h, String outputImageName) throws IOException, InterruptedException {
-        return executeAndOutput(new ProcessBuilder(
+        return Utils.executeAndOutput(new ProcessBuilder(
                 "/usr/bin/convert",
                 image,
                 "-resize", w+"x"+h+"^",
@@ -170,7 +170,7 @@ public class HandlerImage implements Handler {
     }
 
     public static String executeResize(String image, int w, int h, String outputImageName) throws IOException, InterruptedException {
-        return executeAndOutput(new ProcessBuilder(
+        return Utils.executeAndOutput(new ProcessBuilder(
                 "/usr/bin/convert",
                 image,
                 "-resize", w+"x"+h+"^",
@@ -211,24 +211,4 @@ public class HandlerImage implements Handler {
         return result;
     }
 
-    private static String executeAndOutput(ProcessBuilder pb) throws IOException,
-            InterruptedException {
-        pb.redirectErrorStream(true);
-
-        Process p = pb.start();
-        BufferedReader br = new BufferedReader(new InputStreamReader(
-                p.getErrorStream()));
-        String line = null;
-        while ((line = br.readLine()) != null) {
-            LOG.error(line);
-        }
-        br = new BufferedReader(new InputStreamReader(
-                p.getInputStream()));
-        StringBuilder sb = new StringBuilder();
-        while ((line = br.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-        p.waitFor();
-        return sb.toString().trim();
-    }
 }

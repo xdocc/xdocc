@@ -2,9 +2,7 @@ package net.xdocc;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -648,5 +646,34 @@ public class Utils {
         
         
         Utils.write(page.getContent(), xPath, generatedFile);
+    }
+
+    public static String executeAndOutput(ProcessBuilder pb) throws IOException,
+            InterruptedException {
+        return executeAndOutput(pb, null);
+    }
+
+    public static String executeAndOutput(ProcessBuilder pb, String workingDirectory) throws IOException,
+            InterruptedException {
+        pb.redirectErrorStream(true);
+        if(workingDirectory !=null) {
+            pb.directory(new File(workingDirectory));
+        }
+
+        Process p = pb.start();
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                p.getErrorStream()));
+        String line = null;
+        while ((line = br.readLine()) != null) {
+            LOG.error(line);
+        }
+        br = new BufferedReader(new InputStreamReader(
+                p.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+        while ((line = br.readLine()) != null) {
+            sb.append(line).append("\n");
+        }
+        p.waitFor();
+        return sb.toString().trim();
     }
 }

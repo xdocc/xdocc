@@ -596,6 +596,10 @@ final public class XPath implements Comparable<XPath>, Serializable {
         return null;
     }
 
+    public String getPostProcessing() {
+        return getProperty("post-processing", "pp");
+    }
+
     private String[] getPropertyRegexp(String... kepRegexps) {
         String[] resultArray = null;
         String key = null;
