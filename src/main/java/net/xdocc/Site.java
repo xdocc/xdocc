@@ -122,6 +122,7 @@ public class Site implements Serializable {
         map.putAll(HandlerDirectory.MAP);
         map.putAll(HandlerWikiText.MAP);
         map.putAll(HandlerCopy.MAP);
+        map.putAll(HandlerDocbook.MAP);
         return map;
     }
 

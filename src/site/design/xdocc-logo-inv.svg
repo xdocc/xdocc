@@ -9,42 +9,44 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="107.61366"
+   version="1.2"
+   width="106.61366"
    height="30.08"
    id="svg2"
-   version="1.1"
-   inkscape:version="0.48.3.1 r9886"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
    sodipodi:docname="xdocc-logo-inv.svg">
-  <defs
-     id="defs4" />
   <sodipodi:namedview
-     id="base"
      pagecolor="#ffffff"
      bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageopacity="0.0"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="128"
-     inkscape:cx="30.164787"
-     inkscape:cy="28.995514"
-     inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:window-width="1559"
+     inkscape:window-height="718"
+     id="namedview3873"
      showgrid="true"
-     showguides="true"
-     inkscape:guide-bbox="true"
-     inkscape:window-width="1268"
-     inkscape:window-height="714"
-     inkscape:window-x="298"
-     inkscape:window-y="128"
-     inkscape:window-maximized="0"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
-     fit-margin-bottom="0">
+     fit-margin-bottom="0"
+     inkscape:zoom="10.148731"
+     inkscape:cx="44.399317"
+     inkscape:cy="10.560162"
+     inkscape:window-x="2124"
+     inkscape:window-y="402"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2">
     <inkscape:grid
        type="xygrid"
-       id="grid2988" />
+       id="grid2987"
+       originx="-1"
+       originy="7.6293951e-08" />
   </sodipodi:namedview>
+  <defs
+     id="defs4" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -53,44 +55,34 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(-29.066967,-314.37811)">
-    <g
-       id="g2987">
-      <path
-         d="m 35.091994,343.93811 8.297968,-9.11523 6.803044,9.11523 5.772489,0 -9.23053,-11.44 16.109402,-18.04361 -5.7774,0.004 -13.424467,14.50508 -3.985185,-5.29104 -5.334061,0 6.044042,7.94207 -11.300329,12.32389"
-         id="path2994"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccccccccccc"
-         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#f0f0f0;fill-opacity:1;stroke:none;font-family:URW Gothic L;-inkscape-font-specification:URW Gothic L Semi-Bold" />
-      <path
-         sodipodi:nodetypes="cccssscccccsssc"
-         d="m 75.504375,314.37811 -7.32,0 0,7.36 c -1.938805,-0.70985 -2.120003,-0.76 -4.92,-0.76 -6.199994,0 -11.08,5.20001 -11.08,11.84 0,6.56 4.840006,11.64 11.12,11.64 2.999997,0 2.947464,-0.13642 5.32,-1.4 l 0,0.88 4.88,0 0,-29.56 m -9.48,11.48 c 3.719996,0 6.56,3.00001 6.56,6.88 0,3.84 -2.840004,6.84 -6.44,6.84 -3.719996,0 -6.6,-3.08 -6.6,-7 0,-3.75999 2.840004,-6.72 6.48,-6.72"
-         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#f0f0f0;fill-opacity:1;stroke:none;font-family:URW Gothic L;-inkscape-font-specification:URW Gothic L Semi-Bold"
-         id="path2996"
-         inkscape:connector-curvature="0" />
-      <path
-         d="m 82.310625,321.25811 c -6.439994,0 -11.72,5.24001 -11.72,11.6 0,6.4 5.280006,11.6 11.76,11.6 6.439994,0 11.799995,-5.2 11.799995,-11.44 0,-6.59999 -5.160002,-11.76 -11.839995,-11.76 m 0.04,4.88 c 3.559996,0 6.44,3.04001 6.44,6.72 0,3.72 -2.880004,6.72 -6.4,6.72 -3.599996,0 -6.44,-3 -6.44,-6.8 0,-3.63999 2.920003,-6.64 6.4,-6.64"
-         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#f0f0f0;fill-opacity:1;stroke:none;font-family:URW Gothic L;-inkscape-font-specification:URW Gothic L Semi-Bold"
-         id="path2998"
-         inkscape:connector-curvature="0" />
-      <path
-         d="m 98.26303,328.99139 c 1.34511,-2.02352 2.87588,-2.88466 5.0757,-2.85746 3.67972,0.0455 6.4039,2.9594 6.35593,6.8391 -0.048,3.87969 -2.72238,6.64685 -6.40209,6.60135 -2.39982,-0.0297 -4.06734,-1.05036 -5.12202,-3.10356 l -5.99954,-0.0742 c 0.73223,2.24922 1.43785,3.41804 2.94042,4.83672 2.1351,2.02655 5.04104,3.18257 8.1208,3.22065 6.55949,0.0811 11.74191,-4.93522 11.82252,-11.45471 0.0796,-6.43951 -5.13618,-11.66439 -11.69568,-11.7455 -5.1596,-0.0638 -9.19441,2.72654 -11.09559,7.66341 l 5.99955,0.0742"
-         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#f0f0f0;fill-opacity:1;stroke:none;font-family:URW Gothic L;-inkscape-font-specification:URW Gothic L Semi-Bold"
-         id="path3000"
-         inkscape:connector-curvature="0" />
-      <path
-         d="m 130.68062,336.65811 c -1.31999,2.04 -2.84,2.92 -5.04,2.92 -3.67999,0 -6.44,-2.88 -6.44,-6.76 0,-3.87999 2.64001,-6.68 6.32,-6.68 2.4,0 4.08001,1 5.16,3.04 l 6,0 c -0.75999,-2.24 -1.48,-3.4 -3,-4.8 -2.15999,-2 -5.08,-3.12 -8.16,-3.12 -6.55999,0 -11.68,5.08001 -11.68,11.6 0,6.44 5.28001,11.6 11.84,11.6 5.16,0 9.16001,-2.84 11,-7.8 l -6,0"
-         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#f0f0f0;fill-opacity:1;stroke:none;font-family:URW Gothic L;-inkscape-font-specification:URW Gothic L Semi-Bold"
-         id="path3002"
-         inkscape:connector-curvature="0" />
-    </g>
-  </g>
+  <path
+     inkscape:connector-curvature="0"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:40px;line-height:125%;font-family:'URW Gothic L';-inkscape-font-specification:'URW Gothic L Semi-Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#fff7f7;fill-opacity:1;stroke:none"
+     id="path2994"
+     d="m 6.025027,29.56 8.297968,-9.11523 6.803044,9.11523 h 5.772489 L 17.667998,18.12 33.7774,0.07638992 28,0.07999992 14.575533,14.58508 10.590348,9.2940399 H 5.256287 L 11.300329,17.23611 0,29.56"
+     sodipodi:nodetypes="cccccccccccc" />
+  <path
+     inkscape:connector-curvature="0"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:40px;line-height:125%;font-family:'URW Gothic L';-inkscape-font-specification:'URW Gothic L Semi-Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#fff7f7;fill-opacity:1;stroke:none"
+     id="path2996"
+     d="m 45.437408,0 h -7.32 v 7.36 c -1.938805,-0.70985 -2.120003,-0.76 -4.92,-0.76 -6.199994,0 -11.08,5.20001 -11.08,11.84 0,6.56 4.840006,11.64 11.12,11.64 2.999997,0 2.947464,-0.13642 5.32,-1.4 v 0.88 h 4.88 V 0 m -9.48,11.48 c 3.719996,0 6.56,3.00001 6.56,6.88 0,3.84 -2.840004,6.84 -6.44,6.84 -3.719996,0 -6.6,-3.08 -6.6,-7 0,-3.75999 2.840004,-6.72 6.48,-6.72" />
+  <path
+     inkscape:connector-curvature="0"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:40px;line-height:125%;font-family:'URW Gothic L';-inkscape-font-specification:'URW Gothic L Semi-Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#fff7f7;fill-opacity:1;stroke:none"
+     id="path2998"
+     d="m 52.243658,6.88 c -6.439994,0 -11.72,5.24001 -11.72,11.6 0,6.4 5.280006,11.6 11.76,11.6 6.439994,0 11.799995,-5.2 11.799995,-11.44 0,-6.59999 -5.160002,-11.76 -11.839995,-11.76 m 0.04,4.88 c 3.559996,0 6.44,3.04001 6.44,6.72 0,3.72 -2.880004,6.72 -6.4,6.72 -3.599996,0 -6.44,-3 -6.44,-6.8 0,-3.63999 2.920003,-6.64 6.4,-6.64" />
+  <path
+     inkscape:connector-curvature="0"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:40px;line-height:125%;font-family:'URW Gothic L';-inkscape-font-specification:'URW Gothic L Semi-Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#fff7f7;fill-opacity:1;stroke:none"
+     id="path3000"
+     d="m 78.896662,14.61328 c -1.34511,-2.02352 -2.87588,-2.88466 -5.0757,-2.85746 -3.67972,0.0455 -6.4039,2.9594 -6.35593,6.8391 0.048,3.87969 2.72238,6.64685 6.40209,6.60135 2.39982,-0.0297 4.06734,-1.05036 5.12202,-3.10356 l 5.99954,-0.0742 c -0.73223,2.24922 -1.43785,3.41804 -2.94042,4.83672 -2.1351,2.02655 -5.04104,3.18257 -8.1208,3.22065 -6.55949,0.0811 -11.74191,-4.93522 -11.82252,-11.45471 -0.0796,-6.43951 5.13618,-11.66439 11.69568,-11.7455 5.1596,-0.0638 9.19441,2.72654 11.09559,7.66341 l -5.99955,0.0742" />
+  <path
+     inkscape:connector-curvature="0"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:40px;line-height:125%;font-family:'URW Gothic L';-inkscape-font-specification:'URW Gothic L Semi-Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#fff7f7;fill-opacity:1;stroke:none"
+     id="path3002"
+     d="m 100.61366,22.28 c -1.31999,2.04 -2.840003,2.92 -5.040007,2.92 -3.67999,0 -6.44,-2.88 -6.44,-6.76 0,-3.87999 2.64001,-6.68 6.32,-6.68 2.400004,0 4.080017,1 5.160007,3.04 h 6 c -0.75999,-2.24 -1.48,-3.4 -3,-4.8 -2.15999,-2 -5.080003,-3.12 -8.160007,-3.12 -6.55999,0 -11.68,5.08001 -11.68,11.6 0,6.44 5.28001,11.6 11.84,11.6 5.160007,0 9.160017,-2.84 11.000007,-7.8 h -6" />
 </svg>

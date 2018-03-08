@@ -46,7 +46,7 @@
         <div class="card fluid">
             <div class="section">
                 <h3>Supported Formats
-                    <small>Diversity matters!</small>
+                    <small>Static everything!</small>
                 </h3>
                 <img src="${root}/design/books.svg" id="logo-medium">
                 <p><strong>xdocc</strong> supports a wide rang of input formats. The following input formats are

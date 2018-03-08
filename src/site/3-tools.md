@@ -1,0 +1,30 @@
+## Libraries
+
+This static site generator relies on the following libraries:
+
+ * (optional) [PageSpeed](https://www.modpagespeed.com) - xdocc does not optimize the HTML in way, and you may see URLs such as "../../design/../". The HTML is optimized by PageSpeed (inlined, gzipped, etc.), which is available for Apache and Nginx.
+ * (optional) [uncss](https://github.com/uncss/uncss) - PageSpeed does not remove unused css, thus xdocc uses uncss in a post processing task.
+ * (optional) [svgo](https://github.com/svg/svgo) - Although PageSpeed optimizes images, it does not optimize SVGs. Thus, svgo is used during post processing.
+ * [ImageMagick](https://www.imagemagick.org) - To make the images responsive, they are converted to smaller sizes for SrcSet with ImageMagick
+ * [reflections](https://github.com/ronmamo/reflections) - xdocc uses this reflection library to load content handlers
+ * [ICU4J](https://wiki.eclipse.org/ICU4J) - xdocc uses ICU4J to detect the charset of a file
+ * [Freemarker](https://freemarker.apache.org/) - this is the core templating engine deeply embedded into xdocc.
+ * [Mylyn Docs / WikiText](http://projects.eclipse.org/projects/mylyn.docs) - Eclipse uses these to parse ASCIIDoc, Wiki, Textile, and others.
+ * [Commonmark](https://github.com/atlassian/commonmark-java) - Java implementation of CommonMark, a specification of the Markdown format.
+ * [MapDB](http://www.mapdb.org) - To store rendering results for incremental compilation. MapDB is a disk-based HashMap.
+ * [jsoup](https://jsoup.org) - This is a HTML parser for Java
+ * [SnakeYAML](https://bitbucket.org/asomov/snakeyaml) - SnakeYAML is a YAML processor for Java
+
+## Tools
+
+This static site generator supports the following input formats:
+
+ * Markdown (confluence) - *.md, *.markdown
+ * Textile - *.textile
+ * MediaWiki - *.mediawiki
+ * TracWiki - *.tracwiki
+ * Confluence - *. confluence
+ * TWiki - *.twiki
+ * Plain Text - *.txt
+ * HTML - *.html
+ * Images - *.png, *.jpg, *.jgep, *.gif

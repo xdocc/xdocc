@@ -102,34 +102,26 @@ public class Service {
         final boolean isDaemon = !runOnce;
 
         if (isDaemon) {
-            startWatch(site, new RecursiveWatcherService.Listener() {
-                @Override
-                public void filesChanged(Site site) {
-                    try {
-                        LOG.debug("file changed");
-                        startAfterFirstRun.await();
-                        LOG.info("compiling start: {}", site);
-                        //load global navigation, otherwise when we change the name of a navigation
-                        //item or we rename, then the old name will be visible
-                        site.reloadGlobalNavigation();
-                        site.reloadTemplates();
-                        final long start = System.currentTimeMillis();
-                        Map<String, Integer> filesCounter = Collections.synchronizedMap(Files.walk(Paths.get(site.
-                                generated())).collect(Collectors.toMap(p -> p.toString(), p -> 0)));
-                        compile(site, filesCounter, cache).get();
+            startWatch(site, () -> {
+                try {
+                    LOG.debug("file changed");
+                    startAfterFirstRun.await();
+                    LOG.info("compiling start: {}", site);
+                    //load global navigation, otherwise when we change the name of a navigation
+                    //item or we rename, then the old name will be visible
+                    site.reloadGlobalNavigation();
+                    site.reloadTemplates();
+                    final long start = System.currentTimeMillis();
+                    Map<String, Integer> filesCounter = Collections.synchronizedMap(Files.walk(Paths.get(site.
+                            generated())).collect(Collectors.toMap(p -> p.toString(), p -> 0)));
+                    compile(site, filesCounter, cache).get();
 
-                        filesCounter.entrySet().stream().
-                                sorted((f1, f2) -> f2.getKey().compareTo(f1.getKey())).filter(f1 -> f1.
-                                getValue() <= 0 && Utils.isChild(Paths.get(f1.getKey()), Paths.get(site.generated()))).forEach(
-                                        f1 -> {try {Files.delete(Paths.get(f1.getKey()));} catch (IOException ex) {LOG.error("cannot delete", ex);}});
+                    deleteUnusedFiles(site, filesCounter);
+                    postProcessing(site);
 
-                        postProcessing(site);
-
-                        LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
-                    } catch (Throwable t) {
-                        LOG.error("file changed, but could not compile", t);
-                    }
-
+                    LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
+                } catch (Throwable t) {
+                    LOG.error("file changed, but could not compile", t);
                 }
             });
         }
@@ -138,11 +130,9 @@ public class Service {
         Map<String, Integer> filesCounter = Collections.synchronizedMap(Files.walk(Paths.get(site.generated())).collect(
                 Collectors.toMap(p -> p.toString(), p -> 0)));
         compile(site, filesCounter, cache).get();
-        filesCounter.entrySet().stream().sorted((f1, f2) -> f2.getKey().compareTo(f1.getKey())).filter(
-                f1 -> f1.getValue() <= 0 && Utils.isChild(Paths.get(f1.getKey()), Paths.get(site.generated()))).forEach(
-                        f1 -> {try {Files.delete(Paths.get(f1.getKey()));} catch (IOException ex) {LOG.error("cannot delete", ex);}});
-
+        deleteUnusedFiles(site, filesCounter);
         postProcessing(site);
+
         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
         if (isDaemon) {
             startAfterFirstRun.countDown();
@@ -152,10 +142,17 @@ public class Service {
         return this;
     }
 
+    private void deleteUnusedFiles(Site site, Map<String, Integer> filesCounter) {
+        filesCounter.entrySet().stream().
+                sorted((f1, f2) -> f2.getKey().compareTo(f1.getKey())).filter(f1 -> f1.
+                getValue() <= 0 && Utils.isChild(Paths.get(f1.getKey()), Paths.get(site.generated()))).forEach(
+                f1 -> {try {Files.delete(Paths.get(f1.getKey()));} catch (IOException ex) {LOG.error("cannot delete", ex);}});
+
+    }
+
     private void postProcessing(Site site) throws IOException, InterruptedException {
         XPath xPath = new XPath(site, Paths.get(site.source()));
         String command = xPath.getPostProcessing();
-        System.err.println("command is: "+command);
         if(!Strings.isNullOrEmpty(command)) {
             String cmdOutput = Utils.executeAndOutput(new ProcessBuilder(command, xPath.path()), site.generated());
             LOG.info("cmd output: {}", cmdOutput);

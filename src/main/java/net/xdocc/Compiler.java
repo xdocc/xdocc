@@ -76,12 +76,12 @@ public class Compiler {
 
                 for (XPath child : children) {
                     final XItem xItem = compile(child);
-                    if(xItem != null) {
+                    if(xItem != null && !Boolean.TRUE.equals(xItem.getConsumesDirectory())) {
                         xItem.setDepth(depth, promoteDepth);
                         results.add(xItem);
                     }
-                    if (child.isDirectory()) {
-                        //recursion
+                    if (child.isDirectory() && (xItem == null || !Boolean.TRUE.equals(xItem.getConsumesDirectory()))) {
+                        //recursion, only if the directory is not completely consumed
                         if(child.isPromoted()) {
                             futures.add(compile(Paths.get(child.path()), depth + 1, promoteDepth + 1));
                         } else {

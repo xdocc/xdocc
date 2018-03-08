@@ -27,6 +27,10 @@
       <div class="col-sm-10 col-md-10 col-lg-10 col-sm-offset-1 col-md-offset-1 col-lg-offset-1">
           <div id="document">${content}</div>
       </div>
+    <#elseif layout=="cheat">
+      <div class="col-sm-10 col-md-10 col-lg-10 fluid">
+        <div id="document">${content}</div>
+      </div>
     <#else>
       <input type="checkbox" id="doc-drawer-checkbox" class="drawer">
       <nav class="drawer col-md-3 col-lg-2 ">

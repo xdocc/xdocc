@@ -711,7 +711,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
     }
     public static final String IS_KEEP = "iskeep";
     static {KNOWN_EXTENSIONS.add("keep");KNOWN_EXTENSIONS.add("keep_orig");}
-    
+    static {KNOWN_EXTENSIONS.add("docbook");KNOWN_EXTENSIONS.add("Docbook");KNOWN_EXTENSIONS.add("DOCBOOK");}
 
     public String resolveTargetURL(String string) {
         if (getTargetURL().isEmpty()) {

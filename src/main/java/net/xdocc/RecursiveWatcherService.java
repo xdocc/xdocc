@@ -30,17 +30,15 @@ public class RecursiveWatcherService {
 
     private final WatchService watcher;
     private final ExecutorService executor;
-    private final Site site;
     private final Listener listener;
     private final BlockingQueue<Boolean> queue = new LinkedBlockingQueue<>();
     private volatile boolean running = true;
 
     public RecursiveWatcherService(Site site, Listener listener) throws IOException {
-        this.site = site;
         this.listener = listener;
         watcher = FileSystems.getDefault().newWatchService();
         executor = Executors.newFixedThreadPool(2);
-        startRecursiveWatcher();
+        startRecursiveWatcher(Paths.get(site.source()));
     }
 
     public void shutdown() {
@@ -55,7 +53,7 @@ public class RecursiveWatcherService {
         executor.shutdownNow();
     }
 
-    private void startRecursiveWatcher() throws IOException {
+    private void startRecursiveWatcher(Path source) throws IOException {
         LOG.info("Starting Recursive Watcher");
 
         final Map<WatchKey, Path> keys = new HashMap<>();
@@ -80,7 +78,7 @@ public class RecursiveWatcherService {
             }
         };
 
-        register.accept(Paths.get(site.source()));
+        register.accept(source);
                 
         executor.submit(() -> {
             while (running) {
@@ -130,12 +128,12 @@ public class RecursiveWatcherService {
                 } catch (InterruptedException ex) {
                     return;
                 }
-                listener.filesChanged(site);
+                listener.filesChanged();
             }
         });
     }
     
     public interface Listener {
-        void filesChanged(Site site);
+        void filesChanged();
     }
 }

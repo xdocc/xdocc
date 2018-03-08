@@ -48,6 +48,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String DEPTH = "depth";
     public static final String PROMOTE_DEPTH_ORIGINAL = "promotedepthoriginal";
     public static final String PROMOTE_DEPTH = "promotedepth";
+    public static final String CONSUMES_DIRECTORY = "consumesdirectory";
    
     // Utils
     public static final String DEBUG = "debug";
@@ -397,6 +398,15 @@ public class XItem implements Comparable<XItem>, Serializable {
     
     public XItem setPromoteDepth(Integer promoteDepth) {
         generator.model().put(PROMOTE_DEPTH, promoteDepth);
+        return this;
+    }
+
+    public Boolean getConsumesDirectory() {
+        return (Boolean) generator.model().get(CONSUMES_DIRECTORY);
+    }
+
+    public XItem setConsumesDirectory(Boolean consumesDirectory) {
+        generator.model().put(CONSUMES_DIRECTORY, consumesDirectory);
         return this;
     }
 

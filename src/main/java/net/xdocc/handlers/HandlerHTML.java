@@ -1,5 +1,6 @@
 package net.xdocc.handlers;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,13 +50,7 @@ public class HandlerHTML implements Handler {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
-            Charset charset = HandlerUtils.detectCharset(Paths.get(xPath.path()));
-            String all = FileUtils.readFileToString(Paths.get(xPath.path()).toFile(), charset);
-
-            org.jsoup.nodes.Document docj = Jsoup.parse(all);
-            Elements e = docj.getElementsByTag("body");
-
-            String htmlContent = e.toString();
+            String htmlContent = htmlContent(xPath.path());
             doc = Utils.createDocument(site, xPath, htmlContent, "text");
             // always create a single page for that
 
@@ -66,5 +61,13 @@ public class HandlerHTML implements Handler {
             cache.setCached(site, xPath, (Path)null, doc, generatedFile);
         }
         return doc;
+    }
+
+    public static String htmlContent(String file) throws IOException {
+        Charset charset = HandlerUtils.detectCharset(Paths.get(file));
+        String all = FileUtils.readFileToString(Paths.get(file).toFile(), charset);
+        org.jsoup.nodes.Document docj = Jsoup.parse(all);
+        Elements e = docj.getElementsByTag("body");
+        return e.toString();
     }
 }
