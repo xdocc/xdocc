@@ -1,8 +1,4 @@
-# What is ![xdocc-logo medium](${root}/design/xdocc-logo.svg)?
-
-Xdocc is a **static site generator** that compiles documents to HTML. With xdocc and the support of other tools such as WebDAV or modern file-managers, a small to medium-sized CMS can be realized. It can be used for **blogs**, **project sites**, **landing pages**, and **galleries**.
-
-## Why anoter static site generator?
+## Why anoter static site generator? (this section is written in Markdown)
 
 On [StaticGen](https://www.staticgen.com), there is a list with over 200 static site generators. This begs the question why do we need another one? The word "standards" in the following [xkcd](https://xkcd.com/927/) can be replaced by "static site generators", which sums up why to create another one:
 

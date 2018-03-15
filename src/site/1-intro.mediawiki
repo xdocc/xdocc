@@ -1,0 +1,4 @@
+== What is [[File:${root}/design/xdocc-logo.svg|xdocc-logo medium]] (this section is written in Wiki) ==
+
+Xdocc is a **static site generator** that compiles documents to HTML. With xdocc and the support of other tools such as WebDAV or modern file-managers, a small to medium-sized CMS can be realized. It can be used for **blogs**, **project sites**, **landing pages**, and **galleries**.
+

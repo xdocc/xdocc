@@ -384,6 +384,15 @@ final public class XPath implements Comparable<XPath>, Serializable {
         }
         return value;
     }
+
+    public String directory() {
+        Path p = Paths.get(path);
+        if(isDirectory()) {
+            return p.toString();
+        } else {
+            return p.getParent().toString();
+        }
+    }
     
     public String fileName() {
         Path p = Paths.get(path);
@@ -600,6 +609,26 @@ final public class XPath implements Comparable<XPath>, Serializable {
         return getProperty("post-processing", "pp");
     }
 
+    public String getDirectoryCommand() {
+        return getProperty("dir-command", "dir-cmd");
+    }
+
+    public String getCommandODT() {
+        return getRecursiveProperty("command-odt", "cmd-odt");
+    }
+
+    public String getCommandDOCX() {
+        return getRecursiveProperty("command-docx", "cmd-docx");
+    }
+
+    public String getCommandTEX() {
+        return getRecursiveProperty("command-tex", "cmd-tex");
+    }
+
+    public String getCommandRST() {
+        return getRecursiveProperty("command-rst", "cmd-rst");
+    }
+
     private String[] getPropertyRegexp(String... kepRegexps) {
         String[] resultArray = null;
         String key = null;
@@ -711,7 +740,9 @@ final public class XPath implements Comparable<XPath>, Serializable {
     }
     public static final String IS_KEEP = "iskeep";
     static {KNOWN_EXTENSIONS.add("keep");KNOWN_EXTENSIONS.add("keep_orig");}
-    static {KNOWN_EXTENSIONS.add("docbook");KNOWN_EXTENSIONS.add("Docbook");KNOWN_EXTENSIONS.add("DOCBOOK");}
+
+    //used to identify directories where pandoc files are located
+    static {KNOWN_EXTENSIONS.add("command");KNOWN_EXTENSIONS.add("cmd");}
 
     public String resolveTargetURL(String string) {
         if (getTargetURL().isEmpty()) {

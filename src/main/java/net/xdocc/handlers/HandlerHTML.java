@@ -17,7 +17,9 @@ import net.xdocc.XPath;
 
 import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
+import org.jsoup.select.NodeFilter;
 
 public class HandlerHTML implements Handler {
     
@@ -68,6 +70,26 @@ public class HandlerHTML implements Handler {
         String all = FileUtils.readFileToString(Paths.get(file).toFile(), charset);
         org.jsoup.nodes.Document docj = Jsoup.parse(all);
         Elements e = docj.getElementsByTag("body");
+        e = e.filter(new NodeFilter() {
+            @Override
+            public FilterResult head(Node node, int i) {
+                if(node.nodeName().equals("header")) {
+                    return FilterResult.REMOVE;
+                }
+                if(node.nodeName().equals("div") && node.attr("class").equals("NAVHEADER")) {
+                    return FilterResult.REMOVE;
+                }
+                if(node.nodeName().equals("div") && node.attr("class").equals("NAVFOOTER")) {
+                    return FilterResult.REMOVE;
+                }
+                return FilterResult.CONTINUE;
+            }
+
+            @Override
+            public FilterResult tail(Node node, int i) {
+                return FilterResult.CONTINUE;
+            }
+        });
         return e.toString();
     }
 }

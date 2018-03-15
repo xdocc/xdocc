@@ -1,0 +1,15 @@
+#https://superuser.com/questions/944244/running-a-java-process-from-systemd
+
+[Unit]
+Description=Some job
+After=network.target
+
+[Service]
+WorkingDirectory=/home/user/tmp/testout
+SyslogIdentifier=SocketTest
+ExecStart=/bin/sh -c "exec java -jar /home/user/programming/tests/java/core/SocketTest/SocketTest.jar"
+User=dlt
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>xdocc, an experimental document compiler</title>
+    <link rel="stylesheet" type="text/css" href="..//design/mini-default.css"/>
+    <link rel="stylesheet" type="text/css" href="..//design/layout.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<header class="row sticky">
+    <label for="doc-drawer-checkbox" class="button drawer-toggle col-sm"></label>
+  <a href="../" class="logo col-sm3 col-md"><img style="vertical-align: text-top;" id="logo-small2" src="..//design/xdocc-logo.svg" alt="xdocc"></a>
+    <a class="button col-sm col-md" href="..//doc">
+        <img style="vertical-align: text-top;" id="logo-small2" src="..//design/doc.svg" alt="doc">
+        <span>Documentation</span>
+    </a>
+    <a class="button col-sm col-md" href="..//cheat-md">
+        <img style="vertical-align: text-top;" id="logo-small2" src="..//design/cheat-md.svg" alt="cheat-md">
+        <span>Markdown</span>
+    </a>
+    <a class="button col-sm col-md" href="..//cheat-tx">
+        <img style="vertical-align: text-top;" id="logo-small2" src="..//design/cheat-tx.svg" alt="cheat-tx">
+        <span>Textile</span>
+    </a>
+    <a class="button col-sm col-md" href="..//cheat-wi">
+        <img style="vertical-align: text-top;" id="logo-small2" src="..//design/cheat-wi.svg" alt="cheat-wi">
+        <span>Wiki</span>
+    </a>
+    <a class="button col-sm col-md" href="..//cheat-fm">
+        <img style="vertical-align: text-top;" id="logo-small2" src="..//design/cheat-fm.svg" alt="cheat-fm">
+        <span>FreeMarker</span>
+    </a>
+  <a class="button col-sm col-md" href="https://github.com/xdocc">
+      <img style="vertical-align: text-top;" id="logo-small2" src="..//design/github.svg" alt="github">
+      <span> GitHub</span>
+  </a>
+</header>
+
+<div class="container responsive-padding">
+  <div class="row">
+      <div class="col-sm-10 col-md-10 col-lg-10 fluid">
+        <div id="document"><body class="section" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#840084" alink="#0000FF">
+ <div class="NAVHEADER">
+  <table summary="Header navigation table" width="100%" border="0" cellpadding="0" cellspacing="0">
+   <tbody>
+    <tr>
+     <th colspan="3" align="center"></th>
+    </tr>
+    <tr>
+     <td width="10%" align="left" valign="bottom"><a href="x11223.html" accesskey="P">Prev</a></td>
+     <td width="80%" align="center" valign="bottom">Chapter 10. Directive Reference</td>
+     <td width="10%" align="right" valign="bottom"><a href="x11603.html" accesskey="N">Next</a></td>
+    </tr>
+   </tbody>
+  </table>
+  <hr ALIGN="LEFT" WIDTH="100%">
+ </div>
+ <div class="section">
+  <h1 class="section"><a name="AEN11291">setting</a></h1> 
+  <a></a> 
+  <div class="section">
+   <h2 class="section"><a name="AEN11296">Synopsis</a></h2> 
+   <pre class="programlisting"><tt class="literal">&lt;#setting <tt class="replaceable"><i>name</i></tt>=<tt class="replaceable"><i>value</i></tt>&gt;</tt>
+</pre> 
+   <p>Where:</p> 
+   <p></p>
+   <ul compact="COMPACT">
+    <li> <p><tt class="literal"><tt class="replaceable"><i>name</i></tt></tt>: name of the setting. It is not expression!</p> </li>
+    <li> <p><tt class="literal"><tt class="replaceable"><i>value</i></tt></tt>: New value of the setting. Expression</p> </li>
+   </ul> 
+  </div> 
+  <div class="section">
+   <h2 class="section"><a name="AEN11312">Description</a></h2> 
+   <p>Sets a setting for the further part of processing. Settings are values that influence the behavior of FreeMarker. The new value will be present only in the template processing where it was set, and does not touch the template itself. The initial value of settings is set by the programmer <span class="forProgrammers"><span class="phrase">(see: )</span></span>.</p> 
+   <p>The supported settings are:</p> 
+   <p></p>
+   <ul>
+    <li> <p><tt class="literal">locale</tt>: The locale (language) of the output. It can influence the presentation format of numbers, dates, etc. The value is a string which consist of a language code (lowercase two-letter ISO-639 code) plus optional county code (uppercase two-letter ISO-3166 code) separated from the language code with underscore, and if we have specified the country then an optional variant code (not standardized) separated from the country with underscore. Examples of valid values: <tt class="literal">en</tt>, <tt class="literal">en_US</tt>, <tt class="literal">en_US_MAC</tt>. FreeMarker will try to use the most specific available locale, so if you specify <tt class="literal">en_US_MAC</tt> but that is not known, then it will try <tt class="literal">en_US</tt>, and then <tt class="literal">en</tt>, and then the default locale of the computer (which is may set by the programmer).</p> </li>
+    <li> <p><tt class="literal">number_format</tt>: The number format that is used to convert numbers to strings when no explicit format is specified. Can be one of the following:</p> <p></p>
+     <ul>
+      <li> <p>Predefined values defined by the Java platform: <tt class="literal">number</tt> (the default), <tt class="literal">currency</tt>, or <tt class="literal">percent</tt></p> </li>
+      <li> <p><tt class="literal">computer</tt>, which formats like the <tt class="literal">c</tt> built-in</p> </li>
+      <li> <p>Format pattern written in Java decimal number format syntax, for example <tt class="literal">0.###</tt>. FreeMarker extends this format to allow specifying rounding mode, symbols used, etc.</p> </li>
+      <li> <p>Values starting with <tt class="literal">@</tt> that's also followed by a letter, refer to a custom format. For example, <tt class="literal">"@price"</tt> refers to the custom format registered with the <tt class="literal">"price"</tt> name. The custom format name is possibly followed by space or <tt class="literal">_</tt> and then format parameters, whose interpretation depends on the custom format. For backward compatibility, the initial <tt class="literal">@</tt> only has this new meaning if either the <tt class="literal">incompatible_improvements</tt> setting is at least 2.3.24, or there's any custom formats defined. When the initial <tt class="literal">@</tt> isn't followed by a letter (any UNICODE letter), it's never treated as a reference to a custom format.</p> </li>
+     </ul> </li>
+    <li> <p><tt class="literal">boolean_format</tt>: The comma-separated pair of strings for representing true and false values respectively that is used to convert booleans to strings when no explicit format is specified (like in <tt class="literal">${<tt class="replaceable"><i>booleanValue</i></tt>}</tt>). Note that currently white space isn't removed from this string, so don't put space after the comma. Default value is <tt class="literal">"true,false"</tt>, but FreeMarker will deny using that particular value for <tt class="literal">${<tt class="replaceable"><i>booleanValue</i></tt>}</tt>, and requires using <tt class="literal">${<tt class="replaceable"><i>booleanValue</i></tt>?c}</tt> instead (this works since 2.3.21). For any other value, like <tt class="literal">"Y,N"</tt>, <tt class="literal">${<tt class="replaceable"><i>booleanValue</i></tt>}</tt> will work. See also:<tt class="literal">string</tt> built-in.</p> </li>
+    <li> <p> <tt class="literal">date_format</tt>, <tt class="literal">time_format</tt>, <tt class="literal">datetime_format</tt>: The format used to convert date/time/date-time values (Java <tt class="literal">java.util.Date</tt>-s and its subclasses) to strings when no explicit format is specified via the <tt class="literal">string</tt> built-in (or otherwise), as in the case of <tt class="literal">${someDate}</tt>. The <tt class="literal">date_format</tt> setting only effects the formatting of date values that store no time part, <tt class="literal">time_format</tt> only effects the formatting of times that store no date part, and <tt class="literal">datetime_format</tt> only effects formatting of date-time values. These settings also effects what format do <tt class="literal">?time</tt>, <tt class="literal">?date</tt>, and <tt class="literal">?datetime</tt> expect when it's applied on a string value.</p> <p>The possible setting values are (the quotation marks aren't part of the value itself):</p> <p></p>
+     <ul>
+      <li> <p>Patterns accepted by Java's <tt class="literal">SimpleDateFormat</tt>, for example <tt class="literal">"dd.MM.yyyy HH:mm:ss"</tt> (where <tt class="literal">"HH"</tt> means 0-23 hours) or <tt class="literal">"MM/dd/yyyy hh:mm:ss a"</tt> (where <tt class="literal">"a"</tt> prints AM or PM, if the current language is English).</p> </li>
+      <li> <p><tt class="literal">"xs"</tt> for XML Schema format, or <tt class="literal">"iso"</tt> for ISO 8601:2004 format. These formats allow various additional options, separated with space, like in <tt class="literal">"iso m nz"</tt> (or with <tt class="literal">_</tt>, like in <tt class="literal">"iso_m_nz"</tt>; this is useful in a case like <tt class="literal">lastModified?string.iso_m_nz</tt>). The options and their meanings are:</p> <p></p>
+       <ul>
+        <li> <p>Accuracy options:</p> <p></p>
+         <ul compact="COMPACT">
+          <li> <p><tt class="literal">ms</tt>: Milliseconds, always shown with all 3 digits, even if it's all 0-s. Example: <tt class="literal">13:45:05.800</tt></p> </li>
+          <li> <p><tt class="literal">s</tt>: Seconds (fraction seconds are dropped even if non-0), like <tt class="literal">13:45:05</tt></p> </li>
+          <li> <p><tt class="literal">m</tt>: Minutes, like <tt class="literal">13:45</tt>. This isn't allowed for <tt class="literal">"xs"</tt>.</p> </li>
+          <li> <p><tt class="literal">h</tt>: Hours, like <tt class="literal">13</tt>. This isn't allowed for <tt class="literal">"xs"</tt>.</p> </li>
+          <li> <p>Neither: Up to millisecond accuracy, but trailing millisecond 0-s are removed, also the whole milliseconds part if it would be 0 otherwise. Example: <tt class="literal">13:45:05.8</tt></p> </li>
+         </ul> </li>
+        <li> <p>Time zone offset visibility options:</p> <p></p>
+         <ul compact="COMPACT">
+          <li> <p><tt class="literal">fz</tt>: <span class="QUOTE">"Force Zone"</span>, always show time zone offset (even for for <tt class="literal">java.sql.Date</tt> and <tt class="literal">java.sql.Time</tt> values). But, because ISO 8601 doesn't allow for dates (means date without time of the day) to show the zone offset, this option will have no effect in the case of <tt class="literal">"iso"</tt> with dates.</p> </li>
+          <li> <p><tt class="literal">nz</tt>: <span class="QUOTE">"No Zone"</span>, never show time zone offset</p> </li>
+          <li> <p>Neither: Always show time zone offset, except for <tt class="literal">java.sql.Date</tt> and <tt class="literal">java.sql.Time</tt>, and for <tt class="literal">"iso"</tt> date values.</p> </li>
+         </ul> </li>
+        <li> <p>Time zone options:</p> <p></p>
+         <ul compact="COMPACT">
+          <li> <p><tt class="literal">u</tt>: Use UTC instead of what the <tt class="literal">time_zone</tt> setting suggests. However, <tt class="literal">java.sql.Date</tt> and <tt class="literal">java.sql.Time</tt> aren't affected by this (see <tt class="literal">sql_date_and_time_time_zone</tt> to understand why)</p> </li>
+          <li> <p><tt class="literal">fu</tt>: <span class="QUOTE">"Force UTC"</span>, that is, use UTC instead of what the <tt class="literal">time_zone</tt> or the <tt class="literal">sql_date_and_time_time_zone</tt> setting suggests. This also effects <tt class="literal">java.sql.Date</tt> and <tt class="literal">java.sql.Time</tt> values</p> </li>
+          <li> <p>Neither: Use the time zone suggested by the <tt class="literal">time_zone</tt> or the <tt class="literal">sql_date_and_time_time_zone</tt> configuration setting</p> </li>
+         </ul> </li>
+       </ul> <p>Options from the same category are mutually exclusive, like using <tt class="literal">m</tt> and <tt class="literal">s</tt> together is an error.</p> <p>The options can be specified in any order.</p> <p>The accuracy and time zone offset visibility options don't influence parsing, only formatting. For example, even if you use <tt class="literal">"iso m nz"</tt>, <tt class="literal">"2012-01-01T15:30:05.125+01"</tt> will be parsed successfully and with milliseconds accuracy. The time zone options (like <tt class="literal">"u"</tt>) influence what time zone is chosen only when parsing a string that doesn't contain time zone offset.</p> <p>Parsing with <tt class="literal">"iso"</tt> understands both <span class="QUOTE">"extend format"</span> and <span class="QUOTE">"basic format"</span>, like <tt class="literal">20141225T235018</tt>. It doesn't, however, support the parsing of all kind of ISO 8601 strings: if there's a date part, it must use year, month and day of the month values (not week of the year), and the day can't be omitted.</p> <p>The output of <tt class="literal">"iso"</tt> is deliberately so that it's also a good representation of the value with XML Schema format, except for 0 and negative years, where it's impossible. Also note that the time zone offset is omitted for date values in the <tt class="literal">"iso"</tt> format, while it's preserved for the <tt class="literal">"xs"</tt> format.</p> </li>
+      <li> <p><tt class="literal">"short"</tt>, <tt class="literal">"medium"</tt>, <tt class="literal">"long"</tt>, or <tt class="literal">"full"</tt>, which has locale-dependent meaning defined by the Java platform (see in the documentation of <tt class="literal">java.text.DateFormat</tt>). For date-time values, you can specify the length of the date and time part independently, be separating them with <tt class="literal">_</tt>, like <tt class="literal">"short_medium"</tt>. (<tt class="literal">"medium"</tt> means <tt class="literal">"medium_medium"</tt> for date-time values.)</p> </li>
+      <li> <p>Values starting with <tt class="literal">@</tt> that's also followed by a letter, refer to a custom format, like <tt class="literal">"@worklog"</tt> refers to the custom format registered with the <tt class="literal">"worklog"</tt> name. The format name is possibly followed by space or <tt class="literal">_</tt> and then format parameters, whose interpretation depends on the custom format. For backward compatibility, the initial <tt class="literal">@</tt> only has this new meaning if either the <tt class="literal">incompatible_improvements</tt> setting is at least 2.3.24, or there's any custom formats defined. When the initial <tt class="literal">@</tt> isn't followed by a letter (any UNICODE letter), it's never treated as a reference to a custom format.</p> </li>
+     </ul> </li>
+    <li> <p><tt class="literal">time_zone</tt>: The name of the time zone used to format times for display. By default, the default time zone of the JVM is used. Can be any value that is accepted by Java TimeZone API, or <tt class="literal">"JVM default"</tt> (since FreeMarker 2.3.21) to use the JVM default time zone. Examples: <tt class="literal">"GMT"</tt>, <tt class="literal">"GMT+2"</tt>, <tt class="literal">"GMT-1:30"</tt>, <tt class="literal">"CET"</tt>, <tt class="literal">"PST"</tt>, <tt class="literal">"America/Los_Angeles"</tt>.</p> 
+     <div class="warning">
+      <p></p>
+      <table class="warning" width="100%" border="0">
+       <tbody>
+        <tr>
+         <td width="25" align="CENTER" valign="TOP"><img SRC="../images/warning.gif" HSPACE="5" ALT="Warning"></td>
+         <td align="LEFT" valign="TOP"> <p>If you change this setting from its default value, you should certainly also set <tt class="literal">sql_date_and_time_time_zone</tt> to "JVM default". <span class="forProgrammers"><span class="phrase">See more in the Java API documentation of <tt class="literal">Configurable.setSQLDateAndTimeTimeZone(TimeZone)</tt>.</span></span></p> </td>
+        </tr>
+       </tbody>
+      </table>
+     </div> </li>
+    <li> <p><tt class="literal">sql_date_and_time_time_zone</tt> (since FreeMarker 2.3.21): This handles a highly technical issue, so it should usually be set from the Java code by the programmers. <span class="forProgrammers"><span class="phrase">For programmers: If this is set to non-<tt class="literal">null</tt>, for date-only and time-only values coming from SQL database (more precisely, for <tt class="literal">java.sql.Date</tt> and <tt class="literal">java.sql.Time</tt> objects) FreeMarker will use this time zone instead of the time zone specified by the <tt class="literal">time_zone</tt> FreeMarker setting. See more in the Java API documentation of <tt class="literal">Configurable.setSQLDateAndTimeTimeZone(TimeZone)</tt>.</span></span></p> </li>
+    <li> <p><tt class="literal">url_escaping_charset</tt>: The charset used for URL escaping (e.g. for <tt class="literal">${foo?url}</tt>) to calculate the escaped (<tt class="literal">%<tt class="replaceable"><i>XX</i></tt></tt>) parts. Usually the framework that encloses FreeMarker should set it, so you hardly ever should set this setting in templates. <span class="forProgrammers"><span class="phrase">(Programmers can read more about this here...)</span></span></p> </li>
+    <li> <p><tt class="literal">output_encoding</tt>: Tells FreeMarker what the charset of the output is. As FreeMarker outputs a stream of UNICODE characters (<span class="forProgrammers"><span class="phrase">it writes into a <tt class="literal">java.io.Writer</tt></span></span>), it's not affected by the output encoding, but some macros/functions and built-ins may want to used this information.</p> </li>
+    <li> <p><tt class="literal">classic_compatible</tt>: This is for experts. Its value should be a boolean. See the documentation of <tt class="literal">freemarker.template.Configurable</tt> for more information.</p> </li>
+   </ul> 
+   <p>Example: Assume that the initial locale of template is <tt class="literal">de_DE</tt> (German). Then this:</p> 
+   <pre class="programlisting">${1.2}
+&lt;#setting locale="en_US"&gt;
+${1.2}</pre> 
+   <p>will output this:</p> 
+   <pre class="programlisting">1,2
+1.2</pre> 
+   <p>because German people use the comma as their decimal separator, while US people use the dot.</p> 
+  </div> 
+ </div>
+ <div class="NAVFOOTER">
+  <hr ALIGN="LEFT" WIDTH="100%">
+  <table summary="Footer navigation table" width="100%" border="0" cellpadding="0" cellspacing="0">
+   <tbody>
+    <tr>
+     <td width="33%" align="left" valign="top"><a href="x11223.html" accesskey="P">Prev</a></td>
+     <td width="34%" align="center" valign="top"><a href="index.html" accesskey="H">Home</a></td>
+     <td width="33%" align="right" valign="top"><a href="x11603.html" accesskey="N">Next</a></td>
+    </tr>
+    <tr>
+     <td width="33%" align="left" valign="top">outputformat</td>
+     <td width="34%" align="center" valign="top"><a href="c9413.html" accesskey="U">Up</a></td>
+     <td width="33%" align="right" valign="top">stop</td>
+    </tr>
+   </tbody>
+  </table>
+ </div>
+</body></div>
+      </div>
+  </div>
+</div>
+
+<footer>
+    <p></p>
+</footer>
+</body>
+</html>
