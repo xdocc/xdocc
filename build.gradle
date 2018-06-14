@@ -68,6 +68,7 @@ task packageDeb(type: Deb) {
     release = 1
     packager = 'Thomas Bocek <tom@xdocc.net>'
     summary = 'A static HTML site generator that compiles various document formats (markdown, wiki (mediawiki, tracwiki, twiki), confluence, textile, ODT, Tex, docx, ...) and images to HTML'
+    suggests ('pandoc', '1.16.0', GREATER | EQUAL)
 
     requires('default-jre-headless|default-jdk-headless', '1.8', GREATER | EQUAL)
 

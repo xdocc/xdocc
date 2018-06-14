@@ -150,16 +150,20 @@ public class HandlerCommand implements Handler {
                 LOG.debug("exec output: {}", output);
 
                 Path sourceFile = Paths.get(tmpFile);
-                String htmlContent = HandlerHTML.htmlContent(sourceFile.toString());
-                doc = Utils.createDocument(site, xPath, htmlContent, "command");
-                Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + "/" + sourceFile.getFileName());
+                if(Files.exists(sourceFile)) {
+                    String htmlContent = HandlerHTML.htmlContent(sourceFile.toString());
+                    doc = Utils.createDocument(site, xPath, htmlContent, "command");
+                    Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + "/" + sourceFile.getFileName());
 
-                if (xPath.getParent().isItemWritten()) {
-                    Utils.writeHTML(xPath, doc, generatedFile);
-                    Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
+                    if (xPath.getParent().isItemWritten()) {
+                        Utils.writeHTML(xPath, doc, generatedFile);
+                        Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
+                    }
+                    cache.setCached(site, xPath, (Path) null, doc, generatedFile);
+                } else {
+                    LOG.debug("file {} does not exist", sourceFile);
+                    doc = null;
                 }
-                cache.setCached(site, xPath, (Path)null, doc, generatedFile);
-
             }
         }
         //XItem ret = Utils.createDocument(site, xPath, null, "docbook");

@@ -33,66 +33,66 @@ public class Utils {
 
     private static XItem adjustPath(XItem doc, String minusPath) {
         adjustPath0(doc, minusPath);
-        for(XItem item:doc.getItems()) {
+        for (XItem item : doc.getItems()) {
             adjustPath(item, minusPath);
         }
         return doc;
     }
-    
+
     private static XItem adjustPath0(XItem doc, String minusPath) {
         String path = doc.getOriginalPath();
         Path pathRelative = Paths.get(minusPath).relativize(Paths.get(path));
         path = pathRelative.toString();
-        path = path.isEmpty() ? ".":path;
+        path = path.isEmpty() ? "." : path;
         doc.setPath(path);
-        
+
         String link = doc.getLink();
-        if(link != null) {
+        if (link != null) {
             Path pathRelativeLink = Paths.get(minusPath).relativize(Paths.get(link));
             link = pathRelativeLink.toString();
-            link = link.isEmpty() ? ".":link;
+            link = link.isEmpty() ? "." : link;
             doc.setLink(link);
         }
-        
+
         return doc;
     }
-    
+
     private static XItem adjustPathToRoot(XItem doc, String newPathToRoot) {
         adjustPathToRoot0(doc, newPathToRoot);
-        for(XItem item:doc.getItems()) {
+        for (XItem item : doc.getItems()) {
             adjustPathToRoot(item, newPathToRoot);
         }
         return doc;
     }
-    
+
     private static XItem adjustPathToRoot0(XItem doc, String newPathToRoot) {
-        newPathToRoot = newPathToRoot.isEmpty() ? ".":newPathToRoot;
+        newPathToRoot = newPathToRoot.isEmpty() ? "." : newPathToRoot;
         doc.setPathToRoot(newPathToRoot);
         return doc;
     }
 
     private static XItem adjustPromotedDepth(XItem doc, Integer minusPromoteDepth) {
         Integer calc = null;
-        if(doc.getPromoteDepthOriginal()!= null) {
+        if (doc.getPromoteDepthOriginal() != null) {
             calc = doc.getPromoteDepthOriginal() - minusPromoteDepth;
         }
         doc.setPromoteDepth(calc);
-        for(XItem item:doc.getItems()) {
+        for (XItem item : doc.getItems()) {
             adjustPromotedDepth(item, minusPromoteDepth);
         }
         return doc;
     }
 
     public static Collection<Path> listPathsGen(Site site, Path generatedFile) {
-        
+
         generatedFile = generatedFile.normalize();
-        
+
         if (!isChild(generatedFile, Paths.get(site.generated()))) {
             return null;
         }
-        
+
         Collection<Path> retVal = new ArrayList<>();
-        while(!generatedFile.equals(Paths.get(site.generated()))) {
+        while (!generatedFile.equals(Paths.get(site.generated()))) {
             retVal.add(generatedFile);
             generatedFile = generatedFile.getParent();
         }
@@ -109,7 +109,7 @@ public class Utils {
         }
 
         Collection<Path> retVal = new ArrayList<>();
-        while(!srcFile.equals(Paths.get(site.source()))) {
+        while (!srcFile.equals(Paths.get(site.source()))) {
             retVal.add(srcFile);
             srcFile = srcFile.getParent();
         }
@@ -118,10 +118,10 @@ public class Utils {
     }
 
     public static void increase(Map<String, Integer> filesCounter, Collection<Path> listPaths) {
-        for(Path path:listPaths) {
-            synchronized(filesCounter) {
+        for (Path path : listPaths) {
+            synchronized (filesCounter) {
                 Integer i = filesCounter.get(path.toString());
-                if(i == null) {
+                if (i == null) {
                     i = 1;
                 } else {
                     i++;
@@ -133,10 +133,10 @@ public class Utils {
     }
 
     public static void decrease(Map<Path, Integer> filesCounter, Collection<Path> listPaths) {
-        for(Path path:listPaths) {
-            synchronized(filesCounter) {
+        for (Path path : listPaths) {
+            synchronized (filesCounter) {
                 Integer i = filesCounter.get(path);
-                if(i == null) {
+                if (i == null) {
                     i = 0;
                 } else {
                     i--;
@@ -149,7 +149,9 @@ public class Utils {
 
     public static enum OS_TYPE {
         LINUX, WIN, MAC, OTHER
-    };
+    }
+
+    ;
 
     public static OS_TYPE getOSType() {
         String osName = System.getProperty("os.name");
@@ -165,11 +167,11 @@ public class Utils {
     }
 
     public static boolean isChild(Link parent, Link maybeChild) {
-        if(parent.equals(maybeChild)) {
+        if (parent.equals(maybeChild)) {
             return true;
         }
-        for(Link child:parent.getChildren()) {
-            if(isChild(child, maybeChild)) {
+        for (Link child : parent.getChildren()) {
+            if (isChild(child, maybeChild)) {
                 return true;
             }
         }
@@ -193,7 +195,7 @@ public class Utils {
     }
 
     public static String relativePathToRoot(Path root, Path path,
-            boolean includeSelf) {
+                                            boolean includeSelf) {
         if (!isChild(path, root)) {
             return null;
         }
@@ -232,49 +234,49 @@ public class Utils {
     }
 
     public static List<XPath> getNonHiddenChildren(final Site site,
-            final Path siteToCompile) throws IOException {
+                                                   final Path siteToCompile) throws IOException {
         final List<XPath> result = new ArrayList<>();
         Files.walkFileTree(siteToCompile,
                 EnumSet.noneOf(FileVisitOption.class), 1,
                 new FileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) throws IOException {
-                // do not include ourself
-                if (!siteToCompile.equals(dir)) {
-                    XPath xPath = new XPath(site, dir);
-                    if (!xPath.isHidden()) {
-                        result.add(xPath);
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir,
+                                                             BasicFileAttributes attrs) throws IOException {
+                        // do not include ourself
+                        if (!siteToCompile.equals(dir)) {
+                            XPath xPath = new XPath(site, dir);
+                            if (!xPath.isHidden()) {
+                                result.add(xPath);
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
                     }
-                }
-                return FileVisitResult.CONTINUE;
-            }
 
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws IOException {
-                // do not include ourself
-                if (!siteToCompile.equals(file)) {
-                    XPath xPath = new XPath(site, file);
-                    if (!xPath.isHidden()) {
-                        result.add(xPath);
+                    @Override
+                    public FileVisitResult visitFile(Path file,
+                                                     BasicFileAttributes attrs) throws IOException {
+                        // do not include ourself
+                        if (!siteToCompile.equals(file)) {
+                            XPath xPath = new XPath(site, file);
+                            if (!xPath.isHidden()) {
+                                result.add(xPath);
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
                     }
-                }
-                return FileVisitResult.CONTINUE;
-            }
 
-            @Override
-            public FileVisitResult visitFileFailed(Path file,
-                    IOException exc) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
+                    @Override
+                    public FileVisitResult visitFileFailed(Path file,
+                                                           IOException exc) throws IOException {
+                        return FileVisitResult.CONTINUE;
+                    }
 
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir,
-                    IOException exc) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-        });
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir,
+                                                              IOException exc) throws IOException {
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
         return result;
     }
 
@@ -294,7 +296,7 @@ public class Utils {
         });
 
     }
-    
+
     public static void sort3(List<XItem> results, final boolean inverted) {
         Collections.sort(results, new Comparator<XItem>() {
             @Override
@@ -304,23 +306,23 @@ public class Utils {
             }
         });
     }
-    
-    
+
+
     public static void write(String html, XPath xPath, Path generatedFile)
             throws TemplateException, IOException {
         Path alreadyGeneratedSource = created.get(generatedFile);
         if (alreadyGeneratedSource == null) {
             created.put(generatedFile, Paths.get(xPath.path()));
         } else if (!alreadyGeneratedSource.equals(Paths.get(xPath.path()))) {
-        	LOG.warn("create " + generatedFile
+            LOG.warn("create " + generatedFile
                     + ", but it was already created by "
                     + alreadyGeneratedSource + ". Anyway we will overwrite");
         } else {
-        	LOG.debug("overwriting with a new version for {}", generatedFile);
+            LOG.debug("overwriting with a new version for {}", generatedFile);
         }
-        
-        System.err.println("writing "+xPath+" for "+generatedFile);
-        
+
+        System.err.println("writing " + xPath + " for " + generatedFile);
+
         try (FileWriter fw = new FileWriter(generatedFile.toFile())) {
             fw.write(html);
         }
@@ -369,7 +371,7 @@ public class Utils {
     public static Object lock = new Object();
 
     public static String applyTemplate(Site site, TemplateBean templateText,
-            Map<String, Object> model) throws TemplateException, IOException {
+                                       Map<String, Object> model) throws TemplateException, IOException {
         model.put(XItem.DEBUG, getDebug(model));
         StringWriter sw = new StringWriter();
         synchronized (lock) {
@@ -428,10 +430,8 @@ public class Utils {
     /**
      * Performs a wildcard matching for the text and pattern provided.
      *
-     * @param text the text to be tested for matches.
-     *
+     * @param text    the text to be tested for matches.
      * @param pattern the pattern to be matched for. This can contain the wildcard character '*' (asterisk).
-     *
      * @return <tt>true</tt> if a match is found, <tt>false</tt> otherwise.
      */
     public static boolean wildCardMatch(String text, String pattern) {
@@ -450,10 +450,10 @@ public class Utils {
         }
         return true;
     }
-    
+
     public static List<XPath> findURL(Site site, XPath current, String url)
             throws IOException {
-        
+
         boolean root = url.startsWith("/");
         XPath rootPath;
         if (root) {
@@ -470,32 +470,31 @@ public class Utils {
 
     public static List<XPath> findURL(Site site, XPath current, String[] url, int i)
             throws IOException {
-        
-                
+
+
         List<XPath> matches = new ArrayList<>();
         List<XPath> results = new ArrayList<>();
-        
-        if(url[i].equals("..")) {
+
+        if (url[i].equals("..")) {
             current = current.getParent();
             matches.add(current);
-        }
-        else {
+        } else {
             List<XPath> children = Utils.getNonHiddenChildren(site, Paths.get(current.path()));
-            if(url[i].equals("*")) {
+            if (url[i].equals("*")) {
                 matches.addAll(children);
             } else {
-                for(XPath child:children) {
-                    if(child.url().equals(url[i])) {
+                for (XPath child : children) {
+                    if (child.url().equals(url[i])) {
                         matches.add(child);
                     }
                 }
             }
         }
-        if(url.length == (i + 1)) {
+        if (url.length == (i + 1)) {
             return matches;
         } else {
-            for(XPath match: matches) {
-                if(match.isDirectory()) {
+            for (XPath match : matches) {
+                if (match.isDirectory()) {
                     results.addAll(findURL(site, match, url, i + 1));
                 } else {
                     //no match
@@ -515,7 +514,7 @@ public class Utils {
         if (xPath == null) {
             return Collections.emptyList();
         }
-        if(!xPath.isDirectory()) {
+        if (!xPath.isDirectory()) {
             xPath = xPath.getParent();
         }
         List<XPath> xPaths = new ArrayList<>();
@@ -535,7 +534,7 @@ public class Utils {
     }
 
     public static String postApplyTemplate(String html,
-            Map<String, Object> model, String... string) {
+                                           Map<String, Object> model, String... string) {
         for (String key : string) {
             if (!model.containsKey(key) || model.get(key) == null) {
                 LOG.info("cannot find key {} in html{}", key, html);
@@ -574,41 +573,41 @@ public class Utils {
     }
 
     public static XItem createDocument(Site site, XPath xPath,
-            String htmlContent, String template) throws IOException {
+                                       String htmlContent, String template) throws IOException {
         TemplateBean templateText = site.getTemplate(template);
         // create the document
         XItem.Generator documentGenerator = new XItem.FillGenerator(site, templateText);
-       
+
         XItem doc = new XItem(xPath, documentGenerator);
         doc.setHTML(htmlContent);
         doc.setTemplate(template);
         doc.setLayout(xPath.getLayoutSuffix());
         return doc;
     }
-    
-    public static void writeListHTML(XPath xPath, XItem doc, Path generatedFile) 
+
+    public static void writeListHTML(XPath xPath, XItem doc, Path generatedFile)
             throws IOException, TemplateException {
-        
+
         //adjust path in current item
         String minusPath = xPath.getTargetURL();
         doc = Utils.adjustPath(doc, minusPath);
         String minusPathToRoot = xPath.originalRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
         doc = Utils.adjustPromotedDepth(doc, doc.getPromoteDepthOriginal());
-        
+
         //adjust path in page item
         String htmlSite = doc.getContent();
         XItem page = Utils.createDocument(xPath.site(), xPath, htmlSite, "page");
-        
+
         page.setDepth(doc.getDepth(), doc.getPromoteDepthOriginal());
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
         page = Utils.adjustPromotedDepth(page, doc.getPromoteDepthOriginal());
-        
+
         Files.createDirectories(generatedFile.getParent());
         Utils.write(page.getContent(), xPath, generatedFile);
     }
-    
+
     public static XItem adjust(XPath xPath, XItem doc) {
         String minusPath = xPath.getTargetURLPath();
         doc = Utils.adjustPath(doc, minusPath);
@@ -619,19 +618,19 @@ public class Utils {
 
     public static void writeHTML(XPath xPath, XItem doc, Path generatedFile)
             throws IOException, TemplateException {
-        
-         //adjust path in current item
+
+        //adjust path in current item
         String minusPath = xPath.getTargetURLPath();
         doc = Utils.adjustPath(doc, minusPath);
         String minusPathToRoot = xPath.originalRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
-        
-        
+
+
         String path = generatedFile.getFileName().toString();
-        path = path.isEmpty() ? ".":path;
+        path = path.isEmpty() ? "." : path;
         doc.setUrl(path);
-        
-        
+
+
         //adjust path in page item
         String htmlSite = doc.getContent();
         XItem page = Utils.createDocument(xPath.site(), xPath, htmlSite, "page");
@@ -639,12 +638,10 @@ public class Utils {
         page.setUrl(path);
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
-        
+
         Files.createDirectories(generatedFile.getParent());
-        
-        
-        
-        
+
+
         Utils.write(page.getContent(), xPath, generatedFile);
     }
 
@@ -653,27 +650,34 @@ public class Utils {
         return executeAndOutput(pb, null);
     }
 
-    public static String executeAndOutput(ProcessBuilder pb, String workingDirectory) throws IOException,
-            InterruptedException {
+    public static String executeAndOutput(ProcessBuilder pb, String workingDirectory) throws InterruptedException {
         pb.redirectErrorStream(true);
-        if(workingDirectory !=null) {
+        if (workingDirectory != null) {
             pb.directory(new File(workingDirectory));
         }
 
-        Process p = pb.start();
-        BufferedReader br = new BufferedReader(new InputStreamReader(
-                p.getErrorStream()));
-        String line = null;
-        while ((line = br.readLine()) != null) {
-            LOG.error(line);
+        try {
+            Process p = pb.start();
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+                    p.getErrorStream()));
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                LOG.error(line);
+            }
+            br = new BufferedReader(new InputStreamReader(
+                    p.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            p.waitFor();
+            return sb.toString().trim();
+        } catch (IOException e) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            LOG.warn(sw.toString());
+            return sw.toString(); // stack trace as a string
         }
-        br = new BufferedReader(new InputStreamReader(
-                p.getInputStream()));
-        StringBuilder sb = new StringBuilder();
-        while ((line = br.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-        p.waitFor();
-        return sb.toString().trim();
     }
 }
