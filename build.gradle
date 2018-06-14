@@ -1,0 +1,106 @@
+plugins {
+    id "nebula.deb" version "4.9.3"
+    id "java"
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    maven { url 'http://myrepourl/repo' }
+}
+
+dependencies {
+    compile group: 'com.google.guava', name: 'guava', version:'23.0'
+    compile group: 'args4j', name: 'args4j', version:'2.33'
+    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.25'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version:'1.2.3'
+    compile group: 'ch.qos.logback', name: 'logback-core', version:'1.2.3'
+    compile group: 'commons-io', name: 'commons-io', version:'2.6'
+    compile(group: 'org.reflections', name: 'reflections', version:'0.9.11') {
+exclude(module: 'guava')
+    }
+    compile group: 'com.ibm.icu', name: 'icu4j', version:'61.1'
+    compile group: 'org.freemarker', name: 'freemarker', version:'2.3.28'
+    compile(group: 'org.eclipse.mylyn.docs', name: 'org.eclipse.mylyn.wikitext.asciidoc', version:'3.0.24') {
+exclude(module: 'guava')
+    }
+    compile(group: 'org.eclipse.mylyn.docs', name: 'org.eclipse.mylyn.wikitext.confluence', version:'3.0.24') {
+exclude(module: 'guava')
+    }
+    compile(group: 'org.eclipse.mylyn.docs', name: 'org.eclipse.mylyn.wikitext', version:'3.0.24') {
+exclude(module: 'guava')
+    }
+    compile(group: 'org.eclipse.mylyn.docs', name: 'org.eclipse.mylyn.wikitext.html', version:'3.0.24') {
+exclude(module: 'guava')
+    }
+    compile(group: 'org.eclipse.mylyn.docs', name: 'org.eclipse.mylyn.wikitext.markdown', version:'3.0.24') {
+exclude(module: 'guava')
+    }
+    compile(group: 'org.eclipse.mylyn.docs', name: 'org.eclipse.mylyn.wikitext.mediawiki', version:'3.0.24') {
+exclude(module: 'guava')
+    }
+    compile(group: 'org.eclipse.mylyn.docs', name: 'org.eclipse.mylyn.wikitext.textile', version:'3.0.24') {
+exclude(module: 'guava')
+    }
+    compile(group: 'org.eclipse.mylyn.docs', name: 'org.eclipse.mylyn.wikitext.tracwiki', version:'3.0.24') {
+exclude(module: 'guava')
+    }
+    compile(group: 'org.eclipse.mylyn.docs', name: 'org.eclipse.mylyn.wikitext.twiki', version:'3.0.24') {
+exclude(module: 'guava')
+    }
+    compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.7'
+    compile group: 'com.atlassian.commonmark', name: 'commonmark', version:'0.11.0'
+    compile(group: 'org.mapdb', name: 'mapdb', version:'3.0.7') {
+exclude(module: 'guava')
+    }
+    compile group: 'org.jsoup', name: 'jsoup', version:'1.11.3'
+    compile group: 'commons-configuration', name: 'commons-configuration', version:'1.10'
+    compile group: 'org.yaml', name: 'snakeyaml', version:'1.21'
+    testCompile group: 'junit', name: 'junit', version:'4.10'
+    compileOnly group: 'org.projectlombok', name: 'lombok', version:'1.18.0'
+}
+
+task packageDeb(type: Deb) {
+    packageName = 'xdocc'
+    version = '2.0.0'
+    release = 1
+    packager = 'Thomas Bocek <tom@xdocc.net>'
+    summary = 'A static HTML site generator that compiles various document formats (markdown, wiki (mediawiki, tracwiki, twiki), confluence, textile, ODT, Tex, docx, ...) and images to HTML'
+
+    requires('default-jre-headless|default-jdk-headless', '1.8', GREATER | EQUAL)
+
+    preInstallFile file('src/deb/control/preinst')
+    postInstallFile file('src/deb/control/postinst')
+    preUninstallFile file('src/deb/control/prerm')
+
+    from(jar.outputs.files) {
+        into '/usr/lib/xdocc'
+    }
+
+    from('src/deb/shell/xdocc.sh') {
+        into '/usr/lib/xdocc'
+        fileMode = 0755
+    }
+
+    from('src/deb/shell/xdocc.service') {
+        into '/etc/systemd/system'
+    }
+
+    from(configurations.compile) {
+        into '/usr/lib/xdocc/libs'
+    }
+
+    from('src/deb/share') {
+        into '/usr/share/xdocc'
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { 'libs/'+it.getName() }.join(' '),
+                'Main-Class': 'net.xdocc.Service')
+    }
+}

@@ -5,5 +5,7 @@
 /.classpath
 /.project
 build.zip
+build.test
 .idea/
 xdocc.iml
+.gradle/
