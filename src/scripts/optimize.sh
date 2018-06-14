@@ -12,4 +12,4 @@ done
 rm "$TMPFILE"
 
 #optimize SVG, saves aronud 50%/60%. modpagespeed does not optimize SVG yet
-svgo design/*.svg
+sxvgo design/*.svg

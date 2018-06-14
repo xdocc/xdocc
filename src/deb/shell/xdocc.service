@@ -1,15 +1,12 @@
 #https://superuser.com/questions/944244/running-a-java-process-from-systemd
 
 [Unit]
-Description=Some job
-After=network.target
+Description=xdocc service
 
 [Service]
-WorkingDirectory=/home/user/tmp/testout
-SyslogIdentifier=SocketTest
-ExecStart=/bin/sh -c "exec java -jar /home/user/programming/tests/java/core/SocketTest/SocketTest.jar"
-User=dlt
-Type=simple
+WorkingDirectory=/var/lib/xdocc
+ExecStart=/usr/lib/xdocc/xdocc.sh
+User=root
 
 [Install]
 WantedBy=multi-user.target

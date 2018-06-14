@@ -1,4 +1,4 @@
 #!/bin/sh
-# postinst script for xdocc
+# prerm script for xdocc
 
-/etc/init.d/xdocc start
+systemctl daemon-reload

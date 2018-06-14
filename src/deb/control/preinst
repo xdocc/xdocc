@@ -1,9 +1,7 @@
 #!/bin/sh
 # preinst script for xdocc
 
-if [ -f /etc/init.d/xdocc ]; then
-  /etc/init.d/xdocc stop
-fi
+systemctl is-active --quiet xdocc.service && systemctl stop xdocc.service
 
 mkdir -p /var/log/xdocc
 mkdir -p /var/lib/xdocc

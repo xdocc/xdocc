@@ -13,13 +13,13 @@ under * the License. -->
     <groupId>net.xdocc</groupId>
     <artifactId>xdocc</artifactId>
     <name>xdocc</name>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
     <description>xdocc - a static HTML document compiler</description>
     <url>http://xdocc.net</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <wikitext.version>3.0.23</wikitext.version>
+        <wikitext.version>3.0.24</wikitext.version>
     </properties>
 
     <licenses>
@@ -28,14 +28,6 @@ under * the License. -->
             <url>http://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
-
-    <distributionManagement>
-        <repository>
-            <id>ssh-tomp2p</id>
-            <!-- The URL is CMS specific -->
-            <url>scp://tomp2p.net/home/draft/maven</url>
-        </repository>
-    </distributionManagement>
 
     <dependencies>
         <dependency>
@@ -58,22 +50,22 @@ under * the License. -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.20</version>
+            <version>1.7.25</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.1.7</version>
+            <version>1.2.3</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <version>1.1.7</version>
+            <version>1.2.3</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <version>2.6</version>
         </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
@@ -89,12 +81,12 @@ under * the License. -->
         <dependency>
             <groupId>com.ibm.icu</groupId>
             <artifactId>icu4j</artifactId>
-            <version>60.2</version>
+            <version>61.1</version>
         </dependency>
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
-            <version>2.3.27-incubating</version>
+            <version>2.3.28</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.mylyn.docs</groupId>
@@ -198,7 +190,7 @@ under * the License. -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.1</version>
+            <version>3.7</version>
         </dependency>
         <dependency>
             <groupId>com.atlassian.commonmark</groupId>
@@ -208,7 +200,7 @@ under * the License. -->
         <dependency>
             <groupId>org.mapdb</groupId>
             <artifactId>mapdb</artifactId>
-            <version>3.0.5</version>
+            <version>3.0.7</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
@@ -220,35 +212,37 @@ under * the License. -->
             <!-- jsoup HTML parser library @ http://jsoup.org/ -->
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.11.2</version>
+            <version>1.11.3</version>
         </dependency>
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
-            <version>1.8</version>
+            <version>1.10</version>
         </dependency>
 
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.20</version>
+            <version>1.21</version>
         </dependency>
 
-
-                
         <dependency> 
             <groupId>org.projectlombok</groupId> 
             <artifactId>lombok</artifactId> 
-            <version>1.16.20</version> 
+            <version>1.18.0</version>
             <scope>provided</scope> 
         </dependency>
     </dependencies>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -314,7 +308,7 @@ under * the License. -->
             <plugin>
                 <artifactId>jdeb</artifactId>
                 <groupId>org.vafer</groupId>
-                <version>1.0.1</version>
+                <version>1.6</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -342,20 +336,20 @@ under * the License. -->
                                     </mapper>
                                 </data>
                                 <data>
-                                    <src>src/deb/shell/xdocc</src>
+                                    <src>src/deb/shell/xdocc.sh</src>
                                     <type>file</type>
                                     <mapper>
                                         <type>perm</type>
-                                        <prefix>/etc/init.d</prefix>
+                                        <prefix>/usr/lib/xdocc</prefix>
                                         <filemode>755</filemode>
                                     </mapper>
                                 </data>
                                 <data>
-                                    <src>src/deb/etc/example-site.properties</src>
+                                    <src>src/deb/shell/xdocc.service</src>
                                     <type>file</type>
                                     <mapper>
                                         <type>perm</type>
-                                        <prefix>/etc/xdocc/</prefix>
+                                        <prefix>/etc/systemd/system</prefix>
                                     </mapper>
                                 </data>
                                 <data>

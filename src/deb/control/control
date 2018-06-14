@@ -3,7 +3,7 @@ Version: [[version]]
 Priority: optional
 Architecture: all
 Section: Java
-Depends: openjre-8-jre-headless (>= 1.8)
+Depends: default-jre-headless (>= 1.8)
 Maintainer: Thomas Bocek <tom@xdocc.net>
 Description: a static HTML site generator that compiles various document formats (markdown, wiki (mediawiki, tracwiki, twiki), confluence, textile, ODT, Tex, docx, ...) and images to HTML
 Distribution: development
