@@ -18,6 +18,8 @@ import net.xdocc.XItem;
 import net.xdocc.Site;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
@@ -32,6 +34,8 @@ public class HandlerMarkdown implements Handler {
     static{
         MAP.put("markdown.ftl", "${content}");
     }
+    //TODO: add all exentsions
+    private static final List<Extension> extensions = Arrays.asList(TablesExtension.create());
 
     @Override
     public boolean canHandle(Site site, XPath xPath) {
@@ -74,9 +78,9 @@ public class HandlerMarkdown implements Handler {
     }
 
     private void transform(Reader in, Writer out) throws IOException {
-        Parser parser = Parser.builder().build();
+        Parser parser = Parser.builder().extensions(extensions).build();
         Node document = parser.parseReader(in);
-        HtmlRenderer renderer = HtmlRenderer.builder().build();
+        HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
         renderer.render(document, out);
     }
 }

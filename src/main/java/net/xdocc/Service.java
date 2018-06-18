@@ -151,7 +151,7 @@ public class Service {
     }
 
     private void postProcessing(Site site) throws IOException, InterruptedException {
-        XPath xPath = new XPath(site, Paths.get(site.source()));
+        XPath xPath = XPath.get(site, Paths.get(site.source()));
         String command = xPath.getPostProcessing();
         if(!Strings.isNullOrEmpty(command)) {
             String cmdOutput = Utils.executeAndOutput(new ProcessBuilder(command, xPath.path()), site.generated());

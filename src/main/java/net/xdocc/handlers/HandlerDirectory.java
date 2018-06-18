@@ -44,7 +44,9 @@ public class HandlerDirectory implements Handler {
             doc = cached.xItem();
             Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
         } else {
-            Files.createDirectories(generatedFile.getParent());
+            if(!Files.exists(generatedFile.getParent())) {
+                Files.createDirectories(generatedFile.getParent());
+            }
             Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             LOG.debug("copy {} to {}", xPath.path(), generatedFile);
             doc = HandlerCopy.createDocumentBrowse(site, xPath, "");
@@ -57,7 +59,7 @@ public class HandlerDirectory implements Handler {
 	public static XItem compileList(Site site, final Path path, final List<XItem> results,
                              Map<String, Integer> filesCounter, Cache cache, final int depth, final int promoteDepth)
             throws IOException, TemplateException {
-        XPath xPath = new XPath(site, path);
+        XPath xPath = XPath.get(site, path);
 
         final XItem doc;
         final Path generatedFile = xPath.resolveTargetFromPath("index.html");

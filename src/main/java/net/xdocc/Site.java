@@ -62,8 +62,12 @@ public class Site implements Serializable {
     }
 
     public void init(Site site) {
-        this.handlers = site.handlers();
-        this.freemakerEngine = site.freemakerEngine();
+        if(this.handlers == null) {
+            this.handlers = site.handlers();
+        }
+        if(this.freemakerEngine == null) {
+            this.freemakerEngine = site.freemakerEngine();
+        }
     }
     
     public void reloadGlobalNavigation() throws IOException {
@@ -189,7 +193,7 @@ public class Site implements Serializable {
 
     private Link loadGlobalNavigation() throws IOException {
         Path p = Paths.get(this.source);
-        return loadNavigation(new XPath(this, p));
+        return loadNavigation(XPath.get(this, p));
     }
     
     public Link loadLocalNavigation(XPath source) /*throws IOException*/ {

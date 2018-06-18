@@ -59,7 +59,7 @@ public class TestImage {
     public void cropImages() throws IOException, InterruptedException {
         Path image = TestUtils.copyFile("imgs/large-example.jpg", src, "img/example.jpg");
         Site site = new Site(src, gen);
-        XPath xPath = new XPath(site, image);
+        XPath xPath = XPath.get(site, image);
         List<Pair<Path,String>> list = HandlerImage.cropImages(xPath, "9/16", 100);
         Assert.assertEquals(4, list.size());
         Assert.assertEquals("1261w", list.get(0).element1());
@@ -72,7 +72,7 @@ public class TestImage {
     public void resizeImages() throws IOException, InterruptedException {
         Path image = TestUtils.copyFile("imgs/large-example.jpg", src, "img/example.jpg");
         Site site = new Site(src, gen);
-        XPath xPath = new XPath(site, image);
+        XPath xPath = XPath.get(site, image);
         List<Pair<Path,String>> list = HandlerImage.resizeImages(xPath, 100);
         Assert.assertEquals(5, list.size());
         Assert.assertEquals("3992w", list.get(0).element1());

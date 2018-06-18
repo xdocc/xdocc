@@ -1,10 +1,10 @@
 <#include "head.ftl">
-<#if layout=="main">
+<#if depth==0> <!-- main-->
   <#include "body-header-main.ftl">
 </#if>
-
+${debug}
 <header class="row sticky">
-  <#if layout!="main">
+  <#if depth!=0> <!-- not main-->
     <label for="doc-drawer-checkbox" class="button drawer-toggle col-sm"></label>
   </#if>
   <a href="${root}" class="logo col-sm3 col-md"><img style="vertical-align: text-top;" id="logo-small2" src="${root}/design/xdocc-logo.svg" alt="xdocc"></a>
@@ -22,7 +22,7 @@
 
 <div class="container responsive-padding">
   <div class="row">
-    <#if layout=="main">
+    <#if depth==0> <!-- main-->
       <#include "landing.ftl">
       <div class="col-sm-10 col-md-10 col-lg-10 col-sm-offset-1 col-md-offset-1 col-lg-offset-1">
           <div id="document">${content}</div>

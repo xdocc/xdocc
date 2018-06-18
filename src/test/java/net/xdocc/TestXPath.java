@@ -31,7 +31,7 @@ public class TestXPath {
     @Test
     public void testRoot() throws IOException, InstantiationException, IllegalAccessException {
         Site site = new Site(src, gen);
-        XPath root = new XPath(site, src);
+        XPath root = XPath.get(site, src);
         Assert.assertEquals(false, root.isNavigation());
     }
 
@@ -41,12 +41,15 @@ public class TestXPath {
         Site site = new Site(src, gen);
         testFileAssert(site, src.toString()+"/1-url123|tag1=x|tag2=y|tag3=z|name=Myname|.txt");
         testFileAssert(site, src.toString()+"/1-url123|tag1=x|tag2=y|tag3=z|name=Myname.txt");
+        testFileAssert(site, src.toString()+"/1-url123[Myname]|tag1=x|tag2=y|tag3=z||.txt");
+        testFileAssert(site, src.toString()+"/1-url123[Myname]|tag1=x|tag2=y|tag3=z.txt");
+        testFileAssert(site, src.toString()+"/1-url123[Myname]tag1=x|tag2=y|tag3=z.txt");
     }
 
     private void testFileAssert(Site site, String name) throws IOException, InstantiationException,
             IllegalAccessException {
         Path p = Paths.get(name);
-        XPath x = new XPath(site, p);
+        XPath x = XPath.get(site, p);
         Assert.assertEquals("url123", x.url());
         Assert.assertEquals("Myname", x.name());
         Assert.assertEquals(false, x.isNavigation());
@@ -62,7 +65,7 @@ public class TestXPath {
             IllegalAccessException {
         Site site = new Site(src, gen);
         Path p = Paths.get(src.toString()+"/1-url123|tag1=x|tag2=y|tag3=z|name=Myname.bla");
-        XPath x = new XPath(site, p);
+        XPath x = XPath.get(site, p);
         Assert.assertEquals("1-url123|tag1=x|tag2=y|tag3=z|name=Myname.bla", x.url());
         Assert.assertEquals("", x.name());
         Assert.assertEquals(false, x.isNavigation());
@@ -76,25 +79,25 @@ public class TestXPath {
     public void testException() throws IOException {
         Site site = new Site(src, gen);
         Path p = Paths.get("/tmp/1.txt");
-        new XPath(site, p);
+        XPath.get(site, p);
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void testException2() throws IOException {
         Site site = new Site(src, gen);
         Path p = Paths.get(src.toString()+"1.txt");
-        new XPath(site, p);
+        XPath.get(site, p);
     }
 
     @Test
     public void testNumber() throws IOException {
         Site site = new Site(src, gen);
         Path p = Paths.get(src.toString()+"/1.txt");
-        XPath x = new XPath(site, p);
+        XPath x = XPath.get(site, p);
         Assert.assertFalse(x.isVisible());
 
         p = Paths.get(src.toString()+"/1-.txt");
-        x = new XPath(site, p);
+        x = XPath.get(site, p);
         Assert.assertTrue(x.isVisible());
     }
     
@@ -102,7 +105,7 @@ public class TestXPath {
     public void testURL() throws IOException {
         Site site = new Site(src, gen);
         Path p = Paths.get(src.toString()+"/label-1.jpg");
-        XPath x = new XPath(site, p);
+        XPath x = XPath.get(site, p);
         Assert.assertEquals("label-1",x.url());
     }
 
@@ -111,40 +114,40 @@ public class TestXPath {
         Site site = new Site(src, gen);
 
         Path p = Paths.get(src.toString()+"/2014.txt");
-        XPath x = new XPath(site, p);
+        XPath x = XPath.get(site, p);
         Assert.assertFalse(x.isVisible());
 
         p = Paths.get(src.toString()+"/2014-.txt");
-        x = new XPath(site, p);
+        x = XPath.get(site, p);
         Assert.assertTrue(x.isVisible());
 
         p = Paths.get(src.toString()+"/2014-01-01.txt");
-        x = new XPath(site, p);
+        x = XPath.get(site, p);
         Assert.assertFalse(x.isVisible());
 
         p = Paths.get(src.toString()+"/2014-01-01-.txt");
-        x = new XPath(site, p);
+        x = XPath.get(site, p);
         Assert.assertTrue(x.isVisible());
 
         p = Paths.get(src.toString()+"/2014-01-01_15:15:15.txt");
-        x = new XPath(site, p);
+        x = XPath.get(site, p);
         Assert.assertFalse(x.isVisible());
 
         p = Paths.get(src.toString()+"/2014-01-01_15:15:15-.txt");
-        x = new XPath(site, p);
+        x = XPath.get(site, p);
         Assert.assertTrue(x.isVisible());
 
         p = Paths.get(src.toString()+"/2014-myurl.txt");
-        x = new XPath(site, p);
+        x = XPath.get(site, p);
         Assert.assertTrue(x.isVisible());
         Assert.assertEquals("myurl", x.url());
 
         p = Paths.get(src.toString()+"/2014-|tag=value|.txt");
-        x = new XPath(site, p);
+        x = XPath.get(site, p);
         Assert.assertTrue(x.isVisible());
 
         p = Paths.get(src.toString()+"/2014-|tag=value.txt");
-        x = new XPath(site, p);
+        x = XPath.get(site, p);
         Assert.assertTrue(x.isVisible());
     }
 }

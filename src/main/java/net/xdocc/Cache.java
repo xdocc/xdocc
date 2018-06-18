@@ -37,6 +37,47 @@ public class Cache {
         return getCached(site, xPath, null);
     }
 
+    public boolean isCached(Site site, XPath xPath) {
+        return isCached(site, xPath, null);
+    }
+
+    public boolean isCached(Site site, XPath xPath, Path generated) {
+        String key = xPath.getTargetURL();
+        CacheEntry c = cache.get(key);
+        if( c == null) {
+            return false;
+        }
+
+        for(Map.Entry<String, Long> entry: c.sourceDirs.entrySet()) {
+            try {
+                Path p = Paths.get(entry.getKey());
+                if(!Files.exists(p) ||
+                        Files.getLastModifiedTime(p).toMillis() != entry.getValue()) {
+                    LOG.debug("time of file {} is {}, stored is {}", p, Files.getLastModifiedTime(p).toMillis(), entry.getValue());
+                    return false;
+                }
+            } catch (IOException e) {
+                LOG.error("caching exception",e);
+                return false;
+            }
+        }
+
+        boolean found = false;
+        for(String gen:c.generatedFiles()) {
+            Path p = Paths.get(gen);
+            if(p!=null && !Files.exists(p)) {
+                return false;
+            }
+            if(p.equals(generated)) {
+                found = true;
+            }
+        }
+        if(!found && generated != null) {
+            return false;
+        }
+        return true;
+    }
+
     public CacheEntry getCached(Site site, XPath xPath, Path generated) {
         String key = xPath.getTargetURL();
         CacheEntry c = cache.get(key);

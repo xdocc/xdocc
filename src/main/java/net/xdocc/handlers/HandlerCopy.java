@@ -48,15 +48,22 @@ public class HandlerCopy implements Handler {
         }
 
         try {
-            Cache.CacheEntry cached = cache.getCached(site, xPath);
-            if (cached != null) {
-                XItem doc = cached.xItem();
-                Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
-                return doc;
-                
-            } else {
+            if(cache.isCached(site, xPath)) {
+                Cache.CacheEntry cached = cache.getCached(site, xPath);
+                if (cached != null) {
+                    System.out.println("CACHED: " + generatedFile);
+                    XItem doc = cached.xItem();
+                    Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
+                    return doc;
+                } else {
+                    return null;
+                }
+            }
+            else {
                 //copy ignores the page/isItemWritten flag
-                Files.createDirectories(generatedFile.getParent());
+                if(!Files.exists(generatedFile.getParent())) {
+                    Files.createDirectories(generatedFile.getParent());
+                }
                 if(!xPath.isDirectory()) {
                     Files.copy(Paths.get(xPath.path()), generatedFile,
                             StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING,
@@ -69,9 +76,8 @@ public class HandlerCopy implements Handler {
                     XItem item = createDocumentBrowse(site, xPath, "");
                     cache.setCached(site, xPath, (Path)null, item, generatedFile);
                     return item;
-
                 } else {
-                    cache.setCached(site, xPath, (Path)null,null, generatedFile);
+                    cache.setCached(site, xPath, (Path)null, null, generatedFile);
                 }
             }
         } catch (IOException e) {

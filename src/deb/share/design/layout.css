@@ -90,3 +90,19 @@ header.row a span {
     transform: translate(-50%, -50%);
     z-index: 0;
 }
+
+/* mini.css has a 400px height for tables, disable it */
+table.wikitable {
+    max-height: 100%;
+}
+
+#document div {
+    margin-top:2em;
+    padding:2em;
+}
+#document h1 {
+    border-bottom: 2px solid;
+}
+#document h2 {
+    border-bottom: 1px solid;
+}

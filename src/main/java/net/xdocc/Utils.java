@@ -9,13 +9,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +18,6 @@ import freemarker.template.TemplateException;
 import javassist.compiler.SyntaxError;
 
 import java.nio.file.Paths;
-import java.util.Collection;
 
 public class Utils {
 
@@ -217,7 +210,7 @@ public class Utils {
         List<String> paths = new ArrayList<>();
         while (!source.equals(Paths.get(xPath.path()))) {
             paths.add(0, xPath.url());
-            xPath = new XPath(xPath.site(), Paths.get(xPath.path()).getParent());
+            xPath = XPath.get(xPath.site(), Paths.get(xPath.path()).getParent());
         }
         return paths.toArray(new String[0]);
     }
@@ -244,7 +237,7 @@ public class Utils {
                                                              BasicFileAttributes attrs) throws IOException {
                         // do not include ourself
                         if (!siteToCompile.equals(dir)) {
-                            XPath xPath = new XPath(site, dir);
+                            XPath xPath = XPath.get(site, dir);
                             if (!xPath.isHidden()) {
                                 result.add(xPath);
                             }
@@ -257,7 +250,7 @@ public class Utils {
                                                      BasicFileAttributes attrs) throws IOException {
                         // do not include ourself
                         if (!siteToCompile.equals(file)) {
-                            XPath xPath = new XPath(site, file);
+                            XPath xPath = XPath.get(site, file);
                             if (!xPath.isHidden()) {
                                 result.add(xPath);
                             }
@@ -346,13 +339,19 @@ public class Utils {
      * @return A HTML formated string
      */
     public static String getDebug(final Map<String, Object> model) {
-        final int previewSize = 50;
+        final int previewSize = 100;
         final StringBuilder sb = new StringBuilder(
-                "<table border=1><th colspan=2>this document contains</th>\n");
+                "<table id=\"debug\" border=\"1\">" +
+                        "<th colspan=\"2\">Templates can access the following properties:</th>\n");
+        SortedMap<String, Object> map = new TreeMap<>();
         for (Map.Entry<String, Object> entry : model.entrySet()) {
-            if ("debug".equals(entry.getKey())) {
-                continue;
-            }
+            //if ("debug".equals(entry.getKey())) {
+            // /   continue;
+            //}
+            map.put(entry.getKey(), entry.getValue());
+        }
+        for(Map.Entry<String, Object> entry:map.entrySet())
+        {
             sb.append("<tr><td>");
             sb.append(escapeHtml(entry.getKey()));
             sb.append("</td><td title=\"");
@@ -423,10 +422,6 @@ public class Utils {
         return null;
     }
 
-    public static void createDirectory(Site site) throws IOException {
-        Files.createDirectories(Paths.get(site.generated()));
-    }
-
     /**
      * Performs a wildcard matching for the text and pattern provided.
      *
@@ -457,7 +452,7 @@ public class Utils {
         boolean root = url.startsWith("/");
         XPath rootPath;
         if (root) {
-            rootPath = new XPath(site, Paths.get(site.source()));
+            rootPath = XPath.get(site, Paths.get(site.source()));
             url = url.substring(1);
         } else if (current.isDirectory()) {
             rootPath = current;
@@ -520,7 +515,7 @@ public class Utils {
         List<XPath> xPaths = new ArrayList<>();
         while (!root.equals(Paths.get(xPath.path()))) {
             xPaths.add(0, xPath);
-            xPath = new XPath(xPath.site(), Paths.get(xPath.path()).getParent());
+            xPath = XPath.get(xPath.site(), Paths.get(xPath.path()).getParent());
         }
 
         List<Link> retVal = new ArrayList<>();
@@ -603,8 +598,9 @@ public class Utils {
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
         page = Utils.adjustPromotedDepth(page, doc.getPromoteDepthOriginal());
-
-        Files.createDirectories(generatedFile.getParent());
+        if(!Files.exists(generatedFile.getParent())) {
+            Files.createDirectories(generatedFile.getParent());
+        }
         Utils.write(page.getContent(), xPath, generatedFile);
     }
 
@@ -639,8 +635,9 @@ public class Utils {
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
 
-        Files.createDirectories(generatedFile.getParent());
-
+        if(!Files.exists(generatedFile.getParent())) {
+            Files.createDirectories(generatedFile.getParent());
+        }
 
         Utils.write(page.getContent(), xPath, generatedFile);
     }

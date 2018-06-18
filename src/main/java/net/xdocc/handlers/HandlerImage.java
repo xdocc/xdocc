@@ -63,7 +63,9 @@ public class HandlerImage implements Handler {
             throws TemplateException, IOException, InterruptedException {
 
         Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + xPath.extensions());
-        Files.createDirectories(generatedFile.getParent());
+        if(!Files.exists(generatedFile.getParent())) {
+            Files.createDirectories(generatedFile.getParent());
+        }
 
         Path generatedFile2 = xPath
                 .resolveTargetFromBasePath(xPath.getTargetURL() + ".html");
@@ -185,7 +187,9 @@ public class HandlerImage implements Handler {
         do {
             Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_crop_"+ Math.round(w) + xPath.extensions());
-            Files.createDirectories(dstImage.getParent());
+            if(!Files.exists(dstImage.getParent())) {
+                Files.createDirectories(dstImage.getParent());
+            }
             HandlerImage.executeCropResize(xPath.path().toString(), Math.round(w), Math.round(h), dstImage.toString());
             result.add(new Pair<>(dstImage,Math.round(w)+"w"));
             w /= 2;
@@ -202,7 +206,9 @@ public class HandlerImage implements Handler {
         do {
             Path dstImage = xPath.resolveTargetFromBasePath(xPath.getTargetURL()
                     + "_"+ Math.round(w) + xPath.extensions());
-            Files.createDirectories(dstImage.getParent());
+            if(!Files.exists(dstImage.getParent())) {
+                Files.createDirectories(dstImage.getParent());
+            }
             HandlerImage.executeResize(xPath.path().toString(), Math.round(w), Math.round(h), dstImage.toString());
             result.add(new Pair<>(dstImage,Math.round(w)+"w"));
             w /= 2;

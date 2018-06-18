@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Getter;
@@ -87,6 +88,8 @@ final public class XPath implements Comparable<XPath>, Serializable {
     
     private boolean visible;
 
+    private final static Map<String, XPath> cache = new ConcurrentHashMap<>();
+
     /**
      * Creates a xPath object from a path. The path will be parsed and information will be extracted.
      *
@@ -94,11 +97,12 @@ final public class XPath implements Comparable<XPath>, Serializable {
      * @param path The path to parse
      * @throws IllegalArgumentException if the path is not inside the context of site
      */
-    public XPath(Site site, Path path) {
+    private XPath(Site site, Path path) {
         if (!Utils.isChild(path, Paths.get(site.source()))) {
             throw new IllegalArgumentException(path + " is not a child of "
                     + site.source());
         }
+
         this.path = path.toString();
         this.site = site;
         
@@ -123,6 +127,17 @@ final public class XPath implements Comparable<XPath>, Serializable {
         }
         LOG.debug("The path [" + path + "] was parsed to: nr=" + nr + ",name="
                 + name + ",url=" + url);
+    }
+
+    public static XPath get(Site site, Path path) {
+        String key = site.source()+site.generated()+path.toString();
+        XPath xPath = cache.get(key);
+        if(xPath == null) {
+            LOG.debug("path: {} not found", path);
+            xPath = new XPath(site, path);
+            cache.put(key, xPath);
+        }
+        return xPath;
     }
 
     private void readFrontmatter() {
@@ -255,13 +270,20 @@ final public class XPath implements Comparable<XPath>, Serializable {
 
         try {
             int firstPipeIndex = name.indexOf('|');
+            int firstBracket = name.indexOf('[');
+            int lastBracket = name.lastIndexOf(']');
+
             String mandatory = "";
             int nextPipeIndex = 0;
             int offset = 0;
 
             // first mandatory patterns
-            if (firstPipeIndex == -1) {
+            if (firstPipeIndex < 0 && firstBracket < 0) {
                 mandatory = name;
+            } else if(firstPipeIndex > 0 && firstBracket > 0) {
+                mandatory = name.substring(0, Math.min(firstPipeIndex, firstBracket));
+            } else if(firstPipeIndex < 0 && firstBracket > 0) {
+                mandatory = name.substring(0, firstBracket);
             } else {
                 mandatory = name.substring(0, firstPipeIndex);
             }
@@ -325,11 +347,23 @@ final public class XPath implements Comparable<XPath>, Serializable {
                 this.url = mandatory;
                 extractName();
             }
+            // name in []
+            if(firstBracket > 0 && firstBracket < lastBracket) {
+                this.name = name.substring(firstBracket + 1, lastBracket);
+            }
+
             //  tags
-            if (firstPipeIndex != -1) {
+            if (firstPipeIndex > 0 && lastBracket >0) {
+                offset = Math.min(lastBracket, firstPipeIndex);
+                nextPipeIndex = name.indexOf('|', offset + 1);
+            } else if(firstPipeIndex < 0 && lastBracket > 0) {
+                offset = lastBracket;
+                nextPipeIndex = name.indexOf('|', offset + 1);
+            } else if(firstPipeIndex > 0 && lastBracket < 0) {
                 offset = firstPipeIndex;
                 nextPipeIndex = name.indexOf('|', offset + 1);
-            } else {
+            }
+            else {
                 offset = name.length();
             }
 
@@ -464,7 +498,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
     
     public XPath resolveSource(String url) {
         Path p = Paths.get(path);
-        return new XPath(site, p.resolve(url));
+        return XPath.get(site, p.resolve(url));
     }
 
     /**
@@ -480,7 +514,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
         if (!Utils.isChild(p.getParent(), Paths.get(site.source()))) {
             return null;
         }
-        return new XPath(site, p.getParent());
+        return XPath.get(site, p.getParent());
     }
     
     /**
@@ -530,17 +564,13 @@ final public class XPath implements Comparable<XPath>, Serializable {
     static {KNOWN_EXTENSIONS.add("visible");KNOWN_EXTENSIONS.add("vis");}
 
     public boolean isAscending() {
-        return properties != null
-                && (properties.containsKey("ascending") || properties
-                .containsKey("asc"));
+        return properties != null && properties.containsKey("asc");
     }
     public static final String IS_ASCENDING = "isascending";
 
     
     public boolean isDescending() {
-        return properties != null
-                && (properties.containsKey("descending") || properties
-                .containsKey("desc"));
+        return properties != null && properties.containsKey("desc");
     }
     public static final String IS_DESCENDING = "isdescending";
     
@@ -549,34 +579,11 @@ final public class XPath implements Comparable<XPath>, Serializable {
         return !isDescending() && !isAscending();
     }
     public static final String IS_AUTOSORT = "isautosort";
-    
 
     public String getLayoutSuffix() {
-        XPath parent = this;
-
-        // maybe we are a file and the directory has a layout
-        int level = 0;
-        while (parent != null) {
-            String[] layoutSuffix = parent.getPropertyRegexp("layout_([0-9]*)",
-                    "l([0-9]*)");
-
-            if (layoutSuffix != null) {
-                final int depth;
-                if (StringUtils.isEmpty(layoutSuffix[1])) {
-                    depth = 0;
-                } else {
-                    depth = Integer.parseInt(layoutSuffix[1]);
-                }
-                if (depth >= level) {
-                    if (!StringUtils.isEmpty(layoutSuffix[0])) {
-                        return layoutSuffix[0];
-                    } else {
-                        return "";
-                    }
-                }
-            }
-            parent = parent.getParent();
-            level++;
+        //all non hidden files are visible (also those without 1-blabla) and compiled
+        if (hasRecursiveProperty("layout","l") || hasRecursiveExtension("layout","l")) {
+            return getRecursiveProperty("layout","l");
         }
         return "";
     }
@@ -629,31 +636,6 @@ final public class XPath implements Comparable<XPath>, Serializable {
         return getRecursiveProperty("command-rst", "cmd-rst");
     }
 
-    private String[] getPropertyRegexp(String... kepRegexps) {
-        String[] resultArray = null;
-        String key = null;
-        if (properties != null) {
-            for (String kepRegexp : kepRegexps) {
-                Pattern pattern = Pattern.compile(kepRegexp);
-                for (String keyTest : properties.keySet()) {
-                    Matcher m = pattern.matcher(keyTest);
-                    if (m.matches()) {
-                        key = keyTest;
-                        resultArray = new String[1 + m.groupCount()];
-                        for (int i = 0; i < m.groupCount(); i++) {
-                            resultArray[1 + i] = m.group(1 + i);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (key != null && resultArray != null) {
-            resultArray[0] = properties.get(key);
-        }
-        return resultArray;
-    }
     /**
      * 
      * root/1-dir/test.txt
@@ -722,11 +704,11 @@ final public class XPath implements Comparable<XPath>, Serializable {
     
 
     public boolean isHighlight() {
-        return isPropertyTrue("highlight") || isPropertyTrue("high") || 
-                containsExtension("highlight") || containsExtension("high");
+        return isPropertyTrue("highlight") || isPropertyTrue("hl") ||
+                containsExtension("highlight") || containsExtension("hl");
     }
     public static final String IS_HIGHLIGHT = "ishighlight";    
-    static {KNOWN_EXTENSIONS.add("highlight");KNOWN_EXTENSIONS.add("high");}
+    static {KNOWN_EXTENSIONS.add("highlight");KNOWN_EXTENSIONS.add("hl");}
     
     public boolean isCopy() { //nothing is visible (not hidden), everything is copied (not compiled)
         return hasRecursiveProperty("copy") || hasRecursiveExtension("copy");
@@ -736,13 +718,13 @@ final public class XPath implements Comparable<XPath>, Serializable {
     
     
     public boolean isKeep() { //nothing is visible (not hidden), everything is copied (not compiled)
-        return hasRecursiveProperty("keep", "keep_orig") || hasRecursiveExtension("keep", "keep_orig");
+        return hasRecursiveProperty("keep") || hasRecursiveExtension("keep");
     }
     public static final String IS_KEEP = "iskeep";
-    static {KNOWN_EXTENSIONS.add("keep");KNOWN_EXTENSIONS.add("keep_orig");}
+    static {KNOWN_EXTENSIONS.add("keep");}
 
     //used to identify directories where pandoc files are located
-    static {KNOWN_EXTENSIONS.add("command");KNOWN_EXTENSIONS.add("cmd");}
+    static {KNOWN_EXTENSIONS.add("cmd");}
 
     public String resolveTargetURL(String string) {
         if (getTargetURL().isEmpty()) {
@@ -804,7 +786,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
     
 
     public int getPageSize() {
-        String pagesString = getProperty("p", "pages");
+        String pagesString = getProperty("pg", "paging");
         if (pagesString == null) {
             return 0;
         }
@@ -814,7 +796,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
             return 0;
         }
     }
-    public static final String PAGES = "pages";
+    public static final String PAGING = "paging";
 
     /**
      * Search a property the hierarchy up, starting at "this"

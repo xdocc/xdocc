@@ -110,7 +110,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.EXTENSIONS, xPath.extensions());
         generator.model().put(XPath.EXTENSION_LIST, xPath.extensionList());
         generator.model().put(XPath.PROPERTIES, xPath.properties());
-        generator.model().put(XPath.PAGES, xPath.getPageSize());
+        generator.model().put(XPath.PAGING, xPath.getPageSize());
         generator.model().put(XPath.LAYOUT, xPath.getLayoutSuffix());
         //
         generator.model().put(XPath.IS_ASCENDING, xPath.isAscending());
