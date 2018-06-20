@@ -37,13 +37,11 @@ public class Cache {
         return getCached(site, xPath, null);
     }
 
-    public boolean isCached(Site site, XPath xPath) {
-        return isCached(site, xPath, null);
+    public boolean isCached(XPath xPath) {
+        return isCached(xPath, null);
     }
 
-    public boolean isCached(Site site, XPath xPath, Path generated) {
-        String key = xPath.getTargetURL();
-        CacheEntry c = cache.get(key);
+    private boolean isCached(CacheEntry c, Path generated) {
         if( c == null) {
             return false;
         }
@@ -51,11 +49,20 @@ public class Cache {
         for(Map.Entry<String, Long> entry: c.sourceDirs.entrySet()) {
             try {
                 Path p = Paths.get(entry.getKey());
-                if(!Files.exists(p) ||
-                        Files.getLastModifiedTime(p).toMillis() != entry.getValue()) {
-                    LOG.debug("time of file {} is {}, stored is {}", p, Files.getLastModifiedTime(p).toMillis(), entry.getValue());
+                if(!Files.exists(p)) {
+                    LOG.debug("file {} does not exist", p);
                     return false;
                 }
+                //don't check directories for timestamp as they change if the content of the file changes
+                if(Files.isRegularFile(p)) {
+                    if (Files.getLastModifiedTime(p).toMillis() != entry.getValue()) {
+                        LOG.debug("time of file {} is {}, stored is {}", p, Files.getLastModifiedTime(p).toMillis(), entry.getValue());
+                        return false;
+                    }
+                } else {
+
+                }
+
             } catch (IOException e) {
                 LOG.error("caching exception",e);
                 return false;
@@ -78,41 +85,20 @@ public class Cache {
         return true;
     }
 
-    public CacheEntry getCached(Site site, XPath xPath, Path generated) {
-        String key = xPath.getTargetURL();
+    public boolean isCached(XPath xPath, Path generated) {
+        String key = xPath.path();
         CacheEntry c = cache.get(key);
-        if( c == null) {
+        return isCached(c, generated);
+    }
+
+    public CacheEntry getCached(Site site, XPath xPath, Path generated) {
+        String key = xPath.path();
+        CacheEntry c = cache.get(key);
+
+        if(!isCached(c,generated)) {
             return null;
-        }
-        //check if sources have same modification time
-        for(Map.Entry<String, Long> entry: c.sourceDirs.entrySet()) {
-            try {
-                Path p = Paths.get(entry.getKey());
-                if(!Files.exists(p) ||
-                        Files.getLastModifiedTime(p).toMillis() != entry.getValue()) {
-                    return null;
-                }
-            } catch (IOException e) {
-                LOG.error("caching exception",e);
-                return null;
-            }
         }
 
-        
-        //check if generated files are there, don't care about the time
-        boolean found = false;
-        for(String gen:c.generatedFiles()) {
-            Path p = Paths.get(gen);
-            if(p!=null && !Files.exists(p)) {
-                return null;
-            }
-            if(p.equals(generated)) {
-                found = true;
-            }
-        }
-        if(!found && generated != null) {
-            return null;
-        }
         if(c.xItem() !=null) {
             c.xItem().init(site);
         }
@@ -141,11 +127,7 @@ public class Cache {
     }
 
     public Cache setCached(Site site, XPath xPath, List<Path> sourceFiles, XItem item,  List<String> genFiles) {
-    	
-    	if(xPath.path().equals("/home/draft/git/xdocc/src/site")) {
-        	System.err.println("test");
-        }
-        String key = xPath.getTargetURL();
+        String key = xPath.path();
         CacheEntry c = cache.get(key);
 
         if(c == null) {
@@ -183,12 +165,18 @@ public class Cache {
         	try {
         		Path sourceFile = Paths.get(link.getTarget().path());
         		if(Files.exists(sourceFile)) {
+                    //LOG.debug("in source set: key={}", sourceFile);
         			c.sourceDirs().put(sourceFile.toString(), Files.getLastModifiedTime(sourceFile).toMillis());
         		}
             } catch (IOException e) {
                 LOG.error("cannot cache", e);
             }
         }
+        /*if(LOG.isDebugEnabled()) {
+            for(Map.Entry<String, Long> m:c.sourceDirs.entrySet()) {
+                LOG.debug("in source set: key={}, value={}", m.getKey(), m.getValue());
+            }
+        }*/
         
         cache.put(key, c); //mapdb specific, values are immutable
         return this;

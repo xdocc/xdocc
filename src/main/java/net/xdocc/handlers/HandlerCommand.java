@@ -103,9 +103,7 @@ public class HandlerCommand implements Handler {
                             Path gen = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + "/" + rel.toString());
                             if (!rel.toString().contains("docgen")) {
                                 if (Files.isDirectory(filePath)) {
-                                    if(!Files.exists(gen)) {
-                                        Files.createDirectories(gen);
-                                    }
+                                    Utils.createDirectories(gen);
                                 } else {
                                     Files.copy(filePath, gen);
                                 }
@@ -140,9 +138,7 @@ public class HandlerCommand implements Handler {
                 command = command.replace("%TMPDIR", tmpDir.toString());
                 String tmpFile = tmpDir.toString()+"/"+xPath.getTargetURLPath()+"/"+xPath.url()+".html";
                 Path tmpP = Paths.get(tmpFile);
-                if(!Files.exists(tmpP.getParent())) {
-                    Files.createDirectories(tmpP.getParent());
-                }
+                Utils.createDirectories(tmpP);
 
                 command = command.replace("%TMP", tmpP.toString());
                 command = command.replace("%OUTPUT", tmpDir.toString() + "/" + xPath.getTargetURLFilename());

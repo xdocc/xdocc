@@ -303,6 +303,8 @@ public class Utils {
 
     public static void write(String html, XPath xPath, Path generatedFile)
             throws TemplateException, IOException {
+        //create generated file and paths if not done yet
+        createDirectories(generatedFile);
         Path alreadyGeneratedSource = created.get(generatedFile);
         if (alreadyGeneratedSource == null) {
             created.put(generatedFile, Paths.get(xPath.path()));
@@ -598,10 +600,20 @@ public class Utils {
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
         page = Utils.adjustPromotedDepth(page, doc.getPromoteDepthOriginal());
-        if(!Files.exists(generatedFile.getParent())) {
-            Files.createDirectories(generatedFile.getParent());
-        }
+
         Utils.write(page.getContent(), xPath, generatedFile);
+    }
+
+    public static void createDirectories(Path path) throws IOException {
+        if(Files.isDirectory(path)) {
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);
+            }
+        } else {
+            if (!Files.exists(path.getParent())) {
+                Files.createDirectories(path.getParent());
+            }
+        }
     }
 
     public static XItem adjust(XPath xPath, XItem doc) {
@@ -634,10 +646,6 @@ public class Utils {
         page.setUrl(path);
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
-
-        if(!Files.exists(generatedFile.getParent())) {
-            Files.createDirectories(generatedFile.getParent());
-        }
 
         Utils.write(page.getContent(), xPath, generatedFile);
     }

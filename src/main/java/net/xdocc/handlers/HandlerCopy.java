@@ -48,10 +48,9 @@ public class HandlerCopy implements Handler {
         }
 
         try {
-            if(cache.isCached(site, xPath)) {
+            if(cache.isCached(xPath)) {
                 Cache.CacheEntry cached = cache.getCached(site, xPath);
                 if (cached != null) {
-                    System.out.println("CACHED: " + generatedFile);
                     XItem doc = cached.xItem();
                     Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                     return doc;
@@ -61,13 +60,14 @@ public class HandlerCopy implements Handler {
             }
             else {
                 //copy ignores the page/isItemWritten flag
-                if(!Files.exists(generatedFile.getParent())) {
-                    Files.createDirectories(generatedFile.getParent());
-                }
+                Utils.createDirectories(generatedFile);
                 if(!xPath.isDirectory()) {
-                    Files.copy(Paths.get(xPath.path()), generatedFile,
-                            StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING,
-                            StandardCopyOption.COPY_ATTRIBUTES, LinkOption.NOFOLLOW_LINKS);
+                    Files.copy(
+                            Paths.get(xPath.path()),
+                            generatedFile,
+                            StandardCopyOption.COPY_ATTRIBUTES,
+                            StandardCopyOption.REPLACE_EXISTING,
+                            LinkOption.NOFOLLOW_LINKS);
                 }
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                 LOG.debug("copy {} to {}", xPath.path(), generatedFile);
@@ -77,6 +77,7 @@ public class HandlerCopy implements Handler {
                     cache.setCached(site, xPath, (Path)null, item, generatedFile);
                     return item;
                 } else {
+                    LOG.debug("set cache for {} with ts {}",xPath.path(), Files.getLastModifiedTime(generatedFile).toMillis());
                     cache.setCached(site, xPath, (Path)null, null, generatedFile);
                 }
             }

@@ -44,9 +44,7 @@ public class HandlerDirectory implements Handler {
             doc = cached.xItem();
             Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
         } else {
-            if(!Files.exists(generatedFile.getParent())) {
-                Files.createDirectories(generatedFile.getParent());
-            }
+            Utils.createDirectories(generatedFile);
             Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             LOG.debug("copy {} to {}", xPath.path(), generatedFile);
             doc = HandlerCopy.createDocumentBrowse(site, xPath, "");

@@ -2,7 +2,6 @@
 <#if depth==0> <!-- main-->
   <#include "body-header-main.ftl">
 </#if>
-${debug}
 <header class="row sticky">
   <#if depth!=0> <!-- not main-->
     <label for="doc-drawer-checkbox" class="button drawer-toggle col-sm"></label>
