@@ -1,5 +1,9 @@
 :root {
     --back-color: #fff;
+    --fore-color: #444;
+    --card-fore-color: #444;
+    --secondary-fore-color: #555;
+    --universal-border-radius: 0.3rem;
 }
 
 .box-centered { text-align: center; }
@@ -92,17 +96,73 @@ header.row a span {
 }
 
 /* mini.css has a 400px height for tables, disable it */
-table.wikitable {
+table:not(.horizontal) {
     max-height: 100%;
 }
 
 #document div {
-    margin-top:2em;
-    padding:2em;
+    margin-top:0.5em;
+    padding:1em;
 }
 #document h1 {
     border-bottom: 2px solid;
+    text-shadow: 0 1px 2px rgba(100,100,100,0.5)
 }
 #document h2 {
     border-bottom: 1px solid;
+    text-shadow: 0 1px 2px rgba(100,100,100,0.5)
+}
+
+/* not using minicss default tables, as they give every td the same weight */
+table { 
+  border-collapse: collapse; 
+}
+/* Zebra striping */
+tr:nth-of-type(odd) { 
+  background: #eee; 
+}
+th { 
+  background: #bbb; 
+  font-weight: bold;
+}
+td, th { 
+  border: 1px solid #ccc; 
+  text-align: left;
+  padding: 1em;
+}
+
+html {
+  font-size:1.25em;
+  word-wrap: break-word;
+  color: #888;
+  font-weight: 350;
+}
+
+@media screen and (max-width: 600px) {
+  table {
+    border: 0;
+  }
+  
+  table tr {
+    border-bottom: 1px solid #ddd;
+    display: block;
+    margin-bottom: .625em;
+  }
+  
+  table td {
+    border-bottom: 1px solid #ddd;
+    display: block;
+    text-align: right;
+  }
+  
+  table td::before {
+    /*
+    * aria-label has no advantage, it won't be read inside a table
+    content: attr(aria-label);
+    */
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
 }

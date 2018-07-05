@@ -53,6 +53,10 @@ exclude(module: 'guava')
     compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.7'
     compile group: 'com.atlassian.commonmark', name: 'commonmark', version:'0.11.0'
     compile group: 'com.atlassian.commonmark', name: 'commonmark-ext-gfm-tables', version: '0.11.0'
+    compile group: 'com.atlassian.commonmark', name: 'commonmark-ext-autolink', version: '0.11.0'
+    compile group: 'com.atlassian.commonmark', name: 'commonmark-ext-gfm-strikethrough', version: '0.11.0'
+    compile group: 'com.atlassian.commonmark', name: 'commonmark-ext-heading-anchor', version: '0.11.0'
+    compile group: 'com.atlassian.commonmark', name: 'commonmark-ext-ins', version: '0.11.0'
 
     compile(group: 'org.mapdb', name: 'mapdb', version:'3.0.7') {
 exclude(module: 'guava')

@@ -150,4 +150,16 @@ public class TestXPath {
         x = XPath.get(site, p);
         Assert.assertTrue(x.isVisible());
     }
+
+    @Test
+    public void testProperty() throws IOException {
+        Site site = new Site(src, gen);
+        Path p = Paths.get(src.toString()+"/2-files[File Structure]nav.md");
+        XPath x = XPath.get(site, p);
+        Assert.assertEquals("files", x.url());
+        Assert.assertEquals("File Structure", x.name());
+        Assert.assertEquals(2, x.nr());
+        Assert.assertTrue(x.containsExtension("md"));
+        Assert.assertTrue(x.isNavigation());
+    }
 }

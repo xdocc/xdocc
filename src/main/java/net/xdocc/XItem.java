@@ -128,8 +128,6 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.IS_ROOT, xPath.isRoot());
         generator.model().put(XPath.IS_VISIBLE, xPath.isVisible());
         generator.model().put(XPath.IS_WRITE, xPath.isItemWritten());
-        
-        generator.model().put(XPath.IS_KEEP, xPath.isKeep());
     }
     
     private void initNavigation() {

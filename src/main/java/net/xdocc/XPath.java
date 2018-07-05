@@ -44,7 +44,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
     private final static Pattern PATTERN_URL = Pattern
             .compile("([^/|.]*)([.]|[|]|$)");
     
-    private final static List<String> KNOWN_EXTENSIONS = new ArrayList<>();
+    //private final static List<String> KNOWN_EXTENSIONS = new ArrayList<>();
 
     @Getter
     private final String path;
@@ -240,17 +240,6 @@ final public class XPath implements Comparable<XPath>, Serializable {
                     i = j = 0;
                     break;
                 }
-            }
-        }
-        int len3 = KNOWN_EXTENSIONS.size();
-        for (int i = 0; i < len3; i++) {
-            if (tmpFilename.endsWith("." + KNOWN_EXTENSIONS.get(i))) {
-                tmpFilename = tmpFilename
-                            .substring(0, tmpFilename.length() - (KNOWN_EXTENSIONS.get(i).length() + 1));
-
-                    extensionList.add(KNOWN_EXTENSIONS.get(i));
-                    extensions = "." + KNOWN_EXTENSIONS.get(i) + extensions;
-                i = 0;
             }
         }
 
@@ -500,14 +489,6 @@ final public class XPath implements Comparable<XPath>, Serializable {
         Path p = Paths.get(path);
         return XPath.get(site, p.resolve(url));
     }
-
-    /**
-     * @param extension The extension to check
-     * @return True if the exension is present in this filename
-     */
-    public boolean containsExtension(String extension) {
-        return extensionList != null && extensionList.contains(extension);
-    }
     
     public XPath getParent() {
         Path p = Paths.get(path);
@@ -535,11 +516,9 @@ final public class XPath implements Comparable<XPath>, Serializable {
         } else if (fileName().startsWith(".")) {
             return true;
         }
-        return hasRecursiveProperty("hidden") || hasRecursiveExtension("hide");
+        return hasRecursiveProperty("hidden");
     }
     public static final String IS_HIDDEN = "ishidden";
-    static {KNOWN_EXTENSIONS.add("hide");}
-
     
     public boolean isDirectory() {
         Path p = Paths.get(path);
@@ -554,14 +533,13 @@ final public class XPath implements Comparable<XPath>, Serializable {
             return false;
         }
         //all non hidden files are visible (also those without 1-blabla) and compiled
-        if (hasRecursiveProperty("visible","vis") || hasRecursiveExtension("visible","vis")) {
+        if (hasRecursiveProperty("visible","vis")) {
             return true;
         }
         
         return visible;
     }
     public static final String IS_VISIBLE = "isvisible";
-    static {KNOWN_EXTENSIONS.add("visible");KNOWN_EXTENSIONS.add("vis");}
 
     public boolean isAscending() {
         return properties != null && properties.containsKey("asc");
@@ -582,7 +560,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
 
     public String getLayoutSuffix() {
         //all non hidden files are visible (also those without 1-blabla) and compiled
-        if (hasRecursiveProperty("layout","l") || hasRecursiveExtension("layout","l")) {
+        if (hasRecursiveProperty("layout","l")) {
             return getRecursiveProperty("layout","l");
         }
         return "";
@@ -650,12 +628,11 @@ final public class XPath implements Comparable<XPath>, Serializable {
      * root/dir/two.html (only two)
      */
     public boolean isPage() {
-        return containsExtension("page") || isPropertyTrue("page"); 
+        return isPropertyTrue("page");
         //items not rendered, only directory page, no link
     }
     public static final String IS_PAGE = "ispage";
-    static {KNOWN_EXTENSIONS.add("page");}
-    
+
     /**
      * 
      * root/1-dir/test.txt
@@ -671,20 +648,17 @@ final public class XPath implements Comparable<XPath>, Serializable {
      * root/dir/two.html (only two)
      */
     public boolean isNoIndex() {
-        return containsExtension("noindex") || containsExtension("noidx") || isPropertyTrue("noindex") || isPropertyTrue("noidx"); 
+        return isPropertyTrue("noindex") || isPropertyTrue("noidx");
         //items not rendered, only directory page, no link
     }
     public static final String IS_NOINDEX = "isnoindex";
-    static {KNOWN_EXTENSIONS.add("noindex");KNOWN_EXTENSIONS.add("noidx");}
-    
+
     //dealing with recursion: a directory that is promoted, will be a like a content page for the parent
     public boolean isPromoted() {
-        return isPropertyTrue("promote") || isPropertyTrue("prm") || 
-                containsExtension("promote") || containsExtension("prm");
+        return isPropertyTrue("promote") || isPropertyTrue("prm");
     }
     public static final String IS_PROMOTED = "ispromoted";
-    static {KNOWN_EXTENSIONS.add("promote");KNOWN_EXTENSIONS.add("prm");}
-    
+
     
     
     
@@ -697,34 +671,20 @@ final public class XPath implements Comparable<XPath>, Serializable {
     //ordering extensions, can be combined with the rendering or with other ordering extensions
     //from above -> sum_nav, s_n, list_high_nav
     public boolean isNavigation() {
-        return containsExtension("nav") || isPropertyTrue("nav");
+        return isPropertyTrue("nav");
     }
     public static final String IS_NAVIGATION = "isnavigation";
-    static {KNOWN_EXTENSIONS.add("nav");}
     
 
     public boolean isHighlight() {
-        return isPropertyTrue("highlight") || isPropertyTrue("hl") ||
-                containsExtension("highlight") || containsExtension("hl");
+        return isPropertyTrue("highlight") || isPropertyTrue("hl");
     }
     public static final String IS_HIGHLIGHT = "ishighlight";    
-    static {KNOWN_EXTENSIONS.add("highlight");KNOWN_EXTENSIONS.add("hl");}
-    
+
     public boolean isCopy() { //nothing is visible (not hidden), everything is copied (not compiled)
-        return hasRecursiveProperty("copy") || hasRecursiveExtension("copy");
+        return hasRecursiveProperty("copy");
     }
     public static final String IS_COPY = "iscopy";
-    static {KNOWN_EXTENSIONS.add("copy");}
-    
-    
-    public boolean isKeep() { //nothing is visible (not hidden), everything is copied (not compiled)
-        return hasRecursiveProperty("keep") || hasRecursiveExtension("keep");
-    }
-    public static final String IS_KEEP = "iskeep";
-    static {KNOWN_EXTENSIONS.add("keep");}
-
-    //used to identify directories where pandoc files are located
-    static {KNOWN_EXTENSIONS.add("cmd");}
 
     public String resolveTargetURL(String string) {
         if (getTargetURL().isEmpty()) {
@@ -827,19 +787,6 @@ final public class XPath implements Comparable<XPath>, Serializable {
 
         return false;
     }
-    
-     public boolean hasRecursiveExtension(String... names) {
-        XPath current = this;
-        do {
-            for(String name:names) {
-                if (current.extensionList != null && current.extensionList.contains(name)) {
-                    return true;
-                }
-            }
-        } while ((current = current.getParent()) != null);
-
-        return false;
-    }
 
     public long fileSize() {
         Path p = Paths.get(path);
@@ -901,5 +848,9 @@ final public class XPath implements Comparable<XPath>, Serializable {
         sb.append("/u:");
         sb.append(url);
         return sb.toString();
+    }
+
+    public boolean containsExtension(String extension) {
+        return extensionList.contains(extension);
     }
 }

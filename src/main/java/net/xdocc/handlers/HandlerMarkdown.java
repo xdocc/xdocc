@@ -19,7 +19,11 @@ import net.xdocc.Site;
 import net.xdocc.Utils;
 import net.xdocc.XPath;
 import org.commonmark.Extension;
+import org.commonmark.ext.autolink.AutolinkExtension;
+import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension;
 import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.ext.heading.anchor.HeadingAnchorExtension;
+import org.commonmark.ext.ins.InsExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
@@ -34,8 +38,13 @@ public class HandlerMarkdown implements Handler {
     static{
         MAP.put("markdown.ftl", "${content}");
     }
-    //TODO: add all exentsions
-    private static final List<Extension> extensions = Arrays.asList(TablesExtension.create());
+
+    private static final List<Extension> extensions = Arrays.asList(
+            TablesExtension.create(),
+            AutolinkExtension.create(),
+            StrikethroughExtension.create(),
+            HeadingAnchorExtension.create(),
+            InsExtension.create());
 
     @Override
     public boolean canHandle(Site site, XPath xPath) {

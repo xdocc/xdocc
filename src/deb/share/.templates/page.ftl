@@ -23,12 +23,12 @@
   <div class="row">
     <#if depth==0> <!-- main-->
       <#include "landing.ftl">
-      <div class="col-sm-10 col-md-10 col-lg-10 col-sm-offset-1 col-md-offset-1 col-lg-offset-1">
-          <div id="document">${content}</div>
+      <div class="col-sm-12 col-md-12 col-lg-10 col-sm-offset-0 col-md-offset-0 col-lg-offset-1 fluid">
+          <div class="fluid card" id="document">${content}</div>
       </div>
     <#elseif layout=="cheat">
-      <div class="col-sm-10 col-md-10 col-lg-10 fluid">
-        <div id="document">${content}</div>
+      <div class="col-sm-12 col-md-11 col-lg-10 col-sm-offset-0 col-md-offset-0 col-lg-offset-1 fluid">
+        <div class="fluid card" id="document">${content}</div>
       </div>
     <#else>
       <input type="checkbox" id="doc-drawer-checkbox" class="drawer">
@@ -38,7 +38,7 @@
           <a href="#${link.nr}"> ${link.name}</a>
         </#list>
       </nav>
-      <div class="col-sm-12 col-md-9 col-lg-10 fluid">
+      <div class="col-sm-12 col-md-11 col-lg-10 fluid">
           <div id="document">${content}</div>
       </div>
     </#if>
