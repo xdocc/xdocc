@@ -516,7 +516,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
         } else if (fileName().startsWith(".")) {
             return true;
         }
-        return hasRecursiveProperty("hidden");
+        return hasRecursiveProperty("hide", "hid");
     }
     public static final String IS_HIDDEN = "ishidden";
     
@@ -548,7 +548,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
 
     
     public boolean isDescending() {
-        return properties != null && properties.containsKey("desc");
+        return properties != null && (properties.containsKey("desc") || properties.containsKey("dsc")) ;
     }
     public static final String IS_DESCENDING = "isdescending";
     
@@ -628,7 +628,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
      * root/dir/two.html (only two)
      */
     public boolean isPage() {
-        return isPropertyTrue("page");
+        return isPropertyTrue("page", "pag");
         //items not rendered, only directory page, no link
     }
     public static final String IS_PAGE = "ispage";
@@ -648,7 +648,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
      * root/dir/two.html (only two)
      */
     public boolean isNoIndex() {
-        return isPropertyTrue("noindex") || isPropertyTrue("noidx");
+        return isPropertyTrue("noindex", "nidx");
         //items not rendered, only directory page, no link
     }
     public static final String IS_NOINDEX = "isnoindex";
@@ -674,15 +674,9 @@ final public class XPath implements Comparable<XPath>, Serializable {
         return isPropertyTrue("nav");
     }
     public static final String IS_NAVIGATION = "isnavigation";
-    
-
-    public boolean isHighlight() {
-        return isPropertyTrue("highlight") || isPropertyTrue("hl");
-    }
-    public static final String IS_HIGHLIGHT = "ishighlight";    
 
     public boolean isCopy() { //nothing is visible (not hidden), everything is copied (not compiled)
-        return hasRecursiveProperty("copy");
+        return hasRecursiveProperty("copy", "cp");
     }
     public static final String IS_COPY = "iscopy";
 
@@ -746,7 +740,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
     
 
     public int getPageSize() {
-        String pagesString = getProperty("pg", "paging");
+        String pagesString = getProperty("p", "paging");
         if (pagesString == null) {
             return 0;
         }
