@@ -4,11 +4,8 @@ import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -32,7 +29,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     // generic
     public static final String NAVIGATION = "globalnav";
     public static final String LOCALNAV = "localnav";
-    public static final String LOCALNAV_ISCHILD = "ischildnav";
+    public static final String IS_NAVIGATION = "isglobalnav";
     public static final String CURRENT_NAV = "currentnav";
     public static final String ROOT = "root";
     public static final String PATH = "path";
@@ -119,7 +116,6 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.IS_DESCENDING, xPath.isDescending());
         generator.model().put(XPath.IS_DIRECTORY, xPath.isDirectory());
         generator.model().put(XPath.IS_HIDDEN, xPath.isHidden());
-        generator.model().put(XPath.IS_HIGHLIGHT, xPath.isHighlight());
         generator.model().put(XPath.IS_NAVIGATION, xPath.isNavigation());
         generator.model().put(XPath.IS_NOINDEX, xPath.isNoIndex());
         generator.model().put(XPath.IS_COPY, xPath.isCopy());
@@ -134,8 +130,8 @@ public class XItem implements Comparable<XItem>, Serializable {
         Link global = xPath.site().globalNavigation();
         generator.model().put(NAVIGATION, global.getChildren());
         Link local = xPath.site().loadLocalNavigation(xPath);
-        generator.model().put(LOCALNAV_ISCHILD, Utils.isChild(global, local));
         generator.model().put(LOCALNAV, local.getChildren());
+        generator.model().put(IS_NAVIGATION, Utils.isChild(global, local));
         List<Link> pathToRoot = Utils.linkToRoot(Paths.get(xPath.site().source()), xPath);
         generator.model().put(BREADCRUMB, pathToRoot);
         XPath toFind = xPath.isDirectory()? xPath: xPath.getParent();

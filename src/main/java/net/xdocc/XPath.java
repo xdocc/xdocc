@@ -373,8 +373,8 @@ final public class XPath implements Comparable<XPath>, Serializable {
                 if (tokenizer.hasMoreTokens()) {
                     value = tokenizer.nextToken();
                     value = parseValue(key, value);
-                    if (!key.equalsIgnoreCase("")
-                            && !value.equalsIgnoreCase("")) {
+                    if (!key.isEmpty()
+                            && !value.isEmpty()) {
                         if (key.equalsIgnoreCase("name")
                                 || key.equalsIgnoreCase("n")) {
                             this.name = value;
@@ -382,7 +382,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
                             properties.put(key, value);
                         }
                     }
-                } else if (!key.equalsIgnoreCase("")) {
+                } else if (!key.isEmpty()) {
                     // tag [b] is the same as [l99=browse,c]
                     properties.put(key, null);
                 }
@@ -762,8 +762,11 @@ final public class XPath implements Comparable<XPath>, Serializable {
         XPath current = this;
         do {
             String property = current.getProperty(names);
+            boolean contains = current.isPropertyTrue(names);
             if (property != null) {
                 return property;
+            } else if(contains) {
+                return "";
             }
         } while ((current = current.getParent()) != null);
 

@@ -51,30 +51,30 @@ Recursive means, if applied to a directory, its subdirectories will inherit the 
 The directory and all its files are not compiled or copied:
 ```
 2014-mydirurl|hide/
- * 1-myfileurl.txt
- * 2-myfileurl.txt
+ + 1-myfileurl.txt
+ + 2-myfileurl.txt
 ```
 
 The directory and all its files will be compiled even without the mandatory number or date in front (1- or 2014-). This is useful e.g., to display images as a gallery:
 ```
 2014-mydirurl|vis/
- * image1.jpg
- * image1.jpg
+ + image1.jpg
+ + image1.jpg
 ```
 
 The directory and all its files will be copied even with the a number or date in front (1- or 2014-). This is useful e.g., to browse contents of a directory:
 ```
 2014-mydirurl|copy/
- * package.deb
- * notes.txt
- * readme.md
+ + package.deb
+ + notes.txt
+ + readme.md
 ```
 
 If layout is specified, all of its children will inherit the this layout property. The layout property can be used in templates:
 ```
 2014-mydirurl|l=main/
- * 1-myfileurl1.txt
- * 2-myfileurl2.md
+ + 1-myfileurl1.txt
+ + 2-myfileurl2.md
 ```
 
 
@@ -113,38 +113,40 @@ The properties asc and desc/dsc set the sorting of the files in the directory ac
 
 ```
 1-dir|dsc
- * 1-first.txt
- * 2-second.txt
- * 3-third.txt
+ + 1-first.txt
+ + 2-second.txt
+ + 3-third.txt
 ```
 
 The property page tells a directory that every file will be compiled into one big HTML file. The following example will output only one index.html file:
 
 ```
 1-dir|pag
- * 1-first.txt
- * 2-second.txt
- * 3-third.txt
+ + 1-first.txt
+ + 2-second.txt
+ + 3-third.txt
 ```
 
 If the propert pag is not provided, the followig 3 files will be created as well: first.html, second.html, third.html. The opposite of page is noindex, which will not create an index.html, but it will create first.html, second.html, third.html. The property noindex and page together will not create any html files.
 
 ```
 1-dir|nidx
- * 1-first.txt
- * 2-second.txt
+ + 1-first.txt
+ + 2-second.txt
 ```
 
 Paging will create several index files, e.g., index0.html, index1.html. If a directory has 40 itemes, paging is set to 20, then 2 index files: index0.html and index1.html will be created.
 
 ```
 1-dir|p=20
- * 1-first.txt
- * 2-second.txt
+ + 1-first.txt
+ + 2-second.txt
 ```
 
-examples that is used in this page are:
+examples that is used in this page is as follows. The document order number is 6, the url is cheat-fm, the name
+is FreeMarker, the layout is "cheat", and it is rendered as one html (page), every item is visible (vis), and is
+part of the global navigation (nav):
 ```
 6-cheat-fm[FreeMarker]l=cheat|page|vis|nav
- * 2-files[File Structure]nav.md
+ + 2-files[File Structure]nav.md
 ```

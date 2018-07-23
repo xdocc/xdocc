@@ -3,6 +3,7 @@ package net.xdocc;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -73,19 +74,32 @@ public class Compiler {
                 List<CompletableFuture<XItem>> futures = new ArrayList<>();
                 List<CompletableFuture<XItem>> futuresNoPromote = new ArrayList<>();
                 final List<XItem> results = new ArrayList<>();
+                final Map<XPath, XItem> map = new HashMap<>();
 
+                boolean atleastoneprometed = false;
                 for (XPath child : children) {
                     final XItem xItem = compile(child);
-                    if(xItem != null && !Boolean.TRUE.equals(xItem.getConsumesDirectory())) {
-                        xItem.setDepth(depth, promoteDepth);
-                        results.add(xItem);
+                    if(!atleastoneprometed && xItem!=null) {
+                        atleastoneprometed = xItem.getPromoted();
                     }
-                    if (child.isDirectory() && (xItem == null || !Boolean.TRUE.equals(xItem.getConsumesDirectory()))) {
+                    map.put(child, xItem);
+                }
+
+                for (Map.Entry<XPath, XItem> entry:map.entrySet()) {
+                    if(entry.getValue() != null && !Boolean.TRUE.equals(entry.getValue().getConsumesDirectory())) {
+                        entry.getValue().setDepth(depth, promoteDepth);
+                        if(promoteDepth > 0 && (entry.getValue().getPromoted() || !atleastoneprometed) ) {
+                            results.add(entry.getValue());
+                        } else if(promoteDepth == 0) {
+                            results.add(entry.getValue());
+                        }
+                    }
+                    if (entry.getKey().isDirectory() && (entry.getValue() == null || !Boolean.TRUE.equals(entry.getValue().getConsumesDirectory()))) {
                         //recursion, only if the directory is not completely consumed
-                        if(child.isPromoted()) {
-                            futures.add(compile(Paths.get(child.path()), depth + 1, promoteDepth + 1));
+                        if(entry.getKey().isPromoted()) {
+                            futures.add(compile(Paths.get(entry.getKey().path()), depth + 1, promoteDepth + 1));
                         } else {
-                            futuresNoPromote.add(compile(Paths.get(child.path()), depth + 1, 0));
+                            futuresNoPromote.add(compile(Paths.get(entry.getKey().path()), depth + 1, 0));
                         }
                     }
                 }
@@ -93,12 +107,13 @@ public class Compiler {
                                 .concat(futures.stream(), futuresNoPromote.stream())
                                 .toArray(size -> new CompletableFuture[size])
                 ).thenRunAsync(() -> {
+                    System.out.println("before:"+results);
                     results.addAll(
                         futures.stream()
                             .map(v -> v.join())
                             .collect(Collectors.toList())
                     );
-                    
+                    System.out.println("after:"+results);
                     try {
                         XItem doc = HandlerDirectory.compileList(site,path, results, filesCounter, cache, depth, promoteDepth);
                         completableFuture.complete(doc); // or result for flat

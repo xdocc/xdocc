@@ -118,33 +118,13 @@ public class TestHandler {
     @Test
     public void testLayout1() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-test.txt", "this is a text file");
-        TestUtils.createFile(src, "2-dir1|l=m.nav/1-test.txt", "this is a 2nd text file");
-        TestUtils.createFile(src, "2-dir1|l=m.nav/.xdocc", "promote=true");
-        TestUtils.createFile(src, "2-dir1|l=m.nav/2-subdir1.nav/1-test.txt", "this is a 3rd text file");
-        TestUtils.createFile(src, "2-dir1|l=m.nav/2-subdir1.nav/.xdocc", "promote=true");
+        TestUtils.createFile(src, "2-dir1|l=m|nav/1-test.txt", "this is a 2nd text file");
+        TestUtils.createFile(src, "2-dir1|l=m|nav/.xdocc", "promote=true");
+        TestUtils.createFile(src, "2-dir1|l=m|nav/2-subdir1.nav/1-test|l.txt", "this is a 3rd text file");
+        TestUtils.createFile(src, "2-dir1|l=m|nav/2-subdir1.nav/.xdocc", "promote=true");
         
-        TestUtils.createFile(src, ".templates/text.ftl", "${content}");
-        TestUtils.createFile(src, ".templates/list.ftl", "${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
-        TestUtils.createFile(src, ".templates/list_m.ftl", "MM ${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
-
-        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
-        Assert.assertEquals("0/0[this is a text file][MM 1/1[this is a 2nd text file][2/2[this is a 3rd text file]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
-        Assert.assertEquals("MM 1/0[this is a 2nd text file][2/1[this is a 3rd text file]]", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
-        Assert.assertEquals("2/0[this is a 3rd text file]", FileUtils.readFileToString(gen.resolve("dir1/subdir1/index.html").toFile()));
-    }
-    
-    @Test
-    public void testLayout2() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.createFile(src, "1-test.txt", "this is a text file");
-        TestUtils.createFile(src, "2-dir1|l1=m.nav/1-test.txt", "this is a 2nd text file");
-        TestUtils.createFile(src, "2-dir1|l1=m.nav/.xdocc", "promote=true");
-        TestUtils.createFile(src, "2-dir1|l1=m.nav/2-subdir1.nav/1-test.txt", "this is a 3rd text file");
-        TestUtils.createFile(src, "2-dir1|l1=m.nav/2-subdir1.nav/.xdocc", "promote=true");
-        
-        TestUtils.createFile(src, ".templates/text.ftl", "${content}");
-        TestUtils.createFile(src, ".templates/text_m.ftl", "MX ${content}");
-        TestUtils.createFile(src, ".templates/list.ftl", "${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
-        TestUtils.createFile(src, ".templates/list_m.ftl", "MM ${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
+        TestUtils.createFile(src, ".templates/text.ftl", "<#if layout==\"m\">MX </#if>${content}");
+        TestUtils.createFile(src, ".templates/list.ftl", "<#if layout==\"m\">MM </#if>${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
 
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("0/0[this is a text file][MM 1/1[MX this is a 2nd text file][MM 2/2[this is a 3rd text file]]]", FileUtils.readFileToString(gen.resolve("index.html").toFile()));

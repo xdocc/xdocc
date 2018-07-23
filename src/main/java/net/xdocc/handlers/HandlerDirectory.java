@@ -64,9 +64,6 @@ public class HandlerDirectory implements Handler {
         Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             doc = cached.xItem();
-            if(path.toString().equals("/home/draft/git/xdocc/src/site")) {
-            	Cache.CacheEntry cached2 = cache.getCached(site, xPath);
-            }
             if (!xPath.isNoIndex()) {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
