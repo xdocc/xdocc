@@ -53,6 +53,8 @@ public class Service {
     private static Service service;
     private DB db;
 
+    private int runCounter = 0;
+
     public static void main(String... args) throws IOException, InterruptedException, ExecutionException {
         service = new Service()
                 .addShutdownHook()
@@ -118,6 +120,7 @@ public class Service {
 
                     deleteUnusedFiles(site, filesCounter);
                     postProcessing(site);
+                    runCounter ++;
 
                     LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
                 } catch (Throwable t) {
@@ -132,6 +135,7 @@ public class Service {
         compile(site, filesCounter, cache).get();
         deleteUnusedFiles(site, filesCounter);
         postProcessing(site);
+        runCounter ++;
 
         LOG.info("compiling done in {} ms of {}", (System.currentTimeMillis() - start), site);
         if (isDaemon) {
@@ -165,6 +169,10 @@ public class Service {
 
     public Cache cache() {
         return cache;
+    }
+
+    public int runCounter() {
+        return runCounter;
     }
 
     private Service addShutdownHook() {

@@ -392,7 +392,6 @@ public class Utils {
                 templateText.template().process(model, sw);
             } catch (Throwable e) {
                 e.printStackTrace();
-                templateText.template().process(model, sw);
                 LOG.debug("available data:");
                 for (Map.Entry<String, Object> entry : model.entrySet()) {
                     LOG.debug("key:[" + entry.getKey() + "]=["
@@ -534,7 +533,7 @@ public class Utils {
                                            Map<String, Object> model, String... string) {
         for (String key : string) {
             if (!model.containsKey(key) || model.get(key) == null) {
-                LOG.info("cannot find key {} in html{}", key, html);
+                //LOG.debug("cannot find key {} in html{}", key, html);
                 continue;
             }
             // TODO: regexp would be better

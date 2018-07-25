@@ -492,7 +492,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         public String generate() {
             try {
                 String html = Utils.applyTemplate(site, templateBean, model);
-                html = Utils.postApplyTemplate(html, this.model, "path", "root");
+                html = Utils.postApplyTemplate(html, this.model, "path", "root", "name", "date", "nr", "url");
                 return html;
             } catch (TemplateException | IOException e) {
                 LOG.warn("cannot generate document {}. Model is {}",

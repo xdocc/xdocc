@@ -37,6 +37,8 @@ The URL is typically lower case and comes after the dash:
 
 If properties are specified after the URL, it must be separated by a "|". 
 
+A special case is if nr = 0, then it is set to Long.MAX. The reason behind this, is that you can mix dates and numbers. If a file with a date is provided, then sort is descending. Now if the user wants to have a item always before, it can specify the nr as 0, which will be Long.MAX and will always be on top.
+
 ## Recursive properties for files and directories
 Recursive means, if applied to a directory, its subdirectories will inherit the property
 

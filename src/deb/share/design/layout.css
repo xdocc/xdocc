@@ -51,16 +51,32 @@ header.row a span {
 }
 
 #logo-body {
-    position: relative;
     background-image: url(back.svg);
-    background-size: 100% auto;
-    height: calc(100vh - 48px);
-    overflow: hidden;
+    background-attachment: fixed;
+    height: calc(80vh - 48px);
     text-align: center;
     color: white;
 }
+
+#logo-body_blog {
+    background-image: url(back_blog.svg);
+    background-attachment: fixed;
+    height: calc(30vh - 48px);
+    text-align: center;
+    color: white;
+}
+
 #logo-img {
     height: calc(20vh);
+}
+
+#logo-img_blog {
+    margin:0 auto;
+    padding: 2em;
+    height: 5em;
+    width: 80%;
+    border-radius: 5px;
+    transform: rotate(-1deg);
 }
 
 
@@ -75,12 +91,7 @@ header.row a span {
 }
 
 #logo-center {
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    margin-right: -50%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
+    padding-top: 10vh;
     text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
 }
 
@@ -135,7 +146,16 @@ html {
   font-size:1.25em;
   word-wrap: break-word;
   color: #888;
-  font-weight: 350;
+  font-weight: 300;
+}
+
+#document_blog div {
+    margin: 0;
+    pdding: 0;
+}
+
+.blog {
+    border: 1px solid #000;
 }
 
 @media screen and (max-width: 600px) {

@@ -62,7 +62,7 @@ public class HandlerDirectory implements Handler {
         final XItem doc;
         final Path generatedFile = xPath.resolveTargetFromPath("index.html");
         Cache.CacheEntry cached = cache.getCached(site, xPath);
-        if (cached != null) {
+        if (cached != null  && HandlerUtils.childCached(cache, cached.xItem())) {
             doc = cached.xItem();
             if (!xPath.isNoIndex()) {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));

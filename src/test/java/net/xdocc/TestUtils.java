@@ -37,6 +37,12 @@ public class TestUtils {
         Files.createFile(file);
         Files.write(file, content.getBytes());
     }
+
+    public static void replaceFile(Path source, String path, String content)
+            throws IOException {
+        Path file = source.resolve(path);
+        Files.write(file, content.getBytes());
+    }
     
     public static void deleteDirectories(Path... paths) throws IOException {
         for(Path path:paths) {

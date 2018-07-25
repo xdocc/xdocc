@@ -317,6 +317,9 @@ final public class XPath implements Comparable<XPath>, Serializable {
             } else {
                 return false;
             }
+            if (nr == 0) {
+                nr = Long.MAX_VALUE;
+            }
             // mandatory '-'
             if (offset >= mandatory.length()
                     || (mandatory.charAt(offset) != '-' && !isRoot())) {

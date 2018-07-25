@@ -1,5 +1,15 @@
-<#list items as item>
-  <div id=${item.nr}>
-    ${item.content}
-  </div>
-</#list>
+<#if layout=="old">
+  <#list items as item>
+    <div id=${item.nr}>
+      ${item.date?string('dd.MM.yyyy')} - <a href="${path}/${item.url}">${item.name}</a>
+    </div>
+  </#list>
+<#else>
+  <#if layout??><div class="${layout}"></#if>
+  <#list items as item>
+    <div id=${item.nr}>
+      ${item.content}
+    </div>
+  </#list>
+  <#if layout??></div></#if>
+</#if>

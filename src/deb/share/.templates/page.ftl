@@ -30,6 +30,14 @@
       <div class="col-sm-12 col-md-11 col-lg-10 col-sm-offset-0 col-md-offset-0 col-lg-offset-1 fluid">
         <div class="fluid card" id="document">${content}</div>
       </div>
+    <#elseif layout=="blog">
+      <div class="col-sm-12 col-md-11 col-lg-10 col-sm-offset-0 col-md-offset-0 col-lg-offset-1 fluid">
+          <div class="fluid card" id="document_blog">${content}</div>
+      </div>
+    <#elseif layout=="old">
+      <div class="col-sm-12 col-md-11 col-lg-10 col-sm-offset-0 col-md-offset-0 col-lg-offset-1 fluid">
+          <div class="fluid card" id="document_blog">${content}</div>
+      </div>
     <#else>
       <input type="checkbox" id="doc-drawer-checkbox" class="drawer">
       <nav class="drawer col-md-3 col-lg-2 ">

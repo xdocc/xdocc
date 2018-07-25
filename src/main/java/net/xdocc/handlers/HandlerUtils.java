@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import net.xdocc.Cache;
 import net.xdocc.XItem;
 import net.xdocc.XPath;
 
@@ -72,5 +73,17 @@ public class HandlerUtils {
         model.put(XPath.NR, documentNr);
         model.put(XPath.FILENAME, documentFilename);
         return model;
+    }
+
+    public static boolean childCached(Cache cache, XItem xItem) {
+        if(!cache.isCached(xItem.xPath())) {
+            return false;
+        }
+        for(XItem item:xItem.getItems()) {
+            if(!childCached(cache, item)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

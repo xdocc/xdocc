@@ -54,4 +54,25 @@ public class TestCache {
         Assert.assertEquals(3, Service.service().cache().hits());
         
     }
+
+    @Test
+    public void testPromoteCache() throws IOException, InterruptedException, ExecutionException {
+        TestUtils.createFile(src, "1-test.txt", "1");
+        TestUtils.createFile(src, "1-dir|prm/1-test2.txt", "2");
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-x");
+        while(Service.service().runCounter() < 1) {
+            Thread.sleep(200);
+        }
+        Assert.assertEquals("2", FileUtils.readFileToString(gen.resolve("dir/index.html").toFile()));
+        Assert.assertEquals("2", FileUtils.readFileToString(gen.resolve("dir/test2.html").toFile()));
+        Assert.assertEquals("21", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+        TestUtils.replaceFile(src, "1-dir|prm/1-test2.txt", "3");
+        while(Service.service().runCounter() < 2) {
+            Thread.sleep(200);
+        }
+
+        Assert.assertEquals("3", FileUtils.readFileToString(gen.resolve("dir/index.html").toFile()));
+        Assert.assertEquals("3", FileUtils.readFileToString(gen.resolve("dir/test2.html").toFile()));
+        Assert.assertEquals("31", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+    }
 }
