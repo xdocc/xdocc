@@ -111,7 +111,7 @@ public class HandlerImage implements Handler {
                 Generator genLink = new XItem.FillGenerator(site, templateLink);
                 XItem docDetail = new XItem(xPath, genLink);
                 //set link
-                docTop.setLink(xPath.getTargetURLName() + ".html");
+                docTop.setOriginalLink(xPath.getTargetURL()+".html");
                 if (resizeList == null) {
                     resizeList = HandlerImage.resizeImages(xPath, 100);
                 }

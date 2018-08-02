@@ -10,10 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 public class TestHandler {
     private static Path gen;
@@ -71,7 +68,7 @@ public class TestHandler {
         TestUtils.createFile(src, "2-dir1.nav/1-test.txt", "this is a 2nd text file <a href=\"${path}\">current</a>(<a href=\"${root}\">back</a>)");
         TestUtils.createFile(src, "2-dir1.nav/.xdocc", "promote=true");
         TestUtils.createFile(src, "2-dir1.nav/2-subdir1.nav/1-test.txt", "this is a 3rd text file <a href=\"${path}\">current</a>(<a href=\"${root}\">back</a>)");
-        TestUtils.createFile(src, "2-dir1.nav/2-subdir1.nav/.xdocc", "promote=true");
+        TestUtils.createFile(src, "2-dir1.nav/2-subdir1.nav/.xdocc", "content=true");
         
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
@@ -88,7 +85,7 @@ public class TestHandler {
         TestUtils.createFile(src, "2-dir1.nav/1-test.txt", "this is a 2nd text file");
         TestUtils.createFile(src, "2-dir1.nav/.xdocc", "promote=true");
         TestUtils.createFile(src, "2-dir1.nav/2-subdir1.nav/1-test.txt", "this is a 3rd text file");
-        TestUtils.createFile(src, "2-dir1.nav/2-subdir1.nav/.xdocc", "promote=true");
+        TestUtils.createFile(src, "2-dir1.nav/2-subdir1.nav/.xdocc", "content=true");
         
         TestUtils.createFile(src, ".templates/text.ftl", "${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
@@ -121,7 +118,7 @@ public class TestHandler {
         TestUtils.createFile(src, "2-dir1|l=m|nav/1-test.txt", "this is a 2nd text file");
         TestUtils.createFile(src, "2-dir1|l=m|nav/.xdocc", "promote=true");
         TestUtils.createFile(src, "2-dir1|l=m|nav/2-subdir1.nav/1-test|l.txt", "this is a 3rd text file");
-        TestUtils.createFile(src, "2-dir1|l=m|nav/2-subdir1.nav/.xdocc", "promote=true");
+        TestUtils.createFile(src, "2-dir1|l=m|nav/2-subdir1.nav/.xdocc", "content=true");
         
         TestUtils.createFile(src, ".templates/text.ftl", "<#if layout==\"m\">MX </#if>${content}");
         TestUtils.createFile(src, ".templates/list.ftl", "<#if layout==\"m\">MM </#if>${depth}/${promotedepth}<#list items as item>[${item.content}]</#list>");
@@ -210,8 +207,8 @@ public class TestHandler {
     
     @Test
     public void testTextileLink() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.createFile(src, "1-dir1/1-read.textile", "h1. A headline\n\n \"Link1\":../dir2 to 2");
-        TestUtils.createFile(src, "1-dir2/1-me.textile", "h1. Title\n\n \"Link2\":../dir1 to 1 ");
+        TestUtils.createFile(src, "1-dir1/1-read.textile", "h1. A headline\n\n \"Link1\":${path}/../dir2 to 2");
+        TestUtils.createFile(src, "1-dir2/1-me.textile", "h1. Title\n\n \"Link2\":${path}/../dir1 to 1 ");
         
         TestUtils.createFile(src, "3-dir3.prm/4-dir4.prm/1-link.link", "url=../../dir1 \nurl=../../dir2");
         
@@ -220,11 +217,12 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
 
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
-        Assert.assertEquals("<h1 id=\"Aheadline\">A headline</h1><a href=\"./../dir2\">Link1</a> to 2", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
-        Assert.assertEquals("[([<h1 id=\"Aheadline\">A headline</h1><a href=\"../../dir1/../dir2\">Link1</a> to 2])([<h1 id=\"Title\">Title</h1><a href=\"../../dir2/../dir1\">Link2</a> to 1 ])]", FileUtils.readFileToString(gen.resolve("dir3/dir4/index.html").toFile()));
+        Assert.assertEquals("<h1 id=\"Aheadline\">A headline</h1><a href=\"././../dir2\">Link1</a> to 2", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
+        Assert.assertEquals("[([<h1 id=\"Aheadline\">A headline</h1><a href=\"./../../dir1/../dir2\">Link1</a> to 2])([<h1 id=\"Title\">Title</h1><a href=\"./../../dir2/../dir1\">Link2</a> to 1 ])]", FileUtils.readFileToString(gen.resolve("dir3/dir4/index.html").toFile()));
     }
 
     @Test
+    @Ignore //use srcset in future
     public void testTextileImage() throws IOException, InterruptedException, ExecutionException {
         TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1/label-1.jpg");
         TestUtils.copyFile("imgs/label-2.jpg", src, "1-dir2/label-2.jpg");
@@ -250,7 +248,7 @@ public class TestHandler {
         TestUtils.createFile(src, ".templates/markdown.ftl", "${content}");
 
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
-        Assert.assertEquals("<h1>A headline</h1>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()).trim());
+        Assert.assertEquals("<h1 id=\"a-headline\">A headline</h1>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()).trim());
     }
             
 }

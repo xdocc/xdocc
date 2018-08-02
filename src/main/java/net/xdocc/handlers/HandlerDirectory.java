@@ -78,7 +78,24 @@ public class HandlerDirectory implements Handler {
             Utils.sort3(results, ascending);
 
             doc = Utils.createDocument(site, xPath, null, "list");
-            doc.setItems(results);
+
+            List<XItem> copies = new ArrayList<>(results.size());
+            for(XItem item: results) {
+                XItem copy = new XItem(item);
+                if(copy.getTemplate() != null && copy.getTemplate().equals("list") && !copy.getItems().isEmpty()) {
+                    if(copy.getPromoted() && !copy.getItemsPromoted().isEmpty()) {
+                        copy.setItems(copy.getItemsPromoted()); //only add promoted ones
+                    } else if(copy.getPromotedOne() && copy.getItemsPromoted().isEmpty()) {
+                        List<XItem> one = new ArrayList<>(1);
+                        one.add(copy.getItems().get(0));
+                        copy.setItems(one); //just add one
+                    }
+                }
+                copies.add(copy);
+            }
+            doc.setItems(copies);
+
+
             doc.setDepth(depth, promoteDepth);
 
             if (!xPath.isNoIndex() && xPath.isVisible()) {

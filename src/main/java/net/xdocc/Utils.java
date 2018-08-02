@@ -39,7 +39,7 @@ public class Utils {
         path = path.isEmpty() ? "." : path;
         doc.setPath(path);
 
-        String link = doc.getLink();
+        String link = doc.getOriginalLink();
         if (link != null) {
             Path pathRelativeLink = Paths.get(minusPath).relativize(Paths.get(link));
             link = pathRelativeLink.toString();
@@ -578,6 +578,7 @@ public class Utils {
         doc.setHTML(htmlContent);
         doc.setTemplate(template);
         doc.setLayout(xPath.getLayoutSuffix());
+        System.out.println("layout is "+xPath.getLayoutSuffix()+" xpath: "+xPath);
         return doc;
     }
 

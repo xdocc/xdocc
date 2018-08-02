@@ -662,7 +662,15 @@ final public class XPath implements Comparable<XPath>, Serializable {
     }
     public static final String IS_PROMOTED = "ispromoted";
 
-    
+    public boolean isPromotedOne() {
+        return isPropertyTrue("promote1") || isPropertyTrue("prm1");
+    }
+    public static final String IS_PROMOTED_1 = "ispromotedone";
+
+    public boolean isContent() {
+        return isPropertyTrue("content") || isPropertyTrue("cont");
+    }
+    public static final String IS_CONTENT = "iscontent";
     
     
     public boolean isItemWritten() {

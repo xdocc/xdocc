@@ -37,11 +37,14 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String CONTENT = "content";
     public static final String TEMPLATE = "template";
     public static final String LINK = "link";
+    public static final String ORIGINAL_LINK = "originallink";
     public static final String SRC_SETS = "srcsets";
     
     // list
     public static final String ITEMS = "items";
+    public static final String ITEMS_PROMOTED = "itemspromoted";
     public static final String ITEMS_SIZE = "documentsize";
+    public static final String ITEMS_SIZE_PROMOTED = "documentsizepromoted";
     public static final String DEPTH = "depth";
     public static final String PROMOTE_DEPTH_ORIGINAL = "promotedepthoriginal";
     public static final String PROMOTE_DEPTH = "promotedepth";
@@ -70,6 +73,11 @@ public class XItem implements Comparable<XItem>, Serializable {
         initXPath();
         initNavigation();
         initDepth();
+    }
+
+    public XItem(XItem item) {
+        this.generator = new FillGenerator(item.generator);
+        this.xPath = item.xPath;
     }
 
     public void init(Site site) {
@@ -121,6 +129,8 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.IS_COPY, xPath.isCopy());
         generator.model().put(XPath.IS_PAGE, xPath.isPage());
         generator.model().put(XPath.IS_PROMOTED, xPath.isPromoted());
+        generator.model().put(XPath.IS_PROMOTED_1, xPath.isPromotedOne());
+        generator.model().put(XPath.IS_CONTENT, xPath.isContent());
         generator.model().put(XPath.IS_ROOT, xPath.isRoot());
         generator.model().put(XPath.IS_VISIBLE, xPath.isVisible());
         generator.model().put(XPath.IS_WRITE, xPath.isItemWritten());
@@ -157,11 +167,34 @@ public class XItem implements Comparable<XItem>, Serializable {
         return documents;
     }
 
+    public List<XItem> getItemsPromoted() {
+        @SuppressWarnings("unchecked")
+        java.util.List<XItem> documents = (java.util.List<XItem>) documentGenerator()
+                .model().get(ITEMS_PROMOTED);
+        if (documents == null) {
+            return Collections.emptyList();
+        }
+        return documents;
+    }
+
     /**
      * @param documents The list of documents in a collection
      * @return this class
      */
     public XItem setItems(List<XItem> documents) {
+        List<XItem> promoted = new ArrayList<>();
+        for(XItem item:documents) {
+            if(item.getPromoted()) {
+                promoted.add(item);
+            }
+        }
+        //if(promoted.isEmpty() && !documents.isEmpty()) {
+        //    promoted.add(documents.get(0));
+        //}
+
+        documentGenerator().model().put(ITEMS_PROMOTED, promoted);
+        documentGenerator().model().put(ITEMS_SIZE_PROMOTED, promoted.size());
+
         documentGenerator().model().put(ITEMS, documents);
         documentGenerator().model().put(ITEMS_SIZE, documents.size());
         return this;
@@ -229,6 +262,15 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(LINK, link);
         return this;
     }
+
+    public String getOriginalLink() {
+        return (String) generator.model().get(ORIGINAL_LINK);
+    }
+
+    public XItem setOriginalLink(String originalLink) {
+        generator.model().put(ORIGINAL_LINK, originalLink);
+        return this;
+    }
     
     public String getOriginalRoot() {
         return (String) generator.model().get(XPath.ORIGINAL_ROOT);
@@ -272,6 +314,14 @@ public class XItem implements Comparable<XItem>, Serializable {
 
     public boolean getPromoted() {
         return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED));
+    }
+
+    public boolean getPromotedOne() {
+        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED_1));
+    }
+
+    public boolean isDirectoryContent() {
+        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_CONTENT));
     }
     
     public boolean getDirectory() {
@@ -443,6 +493,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         String generate();
         Map<String, Object> model();
         Generator templateBean(TemplateBean templateBean);
+        TemplateBean templateBean();
         Site site();
     }
 
@@ -461,6 +512,11 @@ public class XItem implements Comparable<XItem>, Serializable {
         @Override
         public Generator templateBean(TemplateBean templateBean) {
             return this;
+        }
+
+        @Override
+        public TemplateBean templateBean() {
+            return null;
         }
 
         @Override
@@ -487,6 +543,12 @@ public class XItem implements Comparable<XItem>, Serializable {
             this.site = site;
             this.templateBean = templateBean;
             this.model = new HashMap<String, Object>();
+        }
+
+        public FillGenerator(Generator generator) {
+            this.site = generator.site();
+            this.templateBean = generator.templateBean();
+            this.model = new HashMap<>(generator.model());
         }
 
         public String generate() {

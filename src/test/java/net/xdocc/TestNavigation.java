@@ -60,7 +60,7 @@ public class TestNavigation {
         TestUtils.createFile(src, "2-dir2.nav/2-subdir2.nav/1-test.txt", "this is a 1.2nd text file");
         TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-test.txt", "this is a 1.2nd text file");
         TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-subsubdir.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, ".templates/list.ftl", "<#if !ischildnav><#if localnav??><#list localnav as link>[${link.url}]</#list></#if></#if>");
+        TestUtils.createFile(src, ".templates/list.ftl", "<#if !isglobalnav><#if localnav??><#list localnav as link>[${link.url}]</#list></#if></#if>");
 
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
