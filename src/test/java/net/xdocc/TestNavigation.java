@@ -36,12 +36,12 @@ public class TestNavigation {
     @Test
     public void testNavigation() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-test.txt", "this is a text file");
-        TestUtils.createFile(src, "1-dir1.nav/1-test.txt", "this is a 1.1nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/2-subdir1.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/2-subdir2.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-subsubdir.nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "1-dir1|nav/1-test.txt", "this is a 1.1nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/2-subdir1|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/2-subdir2|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/3-subdir3/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/3-subdir3/1-subsubdir|nav/1-test.txt", "this is a 1.2nd text file");
         
         TestUtils.createFile(src, ".templates/text.ftl", "text template <br><br> -- (${content})");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list globalnav as link>[${link.url}(<#list link.children as link>[${link.url}]</#list>)]</#list>");
@@ -54,12 +54,12 @@ public class TestNavigation {
     @Test
     public void testLoacalNavigation() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-test.txt", "this is a text file");
-        TestUtils.createFile(src, "1-dir1.nav/1-test.txt", "this is a 1.1nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/2-subdir1.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/2-subdir2.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-subsubdir.nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "1-dir1|nav/1-test.txt", "this is a 1.1nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/2-subdir1|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/2-subdir2|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/3-subdir3/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/3-subdir3/1-subsubdir|nav/1-test.txt", "this is a 1.2nd text file");
         TestUtils.createFile(src, ".templates/list.ftl", "<#if !isglobalnav><#if localnav??><#list localnav as link>[${link.url}]</#list></#if></#if>");
 
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
@@ -71,12 +71,12 @@ public class TestNavigation {
     @Test
     public void testBreadcrumb() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-test.txt", "this is a text file");
-        TestUtils.createFile(src, "1-dir1.nav/1-test.txt", "this is a 1.1nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/2-subdir1.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/2-subdir2.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-subsubdir.nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "1-dir1|nav/1-test.txt", "this is a 1.1nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/2-subdir1|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/2-subdir2|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/3-subdir3/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/3-subdir3/1-subsubdir|nav/1-test.txt", "this is a 1.2nd text file");
         
         TestUtils.createFile(src, ".templates/text.ftl", "text template <br><br> -- (${content})");
         TestUtils.createFile(src, ".templates/list.ftl", "<#list breadcrumb as link>[${link.url}]</#list>");
@@ -89,12 +89,12 @@ public class TestNavigation {
     @Test
     public void testCurrentNav() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-test.txt", "this is a text file");
-        TestUtils.createFile(src, "1-dir1.nav/1-test.txt", "this is a 1.1nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/1-subdir1.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/2-subdir2.nav/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-test.txt", "this is a 1.2nd text file");
-        TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-subsubdir.nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "1-dir1|nav/1-test.txt", "this is a 1.1nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/1-subdir1|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/2-subdir2|nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/3-subdir3/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/3-subdir3/1-subsubdir|nav/1-test.txt", "this is a 1.2nd text file");
         
         TestUtils.createFile(src, ".templates/list.ftl", "<#if currentnav??>[${currentnav.url}]</#if>");
 
@@ -107,7 +107,7 @@ public class TestNavigation {
 
     @Test
     public void testCurrentNav2() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.createFile(src, "2-dir2.nav/3-subdir3/1-subsubdir.nav/1-test.txt", "this is a 1.2nd text file");
+        TestUtils.createFile(src, "2-dir2|nav/3-subdir3/1-subsubdir|nav/1-test.txt", "this is a 1.2nd text file");
         TestUtils.createFile(src, ".templates/list.ftl", "<#if currentnav??>[${currentnav.url}]</#if>");
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("[dir2/subdir3/subsubdir]", FileUtils.readFileToString(gen.resolve("dir2/subdir3/subsubdir/index.html").toFile()));
