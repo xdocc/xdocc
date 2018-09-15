@@ -9,3 +9,5 @@ build.test
 .idea/
 xdocc.iml
 .gradle/
+/bin/
+dsl/
