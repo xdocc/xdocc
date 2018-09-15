@@ -1,16 +1,19 @@
 package net.xdocc;
 
-import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +21,7 @@ import freemarker.template.TemplateException;
 import javassist.compiler.SyntaxError;
 
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 public class Utils {
 
@@ -355,13 +359,13 @@ public class Utils {
         for(Map.Entry<String, Object> entry:map.entrySet())
         {
             sb.append("<tr><td>");
-            sb.append(escapeHtml(entry.getKey()));
+            sb.append(escapeHtml4(entry.getKey()));
             sb.append("</td><td title=\"");
             String value = entry.getValue() == null ? "null" : entry.getValue()
                     .toString();
             sb.append(escapeAttribute(value));
             sb.append("\">");
-            value = escapeHtml(value);
+            value = escapeHtml4(value);
             sb.append(value.length() > previewSize ? value.substring(0,
                     previewSize) : value);
             sb.append("</td></tr>\n");
@@ -391,13 +395,19 @@ public class Utils {
             try {
                 templateText.template().process(model, sw);
             } catch (Throwable e) {
-                e.printStackTrace();
-                LOG.debug("available data:");
+                LOG.debug("available data for template {}:", templateText.file(), e);
                 for (Map.Entry<String, Object> entry : model.entrySet()) {
-                    LOG.debug("key:[" + entry.getKey() + "]=["
-                            + entry.getValue() + "]");
+                    if(entry.getValue() != null) {
+                        String val = entry.getValue().toString();
+                        if(val.length() > 60) {
+                            val = val.substring(0, 60) + "...";
+                        }
+                        val = val.replace("\n", "");
+                        LOG.debug("key:[{}]=[{}]", entry.getKey(), val);
+                    } else {
+                        LOG.debug("key:[{}]=null", entry.getKey());
+                    }
                 }
-                LOG.debug("Template is: " + templateText.file());
             }
 
             sw.flush();
@@ -537,7 +547,12 @@ public class Utils {
                 continue;
             }
             // TODO: regexp would be better
-            html = html.replace("${" + key + "}", model.get(key).toString());
+            if(model.get(key) instanceof Date) {
+                SimpleDateFormat dt1 = new SimpleDateFormat("dd.MM.yyyy");
+                html = html.replace("${" + key + "}", dt1.format((Date) model.get(key)));
+            } else {
+                html = html.replace("${" + key + "}", model.get(key).toString());
+            }
         }
         return html;
     }
@@ -685,4 +700,6 @@ public class Utils {
             return sw.toString(); // stack trace as a string
         }
     }
+
+
 }

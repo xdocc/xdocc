@@ -45,7 +45,7 @@ public class Compiler {
     }
     
     public CompletableFuture<XItem> compile(final Path path) {
-        return compile(path, 0, 0);
+        return compile(path, 0);
     }
 
     public XItem compile(XPath child) throws Exception {
@@ -61,7 +61,7 @@ public class Compiler {
     }
 
     public CompletableFuture<XItem> compile(final Path path,
-            final int depth, final int promoteDepth) {
+            final int depth) {
         final CompletableFuture<XItem> completableFuture = new CompletableFuture<>();
 
         CompletableFuture.runAsync(() -> {
@@ -72,27 +72,21 @@ public class Compiler {
                 LOG.info("compiling: "+children);
 
                 List<CompletableFuture<XItem>> futures = new ArrayList<>();
-                List<CompletableFuture<XItem>> futuresNoPromote = new ArrayList<>();
                 final List<XItem> results = new ArrayList<>();
 
                 for (XPath child : children) {
                     final XItem xItem = compile(child);
                     if(xItem != null && !Boolean.TRUE.equals(xItem.getConsumesDirectory())) {
-                        xItem.setDepth(depth, promoteDepth);
+                        xItem.setDepth(depth, depth);
                         results.add(xItem);
                     }
 
                     if (child.isDirectory() && (xItem == null || !Boolean.TRUE.equals(xItem.getConsumesDirectory()))) {
-                        //recursion, only if the directory is not completely consumed
-                        if(child.isPromoted() || child.isPromotedOne() || child.isContent()) {
-                            futures.add(compile(Paths.get(child.path()), depth + 1, promoteDepth + 1));
-                        } else {
-                            futuresNoPromote.add(compile(Paths.get(child.path()), depth + 1, 0));
-                        }
+                        //recursion, only if the directory is not completely consumed by e.g. pandoc
+                        futures.add(compile(Paths.get(child.path()), depth + 1));
                     }
                 }
-                CompletableFuture.allOf(Stream
-                                .concat(futures.stream(), futuresNoPromote.stream())
+                CompletableFuture.allOf(futures.stream()
                                 .toArray(size -> new CompletableFuture[size])
                 ).thenRunAsync(() -> {
                     results.addAll(
@@ -101,7 +95,7 @@ public class Compiler {
                             .collect(Collectors.toList())
                     );
                     try {
-                        XItem doc = HandlerDirectory.compileList(site,path, results, filesCounter, cache, depth, promoteDepth);
+                        XItem doc = HandlerDirectory.compileList(site,path, results, filesCounter, cache, depth);
                         completableFuture.complete(doc); // or result for flat
                         //completableFuture.complete(results);
                         

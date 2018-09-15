@@ -64,20 +64,12 @@ public class HandlerWikiText implements Handler {
         Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             doc = cached.xItem();
-            //we need to reset the generator, as the files counter needs to be set correctly
-            ((WikiTextDocumentGenerator)doc.documentGenerator()).filesCounter(filesCounter);
             if (xPath.getParent().isItemWritten()) {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
-
-            TemplateBean templateText = site.getTemplate("wikitext");
-            WikiTextDocumentGenerator documentGenerator = new WikiTextDocumentGenerator(
-                    templateText, site, xPath, filesCounter);
-
-            doc = new XItem(xPath, documentGenerator);
-            doc.setTemplate("wikitext");
-            doc.setLayout(xPath.getLayoutSuffix());
+            String htmlContent = createHTML(xPath);
+            doc = Utils.createDocument(site, xPath, htmlContent, "wikitext");
 
             // always create a single page for that
             if (xPath.getParent().isItemWritten()) {                
@@ -114,106 +106,9 @@ public class HandlerWikiText implements Handler {
         return result;
     }
 
-    //https://github.com/eclipse/mylyn.docs/tree/master/org.eclipse.mylyn.wikitext.core/src/org/eclipse/mylyn/wikitext/core/parser/builder
-    private static class XdoccHtmlDocumentBuilder extends HtmlDocumentBuilder {
-
-        final private Site site;
-        final private XPath xPath;
-        final private Map<String, Integer> filesCounter;
-        final private Map<String, Object> model;
-
-        public XdoccHtmlDocumentBuilder(Writer out, Site site, XPath xPath, Map<String, Integer> filesCounter, Map<String, Object> model) {
-            super(out);
-            this.site = site;
-            this.xPath = xPath;
-            this.filesCounter = filesCounter;
-            this.model = model;
-        }
-
-        @Override
-        public void image(Attributes attributes, String imageUrl) {
-            //org.eclipse.mylyn.wikitext does not support srcset, so no responsive images
-            if (imageUrl != null) {
-                //if relative only!
-                if (!imageUrl.contains("://")) {
-                        XPath img = xPath.getParent().resolveSource(imageUrl);
-                        imageUrl = model.get(XItem.PATH) + "/" + imageUrl;
-                        Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
-                                .extensions());
-                        Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
-                }
-            }
-            super.image(attributes, imageUrl);
-        }
-
-        @Override
-        public void imageLink(Attributes linkAttributes, Attributes imageAttributes, String href,
-                String imageUrl) {
-            //org.eclipse.mylyn.wikitext does not support srcset, so no responsive images
-            if (imageUrl != null) {
-                //if relative only!
-                if (!imageUrl.contains("://")) {
-                        XPath img = xPath.getParent().resolveSource(imageUrl);
-                        imageUrl = model.get(XItem.PATH) + "/" + imageUrl;
-                        Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img
-                                .extensions());
-                        Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
-                }
-            }
-            super.imageLink(linkAttributes, imageAttributes, href, imageUrl);
-        }
-
-        @Override
-        protected void emitAnchorHref(String href) {
-            if (href != null) {
-                //if relative only!
-                if (!href.contains("://")) {
-                    try {
-                        XPath img = xPath.getParent().resolveSource(href);
-                        href = model.get(XItem.PATH) + "/" + href;
-                        Path generatedFile = img.resolveTargetFromBasePath(img.getTargetURL() + img.extensions());
-                        Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
-                    } catch (IllegalArgumentException e) {
-                        //try to find a source to for conversion, TODO: check what to do here
-                    }
-                }
-            }
-            super.emitAnchorHref(href);
-        }
-    }
-
-    private static class WikiTextDocumentGenerator extends XItem.FillGenerator {
-
-        private static final long serialVersionUID = -6008311072604987744L;
-        final private XPath xPath;
-
-        private Map<String, Integer> filesCounter;
-
-        public WikiTextDocumentGenerator(TemplateBean templateText, Site site, XPath xPath,
-                Map<String, Integer> filesCounter) {
-            super(site, templateText);
-            this.xPath = xPath;
-            this.filesCounter = filesCounter;
-        }
-
-        public void filesCounter(Map<String, Integer> filesCounter) {
-            this.filesCounter = filesCounter;
-        }
-
-        public String generate() {
-            try {
-                fillModel();
-                return super.generate();
-            } catch (IOException e) {
-                LOG.warn("cannot generate wiki document {}.", templateBean().file(), e);
-            }
-            return null;
-        }
-
-        private void fillModel() throws IOException {
+        private String createHTML(XPath xPath) throws IOException {
             StringWriter writer = new StringWriter();
-            HtmlDocumentBuilder builder = new XdoccHtmlDocumentBuilder(writer,
-                    site(), xPath, filesCounter, model());
+            HtmlDocumentBuilder builder = new HtmlDocumentBuilder(writer);
 
             // avoid the <html> and <body> tags
             MarkupParser parser = null;
@@ -250,14 +145,13 @@ public class HandlerWikiText implements Handler {
             }
             if (parser == null) {
                 LOG.error("unknown type for {}", xPath);
-                return;
+                return "no parser found for "+ xPath;
             }
             parser.setBuilder(builder);
             Charset charset = HandlerUtils.detectCharset(Paths.get(xPath.path()));
-            String rawFileContent = FileUtils.readFileToString(Paths.get(xPath.path())
-                    .toFile(), charset);
+            String rawFileContent = HandlerUtils.readFile(Paths.get(xPath.path()), charset);
             parser.parse(rawFileContent);
-            model().put(XItem.CONTENT, writer.toString());
+            return writer.toString();
         }
 
         @Override
@@ -266,5 +160,5 @@ public class HandlerWikiText implements Handler {
         }
 
 
-    }
+
 }

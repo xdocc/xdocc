@@ -67,7 +67,7 @@ public class HandlerHTML implements Handler {
 
     public static String htmlContent(String file) throws IOException {
         Charset charset = HandlerUtils.detectCharset(Paths.get(file));
-        String all = FileUtils.readFileToString(Paths.get(file).toFile(), charset);
+        String all = HandlerUtils.readFile(Paths.get(file), charset);
         org.jsoup.nodes.Document docj = Jsoup.parse(all);
         Elements e = docj.getElementsByTag("body");
         e = e.filter(new NodeFilter() {

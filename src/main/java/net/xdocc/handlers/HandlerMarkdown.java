@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -70,10 +71,10 @@ public class HandlerMarkdown implements Handler {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
-            try (Writer out = new StringWriter();
-                    Reader in = new BufferedReader(new FileReader(Paths.get(xPath.path())
-                            .toFile()))) {
-                transform(in, out);
+            try (Writer out = new StringWriter()) {
+                Charset charset = HandlerUtils.detectCharset(Paths.get(xPath.path()));
+                String input = HandlerUtils.readFile(Paths.get(xPath.path()), charset);
+                transform(input, out);
                 String htmlContent = out.toString();
                 doc = Utils.createDocument(site, xPath, htmlContent, "markdown");
                 if (xPath.getParent().isItemWritten()) {
@@ -86,9 +87,9 @@ public class HandlerMarkdown implements Handler {
         return doc;
     }
 
-    private void transform(Reader in, Writer out) throws IOException {
+    private void transform(String input, Writer out) {
         Parser parser = Parser.builder().extensions(extensions).build();
-        Node document = parser.parseReader(in);
+        Node document = parser.parse(input);
         HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
         renderer.render(document, out);
     }

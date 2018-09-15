@@ -21,7 +21,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -125,6 +125,43 @@ final public class XPath implements Comparable<XPath>, Serializable {
         } else {
             LOG.debug("The path [" + path + "] is not considered!");
         }
+
+        if(properties.containsKey(NAME)) {
+            this.name = properties.get(NAME);
+        }
+        if(properties.containsKey(NR)) {
+            this.nr = Long.parseLong(properties.get(NR));
+        }
+        if(properties.containsKey(URL)) {
+            this.url = properties.get(URL);
+        }
+        if(properties.containsKey(DATE)) {
+
+            String stringDate =  properties.get(DATE);
+            Matcher matcher1 = PATTERN_DATETIME.matcher(stringDate);
+            Matcher matcher2 = PATTERN_DATE.matcher(stringDate);
+
+            if (matcher1.find()) {
+                SimpleDateFormat parserSDF = new SimpleDateFormat(
+                        "yyyy-MM-dd_HH:mm:ss");
+                try {
+                    date = parserSDF.parse(matcher1.group(1));
+                    nr = date.getTime();
+                } catch (ParseException e) {
+                    LOG.error("Cannot parse date time: ", e);
+                }
+            } else if (matcher2.find()) {
+                SimpleDateFormat parserSDF = new SimpleDateFormat(
+                        "yyyy-MM-dd");
+                try {
+                    date = parserSDF.parse(matcher2.group(1));
+                    nr = date.getTime();
+                } catch (ParseException e) {
+                    LOG.error("Cannot parse date time: ", e);
+                }
+            }
+        }
+
         LOG.debug("The path [" + path + "] was parsed to: nr=" + nr + ",name="
                 + name + ",url=" + url);
     }
@@ -630,11 +667,11 @@ final public class XPath implements Comparable<XPath>, Serializable {
      * root/dir/test.html (only test)
      * root/dir/two.html (only two)
      */
-    public boolean isPage() {
-        return isPropertyTrue("page", "pag");
+    public boolean isNoSplit() {
+        return isPropertyTrue("nosplit", "nosp");
         //items not rendered, only directory page, no link
     }
-    public static final String IS_PAGE = "ispage";
+    public static final String IS_NOSPLIT = "isnosplit";
 
     /**
      * 
@@ -662,10 +699,10 @@ final public class XPath implements Comparable<XPath>, Serializable {
     }
     public static final String IS_PROMOTED = "ispromoted";
 
-    public boolean isPromotedOne() {
-        return isPropertyTrue("promote1") || isPropertyTrue("prm1");
+    public boolean isExposed() {
+        return isPropertyTrue("expose") || isPropertyTrue("exp");
     }
-    public static final String IS_PROMOTED_1 = "ispromotedone";
+    public static final String IS_EXPOSED = "isexposed";
 
     public boolean isContent() {
         return isPropertyTrue("content") || isPropertyTrue("cont");
@@ -674,7 +711,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
     
     
     public boolean isItemWritten() {
-        return !isPage();
+        return !isNoSplit();
     }
     public static final String IS_WRITE = "iswrite";
     

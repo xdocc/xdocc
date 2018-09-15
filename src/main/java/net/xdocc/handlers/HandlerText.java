@@ -43,7 +43,7 @@ public class HandlerText implements Handler {
             }
         } else {
             Charset charset = HandlerUtils.detectCharset(Paths.get(xPath.path()));
-            List<String> lines = Files.readAllLines(Paths.get(xPath.path()), charset);
+            List<String> lines = HandlerUtils.readAllLines(Paths.get(xPath.path()), charset);
             String htmlContent = convertHTML(lines);
             doc = Utils.createDocument(site, xPath, htmlContent, "text");
             if (xPath.getParent().isItemWritten()) {

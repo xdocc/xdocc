@@ -1,19 +1,16 @@
 package net.xdocc.handlers;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import net.xdocc.*;
 
 import net.xdocc.Compiler;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
 
 public class HandlerLink implements Handler {
 
@@ -47,43 +44,30 @@ public class HandlerLink implements Handler {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
+            Charset charset = HandlerUtils.detectCharset(Paths.get(xPath.path()));
+            String input = HandlerUtils.readFile(Paths.get(xPath.path()), charset);
+            StringReader reader = new StringReader(input);
+            Properties prop = new Properties();
 
-            Configuration config = new PropertiesConfiguration(Paths.get(xPath.path()).toFile());
-
-            List<Object> urls = config.getList("url", new ArrayList<>());
-            int limit = config.getInt("limit", -1);
-
-            List<XPath> founds = new ArrayList<>();
-
-            for (Object url : urls) {
-                founds.addAll(Utils.findURL(site, xPath, (String) url));
+            try {
+                // load from input stream
+                prop.load(reader);
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
-            if (founds.isEmpty() || (founds.size() > 0 && !founds.get(0).isVisible())) {
+
+            List<XItem> documents = findDocuments(site, xPath, prop, "");
+
+
+            if (documents == null) {
                 return null;
             } else {
-                List<XItem> documents = new ArrayList<>();
-
-                final boolean ascending;
-                if (xPath.isAutoSort()) {
-                    ascending = Utils.guessAutoSort(founds);
-                } else {
-                    ascending = xPath.isAscending();
-                }
-                Utils.sort2(founds, ascending);
-
-                int counter = 0;
-                for (XPath found : founds) {
-
-                    if(found.isDirectory()) {
-                        CompletableFuture<XItem> list = compiler.compile(Paths.get(found.path()), 0, 0);
-                        documents.add(list.get());
-                    } else {
-                        documents.add(compiler.compile(found));
-                    }
-                    //enforce limit
-                    if (limit >= 0 && ++counter >= limit) {
+                for(int i=0;true;i++) {
+                    List<XItem> tmpDocuments = findDocuments(site, xPath, prop, ""+i);
+                    if(tmpDocuments == null) {
                         break;
                     }
+                    documents.addAll(tmpDocuments);
                 }
 
                 doc = Utils.createDocument(site, xPath, null, "link");
@@ -99,6 +83,47 @@ public class HandlerLink implements Handler {
 
         }
         return doc;
+    }
+
+    private List<XItem> findDocuments(Site site, XPath xPath, Properties prop, String suffix) throws Exception {
+
+        String url = prop.getProperty("url"+suffix);
+        if(url == null) {
+            return null;
+        }
+        int limit = Integer.parseInt(prop.getProperty("limit","-1"));
+
+        List<XPath> founds = Utils.findURL(site, xPath, (String) url);
+
+        if (founds.isEmpty() || (founds.size() > 0 && !founds.get(0).isVisible())) {
+            return null;
+        } else {
+            List<XItem> documents = new ArrayList<>();
+
+            final boolean ascending;
+            if (xPath.isAutoSort()) {
+                ascending = Utils.guessAutoSort(founds);
+            } else {
+                ascending = xPath.isAscending();
+            }
+            Utils.sort2(founds, ascending);
+
+            int counter = 0;
+            for (XPath found : founds) {
+
+                if(found.isDirectory()) {
+                    CompletableFuture<XItem> list = compiler.compile(Paths.get(found.path()), 0);
+                    documents.add(list.get());
+                } else {
+                    documents.add(compiler.compile(found));
+                }
+                //enforce limit
+                if (limit >= 0 && ++counter >= limit) {
+                    break;
+                }
+            }
+            return documents;
+        }
     }
 
     public void compiler(Compiler compiler) {

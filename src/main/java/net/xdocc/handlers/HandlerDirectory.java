@@ -18,7 +18,7 @@ public class HandlerDirectory implements Handler {
     public static final Map<String, String> MAP = new HashMap<String, String>();
     static{
         MAP.put("list.ftl", "<#list items as item>${item.content}</#list>");
-        MAP.put("page.ftl", "${content}");
+        MAP.put("page.ftl", "<!DOCTYPE HTML><html><head><meta charset=\"UTF-8\"></head><body>${content}</body></html>");
     }
 
 	@Override
@@ -55,7 +55,7 @@ public class HandlerDirectory implements Handler {
 	}
 
 	public static XItem compileList(Site site, final Path path, final List<XItem> results,
-                             Map<String, Integer> filesCounter, Cache cache, final int depth, final int promoteDepth)
+                             Map<String, Integer> filesCounter, Cache cache, final int depth)
             throws IOException, TemplateException {
         XPath xPath = XPath.get(site, path);
 
@@ -79,36 +79,57 @@ public class HandlerDirectory implements Handler {
 
             doc = Utils.createDocument(site, xPath, null, "list");
 
-            List<XItem> copies = new ArrayList<>(results.size());
+            List<XItem> visible = new ArrayList<>(results.size());
             for(XItem item: results) {
-                XItem copy = new XItem(item);
-                if(copy.getTemplate() != null && copy.getTemplate().equals("list") && !copy.getItems().isEmpty()) {
-                    if(copy.getPromoted() && !copy.getItemsPromoted().isEmpty()) {
-                        copy.setItems(copy.getItemsPromoted()); //only add promoted ones
-                    } else if(copy.getPromotedOne() && copy.getItemsPromoted().isEmpty()) {
-                        List<XItem> one = new ArrayList<>(1);
-                        one.add(copy.getItems().get(0));
-                        copy.setItems(one); //just add one
-                    }
+                if(item.xPath().isVisible() && !item.xPath().isDirectory()) {
+                    visible.add(item);
                 }
-                copies.add(copy);
+                //iterate over item and check if that item is promoted
+                //if yes, add it to top according if exposed or promoted
+                visible.addAll(promoteItems(item));
             }
-            doc.setItems(copies);
+            doc.setItems(visible);
 
-
-            doc.setDepth(depth, promoteDepth);
+            doc.setDepth(depth, depth);
 
             if (!xPath.isNoIndex() && xPath.isVisible()) {
                 Utils.writeListHTML(xPath, doc, generatedFile);
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
+
         }
         cache.setCached(site, xPath, fromXPathList(results), doc, generatedFile);
         return doc;
 
     }
-	
-	private static List<Path> fromXPathList(final List<XItem> results) {
+
+    private static List<XItem> promoteItems(XItem item) {
+        if(item.getTemplate() != null && item.getTemplate().equals("list") && !item.getItems().isEmpty()) {
+            if(item.getPromoted() && !item.getItemsPromoted().isEmpty()) {
+                List<XItem> all = new ArrayList<>(item.getItems().size());
+                for(XItem tmp:item.getItemsPromoted()) {
+                    int promoteDepth = tmp.getPromoteDepth();
+                    all.add(new XItem(tmp).setPromoteDepth(promoteDepth - 1));
+                }
+                return all; //get all promoted
+            } else if(item.getPromoted() && item.getItemsPromoted().isEmpty()) {
+                List<XItem> one = new ArrayList<>(1);
+                int promoteDepth = item.getItems().get(0).getPromoteDepth();
+                one.add(new XItem(item.getItems().get(0)).setPromoteDepth(promoteDepth - 1));
+                return one;
+            } else if(item.getExposed()) {
+                List<XItem> all = new ArrayList<>(item.getItems().size());
+                for(XItem tmp:item.getItems()) {
+                    int promoteDepth = tmp.getPromoteDepth();
+                    all.add(new XItem(tmp).setPromoteDepth(promoteDepth - 1));
+                }
+                return all; //get all
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    private static List<Path> fromXPathList(final List<XItem> results) {
 		List<Path> retVal = new ArrayList<>();
 		for(XItem item:results) {
 			retVal.add(Paths.get(item.xPath().path()));

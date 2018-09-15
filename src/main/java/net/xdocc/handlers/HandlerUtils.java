@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import net.xdocc.XPath;
 
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
+import org.apache.commons.lang3.StringUtils;
 
 public class HandlerUtils {
     
@@ -85,5 +87,45 @@ public class HandlerUtils {
             }
         }
         return true;
+    }
+
+    public static String readFile(Path path, Charset charset) throws IOException {
+        byte[] encoded = Files.readAllBytes(path);
+        String tmp = new String(encoded, charset);
+        if(tmp.startsWith("---")) {
+            int stop = tmp.indexOf("\n---", 3);
+            if(stop <= 0) {
+                //no frontmatter
+                return tmp;
+            }
+            return StringUtils.stripStart(tmp.substring(stop+4), null);
+
+        } else {
+            //no frontmatter
+            return tmp;
+        }
+    }
+
+    public static String readFile(String path) throws IOException {
+        return readFile(Paths.get(path), Charset.defaultCharset());
+    }
+
+    public static List<String> readAllLines(Path path, Charset charset) throws IOException {
+        List<String> lines = Files.readAllLines(path, charset);
+        if(lines.isEmpty()) {
+           return lines;
+        }
+        if(lines.get(0).startsWith("---")) {
+            for(int i=1;i<lines.size();i++) {
+                if(lines.get(i).startsWith("---")) {
+                    return lines.subList(i, lines.size());
+                }
+            }
+            //no frontmatter
+            return lines;
+        } else {
+            //no frontmatter
+            return lines;
+        }
     }
 }

@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,9 +127,9 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.IS_NAVIGATION, xPath.isNavigation());
         generator.model().put(XPath.IS_NOINDEX, xPath.isNoIndex());
         generator.model().put(XPath.IS_COPY, xPath.isCopy());
-        generator.model().put(XPath.IS_PAGE, xPath.isPage());
+        generator.model().put(XPath.IS_NOSPLIT, xPath.isNoSplit());
         generator.model().put(XPath.IS_PROMOTED, xPath.isPromoted());
-        generator.model().put(XPath.IS_PROMOTED_1, xPath.isPromotedOne());
+        generator.model().put(XPath.IS_EXPOSED, xPath.isExposed());
         generator.model().put(XPath.IS_CONTENT, xPath.isContent());
         generator.model().put(XPath.IS_ROOT, xPath.isRoot());
         generator.model().put(XPath.IS_VISIBLE, xPath.isVisible());
@@ -316,8 +316,8 @@ public class XItem implements Comparable<XItem>, Serializable {
         return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED));
     }
 
-    public boolean getPromotedOne() {
-        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED_1));
+    public boolean getExposed() {
+        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_EXPOSED));
     }
 
     public boolean isDirectoryContent() {
@@ -352,7 +352,12 @@ public class XItem implements Comparable<XItem>, Serializable {
      * @return The content that applies the model to the freemarker template
      */
     public String getContent() {
-        return generator.generate();
+        LOG.debug("generate for: {}", xPath);
+        String retVal = generator.generate();
+        if(retVal == null) {
+            LOG.error("eval to null");
+        }
+        return retVal;
     }
 
     /**

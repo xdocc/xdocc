@@ -133,42 +133,40 @@ public class Site implements Serializable {
     private Configuration createTemplateEngine(Path templateDirectory)
             throws IOException {
         Configuration cfg = new Configuration(Configuration.VERSION_2_3_25);
-        // Specify the data source where the template files come from.
-        // Here I set a file directory for it:
+
+        StringTemplateLoader stl = new StringTemplateLoader();
+        for(Map.Entry<String,String> entry:defaults().entrySet()) {
+            stl.putTemplate(entry.getKey(), entry.getValue());
+        }
+
         if (Files.exists(templateDirectory)) {
-            StringTemplateLoader stl = new StringTemplateLoader();
             FileTemplateLoader ftl = new FileTemplateLoader(templateDirectory.toFile());
-            for(Map.Entry<String,String> entry:defaults().entrySet()) {
-                stl.putTemplate(entry.getKey(), entry.getValue());
-            }
             cfg.setTemplateLoader(new MultiTemplateLoader(new TemplateLoader[]{ftl, stl}));
-            //cfg.setDirectoryForTemplateLoading(templateDirectory.toFile());
-            cfg.setCacheStorage(new NullCacheStorage());
-            // Specify how templates will see the data-model. This is an
-            // advanced topic...
-            // but just use this:
-            cfg.setObjectWrapper(new DefaultObjectWrapper(Configuration.VERSION_2_3_25));
+
         } else {
             LOG.warn("could not find the directory: {}", templateDirectory);
+            cfg.setTemplateLoader(new MultiTemplateLoader(new TemplateLoader[]{stl}));
         }
+        cfg.setCacheStorage(new NullCacheStorage());
+        cfg.setObjectWrapper(new DefaultObjectWrapper(Configuration.VERSION_2_3_25));
         return cfg;
     }
 
     private void loadTemplates(Path templatePath) throws IOException {
-
     	templates.clear();
-        try (DirectoryStream<Path> ds = Files.newDirectoryStream(templatePath)) {
-            for (Path p : ds) {
-                if (!Files.isRegularFile(p)) {
-                    continue;
+    	if(Files.exists(templatePath)) {
+    	    try (DirectoryStream<Path> ds = Files.newDirectoryStream(templatePath)) {
+                for (Path p : ds) {
+                    if (!Files.isRegularFile(p)) {
+                        continue;
+                    }
+                    if (!p.toString().toLowerCase().endsWith(".ftl")) {
+                        continue;
+                    }
+                    TemplateBean templateBean = loadTemplate(p);
+                    templates.put(p.getFileName().toString(), templateBean);
                 }
-                if (!p.toString().toLowerCase().endsWith(".ftl")) {
-                    continue;
-                }
-                TemplateBean templateBean = loadTemplate(p);
-                templates.put(p.getFileName().toString(), templateBean);
             }
-
         }
         for(Map.Entry<String,String> entry:defaults().entrySet()) {
             if(!templates.containsKey(entry.getKey())) {
