@@ -77,7 +77,7 @@ public class Compiler {
                 for (XPath child : children) {
                     final XItem xItem = compile(child);
                     if(xItem != null && !Boolean.TRUE.equals(xItem.getConsumesDirectory())) {
-                        xItem.setDepth(depth, depth);
+                        xItem.setDepth(depth);
                         results.add(xItem);
                     }
 

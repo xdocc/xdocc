@@ -41,13 +41,13 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String SRC_SETS = "srcsets";
     
     // list
-    public static final String ITEMS = "items";
+    public static final String ITEMS_URL = "itemsurl";
+    public static final String ITEMS_NR = "itemsnr";
+    public static final String ITEMS= "items";
+    public static final String ITEMS_PROMOTED_URL = "itemspromotedurl";
+    public static final String ITEMS_PROMOTED_NR = "itemspromotednr";
     public static final String ITEMS_PROMOTED = "itemspromoted";
-    public static final String ITEMS_SIZE = "documentsize";
-    public static final String ITEMS_SIZE_PROMOTED = "documentsizepromoted";
     public static final String DEPTH = "depth";
-    public static final String PROMOTE_DEPTH_ORIGINAL = "promotedepthoriginal";
-    public static final String PROMOTE_DEPTH = "promotedepth";
     public static final String CONSUMES_DIRECTORY = "consumesdirectory";
    
     // Utils
@@ -84,7 +84,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     	LOG.debug("init site: {}", site);
         this.xPath.site().init(site);
         this.generator.site().init(site);
-        for(XItem item:getItems()) {
+        for(XItem item:getItems().values()) {
             item.init(site);
         }
     }
@@ -157,22 +157,57 @@ public class XItem implements Comparable<XItem>, Serializable {
     /**
      * @return a list of documents if present in the model or null
      */
-    public List<XItem> getItems() {
+    public Map<String, XItem> getItemsUrl() {
         @SuppressWarnings("unchecked")
-        java.util.List<XItem> documents = (java.util.List<XItem>) documentGenerator()
-                .model().get(ITEMS);
+        java.util.Map<String, XItem> documents = (java.util.Map<String, XItem>) documentGenerator()
+                .model().get(ITEMS_URL);
         if (documents == null) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
         return documents;
     }
 
-    public List<XItem> getItemsPromoted() {
+    public Map<String, XItem> getItemsNr() {
         @SuppressWarnings("unchecked")
-        java.util.List<XItem> documents = (java.util.List<XItem>) documentGenerator()
-                .model().get(ITEMS_PROMOTED);
+        Map<String, XItem> documents = (Map<String, XItem>) documentGenerator().model().get(ITEMS_NR);
         if (documents == null) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
+        }
+        return documents;
+    }
+
+    public Map<String, XItem> getItems() {
+        @SuppressWarnings("unchecked")
+        Map<String, XItem> documents = (Map<String, XItem>) documentGenerator().model().get(ITEMS);
+        if (documents == null) {
+            return Collections.emptyMap();
+        }
+        return documents;
+    }
+
+    public Map<String, XItem> getItemsPromotedUrl() {
+        @SuppressWarnings("unchecked")
+        Map<String, XItem> documents = (Map<String, XItem>) documentGenerator().model().get(ITEMS_PROMOTED_URL);
+        if (documents == null) {
+            return Collections.emptyMap();
+        }
+        return documents;
+    }
+
+    public Map<String, XItem> getItemsPromotedNr() {
+        @SuppressWarnings("unchecked")
+        Map<String, XItem> documents = (Map<String, XItem>) documentGenerator().model().get(ITEMS_PROMOTED_NR);
+        if (documents == null) {
+            return Collections.emptyMap();
+        }
+        return documents;
+    }
+
+    public Map<String, XItem> getItemsPromoted() {
+        @SuppressWarnings("unchecked")
+        Map<String, XItem> documents = (Map<String, XItem>) documentGenerator().model().get(ITEMS_PROMOTED);
+        if (documents == null) {
+            return Collections.emptyMap();
         }
         return documents;
     }
@@ -182,23 +217,36 @@ public class XItem implements Comparable<XItem>, Serializable {
      * @return this class
      */
     public XItem setItems(List<XItem> documents) {
-        List<XItem> promoted = new ArrayList<>();
+        Map<String, XItem> promotedUrl = new LinkedHashMap<>();
+        Map<String, XItem> promotedNr = new LinkedHashMap<>();
+        Map<String, XItem> promoted = new LinkedHashMap<>();
         for(XItem item:documents) {
             if(item.getPromoted()) {
-                promoted.add(item);
+                promotedUrl.put(item.getUrl(), item);
+                promotedNr.put(Long.toString(item.getNr()), item);
+                promoted.put(item.getFileName(), item);
             }
         }
-        //if(promoted.isEmpty() && !documents.isEmpty()) {
-        //    promoted.add(documents.get(0));
-        //}
-
+        documentGenerator().model().put(ITEMS_PROMOTED_URL, promotedUrl);
+        documentGenerator().model().put(ITEMS_PROMOTED_NR, promotedNr);
         documentGenerator().model().put(ITEMS_PROMOTED, promoted);
-        documentGenerator().model().put(ITEMS_SIZE_PROMOTED, promoted.size());
 
-        documentGenerator().model().put(ITEMS, documents);
-        documentGenerator().model().put(ITEMS_SIZE, documents.size());
+        Map<String, XItem> itemsUrl = new LinkedHashMap<>();
+        Map<String, XItem> itemsNr = new LinkedHashMap<>();
+        Map<String, XItem> items = new LinkedHashMap<>();
+        for(XItem item:documents) {
+            itemsUrl.put(item.getUrl(), item);
+            itemsNr.put(Long.toString(item.getNr()), item);
+            items.put(item.xPath().fileName(), item);
+        }
+
+        documentGenerator().model().put(ITEMS_URL, itemsUrl);
+        documentGenerator().model().put(ITEMS_NR, itemsNr);
+        documentGenerator().model().put(ITEMS, items);
         return this;
     }
+
+
 
     public String getName() {
         return (String) generator.model().get(XPath.NAME);
@@ -428,26 +476,12 @@ public class XItem implements Comparable<XItem>, Serializable {
         return Utils.getDebug(generator.model());
     }
     
-    public void setDepth(Integer depth, Integer promoteDepth) {
+    public void setDepth(Integer depth) {
         generator.model().put(DEPTH, depth);
-        generator.model().put(PROMOTE_DEPTH_ORIGINAL, promoteDepth);
     }
     
     public Integer getDepth() {
         return (Integer) generator.model().get(DEPTH);
-    }
-    
-    public Integer getPromoteDepthOriginal() {
-        return (Integer) generator.model().get(PROMOTE_DEPTH_ORIGINAL);
-    }
-    
-    public Integer getPromoteDepth() {
-        return (Integer) generator.model().get(PROMOTE_DEPTH);
-    }
-    
-    public XItem setPromoteDepth(Integer promoteDepth) {
-        generator.model().put(PROMOTE_DEPTH, promoteDepth);
-        return this;
     }
 
     public Boolean getConsumesDirectory() {

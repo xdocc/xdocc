@@ -18,7 +18,7 @@ public class HandlerLink implements Handler {
     
     public static final Map<String, String> MAP = new HashMap<String, String>();
     static{
-        MAP.put("link.ftl", "<#list items as item>${item.content}</#list>");
+        MAP.put("link.ftl", "<#list items as key,item>${item.content}</#list>");
     }
 
     @Override

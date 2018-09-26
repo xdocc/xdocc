@@ -71,7 +71,7 @@ exclude(module: 'guava')
 
 task packageDeb(type: Deb) {
     packageName = 'xdocc'
-    version = '2.0.0'
+    version = '2.0.1'
     release = 1
     packager = 'Thomas Bocek <tom@xdocc.net>'
     summary = 'A static HTML site generator that compiles various document formats (markdown, wiki (mediawiki, tracwiki, twiki), confluence, textile, ODT, Tex, docx, ...) and images to HTML'

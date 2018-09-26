@@ -17,7 +17,7 @@ public class HandlerDirectory implements Handler {
 
     public static final Map<String, String> MAP = new HashMap<String, String>();
     static{
-        MAP.put("list.ftl", "<#list items as item>${item.content}</#list>");
+        MAP.put("list.ftl", "<#list items as key,item>${item.content}</#list>");
         MAP.put("page.ftl", "<!DOCTYPE HTML><html><head><meta charset=\"UTF-8\"></head><body>${content}</body></html>");
     }
 
@@ -90,7 +90,7 @@ public class HandlerDirectory implements Handler {
             }
             doc.setItems(visible);
 
-            doc.setDepth(depth, depth);
+            doc.setDepth(depth);
 
             if (!xPath.isNoIndex() && xPath.isVisible()) {
                 Utils.writeListHTML(xPath, doc, generatedFile);
@@ -107,21 +107,18 @@ public class HandlerDirectory implements Handler {
         if(item.getTemplate() != null && item.getTemplate().equals("list") && !item.getItems().isEmpty()) {
             if(item.getPromoted() && !item.getItemsPromoted().isEmpty()) {
                 List<XItem> all = new ArrayList<>(item.getItems().size());
-                for(XItem tmp:item.getItemsPromoted()) {
-                    int promoteDepth = tmp.getPromoteDepth();
-                    all.add(new XItem(tmp).setPromoteDepth(promoteDepth - 1));
+                for(XItem tmp:item.getItemsPromoted().values()) {
+                    all.add(new XItem(tmp));
                 }
                 return all; //get all promoted
             } else if(item.getPromoted() && item.getItemsPromoted().isEmpty()) {
                 List<XItem> one = new ArrayList<>(1);
-                int promoteDepth = item.getItems().get(0).getPromoteDepth();
-                one.add(new XItem(item.getItems().get(0)).setPromoteDepth(promoteDepth - 1));
+                one.add(new XItem(item.getItems().get(0)));
                 return one;
             } else if(item.getExposed()) {
                 List<XItem> all = new ArrayList<>(item.getItems().size());
-                for(XItem tmp:item.getItems()) {
-                    int promoteDepth = tmp.getPromoteDepth();
-                    all.add(new XItem(tmp).setPromoteDepth(promoteDepth - 1));
+                for(XItem tmp:item.getItems().values()) {
+                    all.add(new XItem(tmp));
                 }
                 return all; //get all
             }

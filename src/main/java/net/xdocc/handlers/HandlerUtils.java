@@ -81,7 +81,7 @@ public class HandlerUtils {
         if(!cache.isCached(xItem.xPath())) {
             return false;
         }
-        for(XItem item:xItem.getItems()) {
+        for(XItem item:xItem.getItems().values()) {
             if(!childCached(cache, item)) {
                 return false;
             }

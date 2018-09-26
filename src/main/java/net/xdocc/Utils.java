@@ -30,7 +30,7 @@ public class Utils {
 
     private static XItem adjustPath(XItem doc, String minusPath) {
         adjustPath0(doc, minusPath);
-        for (XItem item : doc.getItems()) {
+        for (XItem item : doc.getItems().values()) {
             adjustPath(item, minusPath);
         }
         return doc;
@@ -56,7 +56,7 @@ public class Utils {
 
     private static XItem adjustPathToRoot(XItem doc, String newPathToRoot) {
         adjustPathToRoot0(doc, newPathToRoot);
-        for (XItem item : doc.getItems()) {
+        for (XItem item : doc.getItems().values()) {
             adjustPathToRoot(item, newPathToRoot);
         }
         return doc;
@@ -65,18 +65,6 @@ public class Utils {
     private static XItem adjustPathToRoot0(XItem doc, String newPathToRoot) {
         newPathToRoot = newPathToRoot.isEmpty() ? "." : newPathToRoot;
         doc.setPathToRoot(newPathToRoot);
-        return doc;
-    }
-
-    private static XItem adjustPromotedDepth(XItem doc, Integer minusPromoteDepth) {
-        Integer calc = null;
-        if (doc.getPromoteDepthOriginal() != null) {
-            calc = doc.getPromoteDepthOriginal() - minusPromoteDepth;
-        }
-        doc.setPromoteDepth(calc);
-        for (XItem item : doc.getItems()) {
-            adjustPromotedDepth(item, minusPromoteDepth);
-        }
         return doc;
     }
 
@@ -605,16 +593,14 @@ public class Utils {
         doc = Utils.adjustPath(doc, minusPath);
         String minusPathToRoot = xPath.originalRoot();
         doc = Utils.adjustPathToRoot(doc, minusPathToRoot);
-        doc = Utils.adjustPromotedDepth(doc, doc.getPromoteDepthOriginal());
 
         //adjust path in page item
         String htmlSite = doc.getContent();
         XItem page = Utils.createDocument(xPath.site(), xPath, htmlSite, "page");
 
-        page.setDepth(doc.getDepth(), doc.getPromoteDepthOriginal());
+        page.setDepth(doc.getDepth());
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
-        page = Utils.adjustPromotedDepth(page, doc.getPromoteDepthOriginal());
 
         Utils.write(page.getContent(), xPath, generatedFile);
     }
@@ -657,7 +643,7 @@ public class Utils {
         //adjust path in page item
         String htmlSite = doc.getContent();
         XItem page = Utils.createDocument(xPath.site(), xPath, htmlSite, "page");
-        page.setDepth(doc.getDepth(), doc.getPromoteDepthOriginal());
+        page.setDepth(doc.getDepth());
         page.setUrl(path);
         page = Utils.adjustPath(page, minusPath);
         page = Utils.adjustPathToRoot(page, minusPathToRoot);
