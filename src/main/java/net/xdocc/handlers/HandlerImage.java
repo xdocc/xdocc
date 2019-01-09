@@ -71,7 +71,7 @@ public class HandlerImage implements Handler {
         Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             XItem doc = cached.xItem();
-            if (xPath.hasRecursiveProperty("link", "l") && xPath.getParent().isItemWritten()) {
+            if (xPath.hasRecursiveProperty("link", "l") && xPath.getParent().isItemWritten() && xPath.isItemWritten()) {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile2));
             }
             return doc;
@@ -105,7 +105,7 @@ public class HandlerImage implements Handler {
             }
 
             //check if link is required
-            if (xPath.hasRecursiveProperty("link", "l") && xPath.getParent().isItemWritten()) {
+            if (xPath.hasRecursiveProperty("link", "l") && xPath.getParent().isItemWritten() && xPath.isItemWritten()) {
                 //create file
                 TemplateBean templateLink = site.getTemplate("image");
                 Generator genLink = new XItem.FillGenerator(site, templateLink);

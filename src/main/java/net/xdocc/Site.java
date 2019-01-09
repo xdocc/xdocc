@@ -148,7 +148,7 @@ public class Site implements Serializable {
             cfg.setTemplateLoader(new MultiTemplateLoader(new TemplateLoader[]{stl}));
         }
         cfg.setCacheStorage(new NullCacheStorage());
-        cfg.setObjectWrapper(new DefaultObjectWrapper(Configuration.VERSION_2_3_25));
+        cfg.setObjectWrapper(new DefaultObjectWrapper(Configuration.VERSION_2_3_28));
         return cfg;
     }
 

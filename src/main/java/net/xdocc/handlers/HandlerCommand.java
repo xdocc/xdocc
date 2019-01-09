@@ -42,7 +42,7 @@ public class HandlerCommand implements Handler {
         Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             doc = cached.xItem();
-            if (xPath.getParent().isItemWritten()) {
+            if (xPath.getParent().isItemWritten() && xPath.isItemWritten()) {
                 for(String generatedFile:cached.generatedFiles()) {
                     Utils.increase(filesCounter, Utils.listPathsGen(site, Paths.get(generatedFile)));
                 }
@@ -155,7 +155,7 @@ public class HandlerCommand implements Handler {
                     doc = Utils.createDocument(site, xPath, htmlContent, "command");
                     Path generatedFile = xPath.resolveTargetFromBasePath(xPath.getTargetURL() + "/" + sourceFile.getFileName());
 
-                    if (xPath.getParent().isItemWritten()) {
+                    if (xPath.getParent().isItemWritten() && xPath.isItemWritten()) {
                         Utils.writeHTML(xPath, doc, generatedFile);
                         Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
                     }

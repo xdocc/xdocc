@@ -38,7 +38,7 @@ public class HandlerText implements Handler {
         Cache.CacheEntry cached = cache.getCached(site, xPath);
         if (cached != null) {
             doc = cached.xItem();
-            if (xPath.getParent().isItemWritten()) {
+            if (xPath.getParent().isItemWritten() && xPath.isItemWritten()) {
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }
         } else {
@@ -46,7 +46,7 @@ public class HandlerText implements Handler {
             List<String> lines = HandlerUtils.readAllLines(Paths.get(xPath.path()), charset);
             String htmlContent = convertHTML(lines);
             doc = Utils.createDocument(site, xPath, htmlContent, "text");
-            if (xPath.getParent().isItemWritten()) {
+            if (xPath.getParent().isItemWritten() && xPath.isItemWritten()) {
                 Utils.writeHTML(xPath, doc, generatedFile);
                 Utils.increase(filesCounter, Utils.listPathsGen(site, generatedFile));
             }

@@ -7,4 +7,4 @@ mkdir -p /var/log/xdocc
 mkdir -p /var/lib/xdocc
 mkdir -p /var/www/example-xdocc
 
-rm -f /var/lib/xdocc/xdocc.mapdb*
+rm -f /var/lib/xdocc/xdocc
