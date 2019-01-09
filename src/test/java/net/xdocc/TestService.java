@@ -1,16 +1,15 @@
 package net.xdocc;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.concurrent.ExecutionException;
 import org.apache.commons.io.FileUtils;
-
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.ExecutionException;
 
 public class TestService {
     

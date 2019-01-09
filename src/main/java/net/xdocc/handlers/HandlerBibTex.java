@@ -91,10 +91,10 @@ public class HandlerBibTex  implements Handler {
 
         if(journal != null) {
             sb.append(journal);
-            sb.append(";");
+            sb.append("; ");
         } else if (how !=null) {
             sb.append(how);
-            sb.append(";");
+            sb.append("; ");
         }  else if (booktitle !=null) {
             sb.append(booktitle);
             sb.append("; ");

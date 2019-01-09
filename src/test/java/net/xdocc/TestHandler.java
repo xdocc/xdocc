@@ -5,12 +5,13 @@
  */
 package net.xdocc;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
-import org.apache.commons.io.FileUtils;
-import org.junit.*;
 
 public class TestHandler {
     private static Path gen;
