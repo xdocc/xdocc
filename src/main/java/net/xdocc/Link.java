@@ -1,7 +1,6 @@
 package net.xdocc;
 
 import com.google.common.base.Strings;
-
 import lombok.Getter;
 import lombok.Setter;
 

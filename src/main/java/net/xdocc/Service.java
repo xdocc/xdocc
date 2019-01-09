@@ -1,15 +1,7 @@
 package net.xdocc;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
-
 import com.google.common.base.Strings;
+import net.xdocc.Cache.CacheEntry;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -21,8 +13,14 @@ import org.mapdb.serializer.SerializerJava;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.xdocc.Cache.CacheEntry;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class Service {

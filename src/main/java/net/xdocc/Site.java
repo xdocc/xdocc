@@ -1,35 +1,25 @@
 package net.xdocc;
 
-import freemarker.cache.FileTemplateLoader;
-import freemarker.cache.MultiTemplateLoader;
+import freemarker.cache.*;
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import net.xdocc.handlers.*;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import net.xdocc.handlers.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import freemarker.cache.NullCacheStorage;
-import freemarker.cache.StringTemplateLoader;
-import freemarker.cache.TemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapper;
-import java.nio.file.DirectoryStream;
-import java.util.ArrayList;
-import java.util.Set;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
-import org.reflections.Reflections;
+import java.util.*;
 
 @Accessors(chain = true, fluent = true)
 public class Site implements Serializable {

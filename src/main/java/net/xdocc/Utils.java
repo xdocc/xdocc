@@ -1,27 +1,16 @@
 package net.xdocc;
 
-import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+import freemarker.template.TemplateException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.file.FileVisitOption;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import freemarker.template.TemplateException;
-import javassist.compiler.SyntaxError;
-
-import java.nio.file.Paths;
-import java.util.regex.Pattern;
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 public class Utils {
 

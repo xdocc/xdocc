@@ -2,13 +2,11 @@ package net.xdocc.handlers;
 
 import freemarker.template.TemplateException;
 import net.xdocc.*;
-import net.xdocc.Compiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

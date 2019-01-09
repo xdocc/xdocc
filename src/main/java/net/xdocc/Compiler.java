@@ -1,21 +1,19 @@
 package net.xdocc;
 
+import net.xdocc.handlers.Handler;
+import net.xdocc.handlers.HandlerDirectory;
+import net.xdocc.handlers.HandlerLink;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import net.xdocc.handlers.Handler;
-
-import net.xdocc.handlers.HandlerDirectory;
-import net.xdocc.handlers.HandlerLink;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Compiler {
 

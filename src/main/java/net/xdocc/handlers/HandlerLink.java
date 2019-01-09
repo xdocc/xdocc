@@ -1,5 +1,8 @@
 package net.xdocc.handlers;
 
+import net.xdocc.Compiler;
+import net.xdocc.*;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.Charset;
@@ -7,10 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-
-import net.xdocc.*;
-
-import net.xdocc.Compiler;
 
 public class HandlerLink implements Handler {
 

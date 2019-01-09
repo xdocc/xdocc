@@ -1,23 +1,13 @@
 package net.xdocc.handlers;
 
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import net.xdocc.Cache;
-
-import net.xdocc.XItem;
+import net.xdocc.*;
 import net.xdocc.XItem.Generator;
-import net.xdocc.Site;
-import net.xdocc.TemplateBean;
-import net.xdocc.Utils;
-import net.xdocc.XPath;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.*;
 
 public class HandlerCopy implements Handler {
     

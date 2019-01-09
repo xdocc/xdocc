@@ -1,5 +1,12 @@
 package net.xdocc.handlers;
 
+import com.ibm.icu.text.CharsetDetector;
+import com.ibm.icu.text.CharsetMatch;
+import net.xdocc.Cache;
+import net.xdocc.XItem;
+import net.xdocc.XPath;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -9,14 +16,6 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import net.xdocc.Cache;
-import net.xdocc.XItem;
-import net.xdocc.XPath;
-
-import com.ibm.icu.text.CharsetDetector;
-import com.ibm.icu.text.CharsetMatch;
-import org.apache.commons.lang3.StringUtils;
 
 public class HandlerUtils {
     

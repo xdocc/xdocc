@@ -1,20 +1,14 @@
 package net.xdocc.handlers;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-
+import freemarker.template.TemplateException;
 import net.xdocc.*;
-import net.xdocc.TemplateBean;
-
+import net.xdocc.XItem.Generator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import freemarker.template.TemplateException;
-import net.xdocc.XItem.Generator;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.*;
 
 /**
  * Create responsive images

@@ -1,5 +1,11 @@
 package net.xdocc.handlers;
 
+import net.xdocc.*;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Node;
+import org.jsoup.select.Elements;
+import org.jsoup.select.NodeFilter;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -8,18 +14,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.xdocc.Cache;
-
-import net.xdocc.XItem;
-import net.xdocc.Site;
-import net.xdocc.Utils;
-import net.xdocc.XPath;
-
-import org.apache.commons.io.FileUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Node;
-import org.jsoup.select.Elements;
-import org.jsoup.select.NodeFilter;
 
 public class HandlerHTML implements Handler {
     

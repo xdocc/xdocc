@@ -1,8 +1,18 @@
 package net.xdocc.handlers;
 
+import net.xdocc.*;
+import org.eclipse.mylyn.wikitext.confluence.ConfluenceLanguage;
+import org.eclipse.mylyn.wikitext.mediawiki.MediaWikiLanguage;
+import org.eclipse.mylyn.wikitext.parser.MarkupParser;
+import org.eclipse.mylyn.wikitext.parser.builder.HtmlDocumentBuilder;
+import org.eclipse.mylyn.wikitext.textile.TextileLanguage;
+import org.eclipse.mylyn.wikitext.tracwiki.TracWikiLanguage;
+import org.eclipse.mylyn.wikitext.twiki.TWikiLanguage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,25 +20,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.xdocc.Cache;
-
-import net.xdocc.XItem;
-import net.xdocc.Site;
-import net.xdocc.TemplateBean;
-import net.xdocc.Utils;
-import net.xdocc.XPath;
-
-import org.apache.commons.io.FileUtils;
-import org.eclipse.mylyn.wikitext.confluence.ConfluenceLanguage;
-import org.eclipse.mylyn.wikitext.parser.Attributes;
-import org.eclipse.mylyn.wikitext.parser.MarkupParser;
-import org.eclipse.mylyn.wikitext.parser.builder.HtmlDocumentBuilder;
-import org.eclipse.mylyn.wikitext.mediawiki.MediaWikiLanguage;
-import org.eclipse.mylyn.wikitext.textile.TextileLanguage;
-import org.eclipse.mylyn.wikitext.tracwiki.TracWikiLanguage;
-import org.eclipse.mylyn.wikitext.twiki.TWikiLanguage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HandlerWikiText implements Handler {
     
