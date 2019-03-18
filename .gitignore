@@ -11,3 +11,5 @@ xdocc.iml
 .gradle/
 /bin/
 dsl/
+out/
+
