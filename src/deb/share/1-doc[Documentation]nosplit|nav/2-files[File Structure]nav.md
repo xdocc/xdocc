@@ -3,21 +3,16 @@
 The file or directory names are structured in the following ways:
 
 ```
-numberordate-optionalurlpath[optianalname]optionalproperty|optionalproperties.suffix
+numberordate-optionalurlpath[optianalname]optionalproperties.suffix
 ```
 
 |Name|Example|
 |---|---|
-|numberordate|1|
-|numberordate|2014-01-01|
-|numberordate|2014-01-01_15:15:15|
-|optionalurlpath|myurlpath?key=value|
-|optianalname|About|
-|optionalproperty|name=About|
-|optionalproperty|vis|
-|optionalproperties|vis&#124;nav|
-|suffix|md|
-|suffix|txt|
+|numberordate|**1** or **2014-01-01** or **2014-01-01_15:15:15**|
+|optionalurlpath|**myurl**|
+|optianalname|**About**|
+|optionalproperty|**name=About**. Multiple properties are delimited with a &#124; e.g., **vis&#124;nav**|
+|suffix|**md** or **txt**|
 
 If a number or date is present the file or directory is flagged as visible. That means the following filenames are visible:
 
@@ -45,7 +40,7 @@ Recursive means, if applied to a directory, its subdirectories will inherit the 
 |Name|Shortname|Description|
 |---|---|---|
 |hide|hid|Does not compile or copy the files. Also if a file/directory starts with a dot "." or ends with a "~", its hidden as well|
-|visible|vis|The file/directory becomes visible, that means also without the pattern 1-url.txt, the file/directory will be processed|
+|visible|vis|The file/directory becomes visible, that means also without the pattern 1-url.txt, the file/directory will be processed. The order is based on the filename|
 |copy|cp|The file/directory will be copied and not processed regardless of the pattern|
 |layout|l|If a layout is specified, then this property can be used in the template to change the design/layout. Example: 1-url\[Name\]layout=main.txt|
 
@@ -84,8 +79,9 @@ If layout is specified, all of its children will inherit the this layout propert
 |Name|Shortname|Description|
 |---|---|---|
 |name|n|A name given to the file or directory that can be used in the template. |
-|promote|prm|Content is promoted to the parent. The resulting item is treated as a file in the parent directory. If other files inside this directory are marked as promoted, only those files are promoted, otherwise all files are promoted|
-|nav| |Mark the folder as part of the navigation|
+|promote|prm|Content is promoted to the parent. The resulting item is treated as a file in the parent directory. If other files inside this directory are marked as promoted, only those files are promoted, otherwise the first file is promoted|
+|expose|exp|All content is promoted to the parent. The resulting item is treated as a file in the parent directory.|
+
 
 ### Example
 Alternatively [name] can be used as well. All three variants are treated the same:
@@ -103,9 +99,11 @@ Alternatively [name] can be used as well. All three variants are treated the sam
 |---|---|---|
 |asc| |Sort ascending. If no sorting is provided, auto-sort is assumed: for small numbers ascending, for large numbers (dates are converted to unix timestamps) descending|
 |desc|dsc|Sort ascending. If no sorting is provided, auto-sort is assumed: for small numbers ascending, for large numbers (dates are converted to unix timestamps) descending|
-|page|pag|Every visible document is compiled into one index.html, no other files are generated. If neither page or noindex is provided, every visible document is compiled into one index.html and other files are generated as well|
-|noindex|nidx|No index.html is generated. If neither page or noindex is provided, every visible document is compiled into one index.html and other files are generated as well|
+|nosplit|nosp|Every visible document is compiled into one index.html, no other files are generated. If neither page or noindex is provided, every visible document is compiled into one index.html as well as each visible document is compiled individually|
+|noindex|nidx|No index.html is generated. If neither page or noindex is provided, every visible document is compiled into one index.html as well as each visible document is compiled individually|
 |paging|p|The number of items per page|
+|nav| |Mark the folder as part of the navigation|
+
 
 The idea behind this syntax is that it should become clear from a filename what parameters are set. Thus, for parameters that have only a key, a 3-4 character abbreviation was chosen. For key-value parameters, a 1 charactor abbreviation was chosen, as it becomes clean from the value, what the parameter is.
 
