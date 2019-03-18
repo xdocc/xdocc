@@ -110,7 +110,8 @@ public class HandlerDirectory implements Handler {
                     all.add(new XItem(tmp));
                 }
                 return all; //get all promoted
-            } else if(item.getPromoted() && item.getItemsPromoted().isEmpty()) {
+            } else if(item.getPromoted() && item.getItemsPromoted().isEmpty() && item.getItems().get(0) != null) {
+                //TODO: check wy && item.getItems().get(0) != null is necessary!
                 List<XItem> one = new ArrayList<>(1);
                 one.add(new XItem(item.getItems().get(0)));
                 return one;
