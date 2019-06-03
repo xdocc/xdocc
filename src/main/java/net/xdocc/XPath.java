@@ -37,19 +37,19 @@ final public class XPath implements Comparable<XPath>, Serializable {
 
     private final static Pattern PATTERN_URL = Pattern
             .compile("([^/|.]*)([.]|[|]|$)");
-    
+
     //private final static List<String> KNOWN_EXTENSIONS = new ArrayList<>();
 
     @Getter
     private final String path;
 
     @Getter
-    private final Site site; 
-    
+    private final Site site;
+
     @Getter
     private final List<String> extensionList = new ArrayList<>(2);
     public static final String EXTENSION_LIST = "extensionlist";
-    
+
     @Getter
     private final Map<String, String> properties = new HashMap<>();
     public static final String PROPERTIES = "properties";
@@ -79,7 +79,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
     private String url;
     public static final String URL = "url";
 
-    
+
     private boolean visible;
 
     private final static Map<String, XPath> cache = new ConcurrentHashMap<>();
@@ -99,19 +99,19 @@ final public class XPath implements Comparable<XPath>, Serializable {
 
         this.path = path.toString();
         this.site = site;
-        
+
         String extensionFilteredFileName = findKnownExtensions(site, fileName());
         if (extensionList.size() > 0 || Files.isDirectory(path)) {
             this.visible = parse(extensionFilteredFileName, site.source().equals(path));
         } else {
             this.visible = false;
         }
-        
+
         if(!this.visible) {
              this.url = extensionFilteredFileName;
              extractName();
         }
-        
+
         if (Files.isRegularFile(path)) {
             parseFrontmatter();
         } else if (Files.isDirectory(path)) {
@@ -257,7 +257,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
         extensionList.clear();
         extensions = "";
         int len1 = site.handlers().size();
-        
+
         for (int i = 0; i < len1; i++) {
             int len2 = site.handlers().get(i).knownExtensions().size();
             for (int j = 0; j < len2; j++) {
@@ -450,7 +450,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
             return p.getParent().toString();
         }
     }
-    
+
     public String fileName() {
         Path p = Paths.get(path);
         if (p.getFileName() == null) {
@@ -465,7 +465,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
         String[] paths = Utils.createURLSplit(Paths.get(site.source()), this);
         return paths[paths.length - 1];
     }
-    
+
     public String getTargetURLFilename() {
         String[] paths = Utils.createURLSplit(Paths.get(site.source()), this);
         paths[paths.length - 1] = fileName();
@@ -481,7 +481,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
         String url = Utils.createURL(paths);
         return url;
     }
-    
+
     public int getTargetDepth() {
         String[] paths = Utils.createURLSplit(Paths.get(site.source()), this);
         return paths.length - (isDirectory() ? 0 : 1);
@@ -507,7 +507,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
         Path tmp = gen.resolve(url);
         return tmp;
     }
-    
+
     public Path resolveTargetFromPath(String url) {
         Path p = Paths.get(path);
         Path target = Paths.get(getTargetURL());
@@ -518,12 +518,12 @@ final public class XPath implements Comparable<XPath>, Serializable {
             return gen.resolve(target.getParent().resolve(url));
         }
     }
-    
+
     public XPath resolveSource(String url) {
         Path p = Paths.get(path);
         return XPath.get(site, p.resolve(url));
     }
-    
+
     public XPath getParent() {
         Path p = Paths.get(path);
         if (!Utils.isChild(p.getParent(), Paths.get(site.source()))) {
@@ -531,7 +531,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
         }
         return XPath.get(site, p.getParent());
     }
-    
+
     /**
      * @return True if the file should been compiled, e.g. compile from textile to html
      */
@@ -540,7 +540,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
     }
     public static final String IS_COMPILE = "iscompile";
 
-    
+
     /**
      * @return True if a file is hidden and only visible in the source folder
      */
@@ -553,14 +553,14 @@ final public class XPath implements Comparable<XPath>, Serializable {
         return hasRecursiveProperty("hide", "hid");
     }
     public static final String IS_HIDDEN = "ishidden";
-    
+
     public boolean isDirectory() {
         Path p = Paths.get(path);
         return Files.isDirectory(p);
     }
     public static final String IS_DIRECTORY = "isdirectory";
 
-    
+
     public boolean isVisible() {
         // first check if property "copy" is somewhere
         if (isCopy()) {
@@ -570,7 +570,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
         if (hasRecursiveProperty("visible","vis")) {
             return true;
         }
-        
+
         return visible;
     }
     public static final String IS_VISIBLE = "isvisible";
@@ -580,12 +580,12 @@ final public class XPath implements Comparable<XPath>, Serializable {
     }
     public static final String IS_ASCENDING = "isascending";
 
-    
+
     public boolean isDescending() {
         return properties != null && (properties.containsKey("desc") || properties.containsKey("dsc")) ;
     }
     public static final String IS_DESCENDING = "isdescending";
-    
+
 
     public boolean isAutoSort() {
         return !isDescending() && !isAscending();
@@ -649,33 +649,33 @@ final public class XPath implements Comparable<XPath>, Serializable {
     }
 
     /**
-     * 
-     * root/1-dir/test.txt
-     * root/1-dir/two.txt
-     * 
+     *
+     * root/1-dir/1-test.txt
+     * root/1-dir/1-two.txt
+     *
      * if page is set, it will produce
      * root/dir/index.html (contains test, two)
-     * 
+     *
      * if page is not set, it will produce
      * root/dir/index.html (contains test, two)
      * root/dir/test.html (only test)
      * root/dir/two.html (only two)
      */
-    public boolean isNoSplit() {
-        return isPropertyTrue("nosplit", "nosp");
+    public boolean isIndex() {
+        return isPropertyTrue("index", "idx");
         //items not rendered, only directory page, no link
     }
-    public static final String IS_NOSPLIT = "isnosplit";
+    public static final String IS_INDEX = "isindex";
 
     /**
-     * 
-     * root/1-dir/test.txt
-     * root/1-dir/two.txt
-     * 
+     *
+     * root/1-dir/1-test.txt
+     * root/1-dir/1-two.txt
+     *
      * if no index is set, it will produce
      * root/dir/test.html (only test)
      * root/dir/two.html (only two)
-     * 
+     *
      * if no index is not set, it will produce
      * root/dir/index.html (contains test, two)
      * root/dir/test.html (only test)
@@ -687,11 +687,24 @@ final public class XPath implements Comparable<XPath>, Serializable {
     }
     public static final String IS_NOINDEX = "isnoindex";
 
-    //dealing with recursion: a directory that is promoted, will be a like a content page for the parent
+
     public boolean isPromoted() {
         return isPropertyTrue("promote") || isPropertyTrue("prm");
     }
-    public static final String IS_PROMOTED = "ispromoted";
+    public static final String IS_PROMOTED_LIST = "ispromotedlist";
+    public boolean isPromotedItem() {
+        return isPropertyTrue("promote-item") || isPropertyTrue("prmit");
+    }
+    public static final String IS_PROMOTED_ITEM = "ispromoteditem";
+    public boolean isPromotedAll() {
+        return isPropertyTrue("promote-all") || isPropertyTrue("prmall");
+    }
+    public static final String IS_PROMOTED_ALL = "ispromotedall";
+    public boolean isPromotedAllItem() {
+        return isPropertyTrue("promote-all-item") || isPropertyTrue("prmitall");
+    }
+    public static final String IS_PROMOTED_ALL_ITEM = "ispromotedallitem";
+
 
     public boolean isExposed() {
         return isPropertyTrue("expose") || isPropertyTrue("exp");
@@ -702,13 +715,13 @@ final public class XPath implements Comparable<XPath>, Serializable {
         return isPropertyTrue("content") || isPropertyTrue("cont");
     }
     public static final String IS_CONTENT = "iscontent";
-    
-    
+
+
     public boolean isItemWritten() {
-        return !isNoSplit();
+        return !isIndex();
     }
     public static final String IS_WRITE = "iswrite";
-    
+
 
     //ordering extensions, can be combined with the rendering or with other ordering extensions
     //from above -> sum_nav, s_n, list_high_nav
@@ -767,19 +780,19 @@ final public class XPath implements Comparable<XPath>, Serializable {
         if(!(obj instanceof XPath)) {
             return false;
         }
-        
+
         XPath other = (XPath) obj;
-        
+
         return compareTo(other) == 0;
     }
-    
-    
+
+
 
     public boolean isRoot() {
         return path().equals(site.source());
     }
     public static final String IS_ROOT = "isroot";
-    
+
 
     public int getPageSize() {
         String pagesString = getProperty("p", "paging");
@@ -812,10 +825,10 @@ final public class XPath implements Comparable<XPath>, Serializable {
             }
         } while ((current = current.getParent()) != null);
 
-        
+
         return null;
     }
-    
+
      public boolean hasRecursiveProperty(String... names) {
         XPath current = this;
         do {
@@ -841,7 +854,7 @@ final public class XPath implements Comparable<XPath>, Serializable {
         }
     }
     public static final String FILESIZE = "filesize";
-    
+
     public long filesCount() {
         Path p = Paths.get(path);
         try {
@@ -856,14 +869,14 @@ final public class XPath implements Comparable<XPath>, Serializable {
         }
     }
     public static final String FILESCOUNT = "filescount";
-    
-    
+
+
 
     public String originalPath() {
         return isDirectory() ? getTargetURL() : getTargetURLPath();
     }
     public static final String ORIGINAL_PATH = "originalpath";
-    
+
     public String originalRoot() {
         Path p = Paths.get(path);
         return Utils.relativePathToRoot(Paths.get(site.source()), p);

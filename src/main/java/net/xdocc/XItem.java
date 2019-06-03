@@ -38,23 +38,24 @@ public class XItem implements Comparable<XItem>, Serializable {
     public static final String LINK = "link";
     public static final String ORIGINAL_LINK = "originallink";
     public static final String SRC_SETS = "srcsets";
-    
+
     // list
     public static final String ITEMS_URL = "itemsurl";
     public static final String ITEMS_NR = "itemsnr";
     public static final String ITEMS= "items";
-    public static final String ITEMS_PROMOTED_URL = "itemspromotedurl";
-    public static final String ITEMS_PROMOTED_NR = "itemspromotednr";
-    public static final String ITEMS_PROMOTED = "itemspromoted";
+    //public static final String ITEMS_PROMOTED_URL = "itemspromotedurl";
+    //public static final String ITEMS_PROMOTED_NR = "itemspromotednr";
+    //public static final String ITEMS_PROMOTED = "itemspromoted";
     public static final String DEPTH = "depth";
+    public static final String PROMOTE_DEPTH = "promotedepth";
     public static final String CONSUMES_DIRECTORY = "consumesdirectory";
-   
+
     // Utils
     public static final String DEBUG = "debug";
 
     private static final Logger LOG = LoggerFactory.getLogger(XItem.class);
     private static final long serialVersionUID = 136066054966377823L;
-    
+
     private final Generator generator;
     private final XPath xPath;
 
@@ -87,19 +88,19 @@ public class XItem implements Comparable<XItem>, Serializable {
             item.init(site);
         }
     }
-    
+
     public Generator documentGenerator() {
         return generator;
     }
-    
+
     public XPath xPath() {
         return xPath;
     }
-    
+
     private void initDepth() {
         generator.model().put(XItem.DEPTH, xPath.getTargetDepth());
     }
-    
+
     private void initXPath() {
         generator.model().put(XPath.NAME, xPath.name());
         generator.model().put(XPath.URL, xPath.url());
@@ -107,7 +108,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.NR, xPath.nr());
         generator.model().put(XPath.ORIGINAL_PATH, xPath.originalPath());
         generator.model().put(XPath.ORIGINAL_ROOT, xPath.originalRoot());
-        
+
         generator.model().put(XPath.FILENAME, xPath.fileName());
         generator.model().put(XPath.FILESCOUNT, xPath.filesCount());
         generator.model().put(XPath.FILESIZE, xPath.fileSize());
@@ -126,15 +127,18 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.IS_NAVIGATION, xPath.isNavigation());
         generator.model().put(XPath.IS_NOINDEX, xPath.isNoIndex());
         generator.model().put(XPath.IS_COPY, xPath.isCopy());
-        generator.model().put(XPath.IS_NOSPLIT, xPath.isNoSplit());
-        generator.model().put(XPath.IS_PROMOTED, xPath.isPromoted());
+        generator.model().put(XPath.IS_INDEX, xPath.isIndex());
+        generator.model().put(XPath.IS_PROMOTED_LIST, xPath.isPromoted());
+        generator.model().put(XPath.IS_PROMOTED_ITEM, xPath.isPromotedItem());
+        generator.model().put(XPath.IS_PROMOTED_ALL, xPath.isPromotedAll());
+        generator.model().put(XPath.IS_PROMOTED_ALL_ITEM, xPath.isPromotedAllItem());
         generator.model().put(XPath.IS_EXPOSED, xPath.isExposed());
         generator.model().put(XPath.IS_CONTENT, xPath.isContent());
         generator.model().put(XPath.IS_ROOT, xPath.isRoot());
         generator.model().put(XPath.IS_VISIBLE, xPath.isVisible());
         generator.model().put(XPath.IS_WRITE, xPath.isItemWritten());
     }
-    
+
     private void initNavigation() {
         Link global = xPath.site().globalNavigation();
         generator.model().put(NAVIGATION, global.getChildren());
@@ -152,7 +156,7 @@ public class XItem implements Comparable<XItem>, Serializable {
             generator.model().put(XItem.CURRENT_NAV, current);
         }
     }
-    
+
     /**
      * @return a list of documents if present in the model or null
      */
@@ -184,7 +188,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         return documents;
     }
 
-    public Map<String, XItem> getItemsPromotedUrl() {
+    /*public Map<String, XItem> getItemsPromotedUrl() {
         @SuppressWarnings("unchecked")
         Map<String, XItem> documents = (Map<String, XItem>) documentGenerator().model().get(ITEMS_PROMOTED_URL);
         if (documents == null) {
@@ -209,7 +213,7 @@ public class XItem implements Comparable<XItem>, Serializable {
             return Collections.emptyMap();
         }
         return documents;
-    }
+    }*/
 
     /**
      * @param documents The list of documents in a collection
@@ -219,7 +223,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         Map<String, XItem> promotedUrl = new LinkedHashMap<>();
         Map<String, XItem> promotedNr = new LinkedHashMap<>();
         Map<String, XItem> promoted = new LinkedHashMap<>();
-        for(XItem item:documents) {
+        /*for(XItem item:documents) {
             if(item.getPromoted()) {
                 promotedUrl.put(item.getUrl(), item);
                 promotedNr.put(Long.toString(item.getNr()), item);
@@ -228,7 +232,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         }
         documentGenerator().model().put(ITEMS_PROMOTED_URL, promotedUrl);
         documentGenerator().model().put(ITEMS_PROMOTED_NR, promotedNr);
-        documentGenerator().model().put(ITEMS_PROMOTED, promoted);
+        documentGenerator().model().put(ITEMS_PROMOTED, promoted);*/
 
         Map<String, XItem> itemsUrl = new LinkedHashMap<>();
         Map<String, XItem> itemsNr = new LinkedHashMap<>();
@@ -259,7 +263,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     public String getUrl() {
         return (String) generator.model().get(XPath.URL);
     }
-    
+
     public XItem setUrl(String url) {
         generator.model().put(XPath.URL, url);
         return this;
@@ -273,7 +277,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.DATE, date);
         return this;
     }
-    
+
     public long getNr() {
         return (long) generator.model().get(XPath.NR);
     }
@@ -282,16 +286,16 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.NR, nr);
         return this;
     }
-    
+
     public XItem setOriginalPath(String originalPath) {
         generator.model().put(XPath.ORIGINAL_PATH, originalPath);
         return this;
     }
-    
+
     public String getOriginalPath() {
         return (String) generator.model().get(XPath.ORIGINAL_PATH);
     }
-    
+
     public String getPath() {
         return (String) generator.model().get(PATH);
     }
@@ -300,7 +304,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(PATH, path);
         return this;
     }
-    
+
     public String getLink() {
         return (String) generator.model().get(LINK);
     }
@@ -318,11 +322,11 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(ORIGINAL_LINK, originalLink);
         return this;
     }
-    
+
     public String getOriginalRoot() {
         return (String) generator.model().get(XPath.ORIGINAL_ROOT);
     }
-    
+
     public String getRoot() {
         return (String) generator.model().get(ROOT);
     }
@@ -331,7 +335,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(ROOT, pathToRoot);
         return this;
     }
-    
+
     public String getFileName() {
         return (String) generator.model().get(XPath.FILENAME);
     }
@@ -340,7 +344,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.FILENAME, fileName);
         return this;
     }
-    
+
     public String getFileSize() {
         return (String) generator.model().get(XPath.FILESIZE);
     }
@@ -349,7 +353,7 @@ public class XItem implements Comparable<XItem>, Serializable {
         generator.model().put(XPath.FILESIZE, fileSize);
         return this;
     }
-    
+
     public String getFilesCount() {
         return (String) generator.model().get(XPath.FILESCOUNT);
     }
@@ -359,8 +363,17 @@ public class XItem implements Comparable<XItem>, Serializable {
         return this;
     }
 
-    public boolean getPromoted() {
-        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED));
+    public boolean getPromotedList() {
+        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED_LIST));
+    }
+    public boolean getPromotedItem() {
+        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED_ITEM));
+    }
+    public boolean getPromotedAll() {
+        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED_ALL));
+    }
+    public boolean getPromotedAllItem() {
+        return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_PROMOTED_ALL_ITEM));
     }
 
     public boolean getExposed() {
@@ -370,7 +383,7 @@ public class XItem implements Comparable<XItem>, Serializable {
     public boolean isDirectoryContent() {
         return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_CONTENT));
     }
-    
+
     public boolean getDirectory() {
         return BooleanUtils.isTrue((Boolean) generator.model().get(XPath.IS_DIRECTORY));
     }
@@ -474,13 +487,17 @@ public class XItem implements Comparable<XItem>, Serializable {
     public String getDebug() {
         return Utils.getDebug(generator.model());
     }
-    
+
     public void setDepth(Integer depth) {
         generator.model().put(DEPTH, depth);
     }
-    
+
     public Integer getDepth() {
         return (Integer) generator.model().get(DEPTH);
+    }
+
+    public Integer getPromoteDepth() {
+        return (Integer) generator.model().get(PROMOTE_DEPTH);
     }
 
     public Boolean getConsumesDirectory() {
@@ -525,7 +542,16 @@ public class XItem implements Comparable<XItem>, Serializable {
             sb.append(getFileName());
         }
         return sb.toString();
-    }    
+    }
+
+    public void incPromoteDepth() {
+        Integer depth = getPromoteDepth();
+        if(depth == null) {
+            generator.model().put(PROMOTE_DEPTH, 1);
+        } else {
+            generator.model().put(PROMOTE_DEPTH, depth + 1);
+        }
+    }
 
     public interface Generator {
         String generate();

@@ -79,13 +79,40 @@ public class HandlerDirectory implements Handler {
             doc = Utils.createDocument(site, xPath, null, "list");
 
             List<XItem> visible = new ArrayList<>(results.size());
+            //List<XItem> noIndex = new ArrayList<>(results.size());
             for(XItem item: results) {
-                if(item.xPath().isVisible() && !item.xPath().isDirectory()) {
+                //if()
+                if(!item.xPath().isNoIndex() && item.xPath().isVisible() && !item.xPath().isDirectory()) {
                     visible.add(item);
+
+
                 }
-                //iterate over item and check if that item is promoted
-                //if yes, add it to top according if exposed or promoted
-                visible.addAll(promoteItems(item));
+                if(item.xPath().isVisible() && item.xPath().isDirectory()) {
+                    if(item.getPromotedAll()) {
+                        visible.add(item);
+                    } else if(item.getPromotedAllItem()) {
+                        visible.addAll(item.getItems().values());
+                    } else if(item.getPromotedList()) {
+                        List<XItem> promotedList = new ArrayList<>();
+                        for(XItem itemPromoted:item.getItems().values()) {
+                            if(itemPromoted.getPromotedList() || itemPromoted.getPromotedItem()) {
+                                XItem tmp = new XItem(itemPromoted.xPath(), itemPromoted.documentGenerator());
+                                tmp.incPromoteDepth();
+                                promotedList.add(tmp);
+                            }
+                        }
+                        XItem tmp = new XItem(item.xPath(), item.documentGenerator());
+                        tmp.setItems(promotedList);
+                        visible.add(tmp);
+
+                    } else if(item.getPromotedItem()) {
+                        for(XItem itemPromoted:item.getItems().values()) {
+                            if(itemPromoted.getPromotedList() || itemPromoted.getPromotedItem()) {
+                                visible.add(itemPromoted);
+                            }
+                        }
+                    }
+                }
             }
             doc.setItems(visible);
 
@@ -100,30 +127,6 @@ public class HandlerDirectory implements Handler {
         cache.setCached(site, xPath, fromXPathList(results), doc, generatedFile);
         return doc;
 
-    }
-
-    private static List<XItem> promoteItems(XItem item) {
-        if(item.getTemplate() != null && item.getTemplate().equals("list") && !item.getItems().isEmpty()) {
-            if(item.getPromoted() && !item.getItemsPromoted().isEmpty()) {
-                List<XItem> all = new ArrayList<>(item.getItems().size());
-                for(XItem tmp:item.getItemsPromoted().values()) {
-                    all.add(new XItem(tmp));
-                }
-                return all; //get all promoted
-            } else if(item.getPromoted() && item.getItemsPromoted().isEmpty() && item.getItems().get(0) != null) {
-                //TODO: check wy && item.getItems().get(0) != null is necessary!
-                List<XItem> one = new ArrayList<>(1);
-                one.add(new XItem(item.getItems().get(0)));
-                return one;
-            } else if(item.getExposed()) {
-                List<XItem> all = new ArrayList<>(item.getItems().size());
-                for(XItem tmp:item.getItems().values()) {
-                    all.add(new XItem(tmp));
-                }
-                return all; //get all
-            }
-        }
-        return Collections.emptyList();
     }
 
     private static List<Path> fromXPathList(final List<XItem> results) {

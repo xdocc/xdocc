@@ -27,13 +27,14 @@ public class TestDelete {
         gen = Files.createTempDirectory("gen");
         cache = Files.createTempDirectory("cache").resolve("cache");
         Files.createDirectories(src.resolve(".templates"));
+        TestUtils.createFile(src, ".templates/page.ftl", "${content}");
     }
 
     @After
     public void tearDown() throws IOException {
         TestUtils.deleteDirectories(gen, src, cache);
     }
-    
+
     @Test
     public void testDelete() throws IOException, InterruptedException, ExecutionException {
         TestUtils.copyFile("imgs/label-2.jpg", src, "1-dir1/label-2.jpg");
@@ -41,14 +42,14 @@ public class TestDelete {
         TestUtils.createFile(gen, "del2.me", "h1. A headline");
         TestUtils.createFile(gen, "dir1/read.html", "h1. A headline");
         TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-2.jpg!");
-        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
+        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as key,item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
 
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
-        Assert.assertEquals("<p><img border=\"0\" src=\"./label-2.jpg\"/></p>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
+        Assert.assertEquals("<p><img border=\"0\" src=\"label-2.jpg\"/></p>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
         Assert.assertFalse(Files.exists(gen.resolve("dir1/del1.me")));
     }
-    
+
     @Test
     public void testDeleteNoImage() throws IOException, InterruptedException, ExecutionException {
         TestUtils.copyFile("imgs/label-2.jpg", src, "1-dir1/label-2.jpg");
@@ -56,14 +57,14 @@ public class TestDelete {
         TestUtils.createFile(gen, "del2.me", "h1. A headline");
         TestUtils.createFile(gen, "dir1/read.html", "h1. A headline");
         TestUtils.createFile(src, "1-dir1/1-read.textile", "!label-2.jpg! \"test\":label-2.jpg");
-        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
+        TestUtils.createFile(src, ".templates/list.ftl", "<#list items as key,item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
 
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertTrue(Files.exists(gen.resolve("dir1/label-2.jpg")));
-        Assert.assertEquals("<p><img border=\"0\" src=\"./label-2.jpg\"/> <a href=\"./label-2.jpg\">test</a></p>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
+        Assert.assertEquals("<p><img border=\"0\" src=\"label-2.jpg\"/> <a href=\"label-2.jpg\">test</a></p>", FileUtils.readFileToString(gen.resolve("dir1/read.html").toFile()));
     }
-    
+
     @Test
     public void testDeleteNoImage2() throws IOException, InterruptedException, ExecutionException {
         TestUtils.copyFile("imgs/label-2.jpg", src, "1-dir1/label-2.jpg");
@@ -79,7 +80,7 @@ public class TestDelete {
         Assert.assertTrue(Files.exists(gen.resolve("dir1/label-2.jpg")));
         Assert.assertTrue(Files.exists(gen.resolve("dir1/label-3.jpg")));
     }
-    
+
     @Test
     public void testDeleteDirector() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(gen, "dir1/del1.me", "h1. A headline");
@@ -87,7 +88,7 @@ public class TestDelete {
         TestUtils.createFile(gen, "del2.me", "h1. A headline");
         TestUtils.createFile(gen, "dir1/read.html", "h1. A headline");
         TestUtils.createFile(src, "1-dir1/1-read.textile", "hallo");
-        
+
         TestUtils.createFile(src, ".templates/list.ftl", "<#list items as item>[${item.content}]</#list>");
         TestUtils.createFile(src, ".templates/wikitext.ftl", "${content}");
         TestUtils.copyFile("imgs/label-2.jpg", gen, "dir1/label-2.jpg");

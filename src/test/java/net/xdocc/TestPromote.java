@@ -22,6 +22,7 @@ public class TestPromote {
         gen = Files.createTempDirectory("gen");
         cache = Files.createTempDirectory("cache").resolve("cache");
         Files.createDirectories(src.resolve(".templates"));
+        TestUtils.createFile(src, ".templates/page.ftl", "${content}");
     }
 
     @After
@@ -30,11 +31,22 @@ public class TestPromote {
     }
 
     @Test
+    public void testPromot01() throws IOException, InterruptedException, ExecutionException {
+        TestUtils.createFile(src, "2-item2.txt", "Item2");
+        TestUtils.createFile(src, "3-item3.txt", "Item3");
+        TestUtils.createFile(src, "4-item4.txt", "Item4");
+        TestUtils.createFile(src, "1-dir1[Dir]prm/1-item1", "Item1");
+
+        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
+        Assert.assertEquals("Item2Item3Item4", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
+    }
+
+    @Test
     public void testPromote1() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "2-item2.txt", "Item2");
         TestUtils.createFile(src, "3-item3.txt", "Item3");
         TestUtils.createFile(src, "4-item4.txt", "Item4");
-        TestUtils.createFile(src, "1-dir1[Dir]prm/1-item1.txt", "Item1");
+        TestUtils.createFile(src, "1-dir1[Dir]prm/1-item1|prm.txt", "Item1");
 
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("Item1Item2Item3Item4", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
@@ -104,24 +116,11 @@ public class TestPromote {
         TestUtils.createFile(src, "2-item2.txt", "Item2");
         TestUtils.createFile(src, "3-item3.txt", "Item3");
         TestUtils.createFile(src, "4-item4.txt", "Item4");
-        TestUtils.createFile(src, "1-dir1[Dir]prm/1-item1.txt", "Item1a");
-        TestUtils.createFile(src, "1-dir1[Dir]prm/2-item1.txt", "Item1b");
+        TestUtils.createFile(src, "1-dir1[Dir]prm/1-item1|prm.txt", "Item1a");
+        TestUtils.createFile(src, "1-dir1[Dir]prm/2-item1|prm.txt", "Item1b");
 
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Assert.assertEquals("Item1aItem1bItem2Item3Item4", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
-        Assert.assertEquals("Item1aItem1b", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
-    }
-
-    @Test
-    public void testPromoteOne2() throws IOException, InterruptedException, ExecutionException {
-        TestUtils.createFile(src, "2-item2.txt", "Item2");
-        TestUtils.createFile(src, "3-item3.txt", "Item3");
-        TestUtils.createFile(src, "4-item4.txt", "Item4");
-        TestUtils.createFile(src, "1-dir1[Dir]prm1/1-item1.txt", "Item1a");
-        TestUtils.createFile(src, "1-dir1[Dir]prm1/2-item1.txt", "Item1b");
-
-        Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
-        Assert.assertEquals("Item1aItem2Item3Item4", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
         Assert.assertEquals("Item1aItem1b", FileUtils.readFileToString(gen.resolve("dir1/index.html").toFile()));
     }
 

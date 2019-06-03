@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
 public class TestCache {
-    
+
     private static Path gen;
     private static Path src;
     private static Path cache;
@@ -28,13 +28,14 @@ public class TestCache {
         gen = Files.createTempDirectory("gen");
         cache = Files.createTempDirectory("cache").resolve("cache");
         Files.createDirectories(src.resolve(".templates"));
+        TestUtils.createFile(src, ".templates/page.ftl", "${content}");
     }
 
     @After
     public void tearDown() throws IOException {
         TestUtils.deleteDirectories(gen, src, cache);
     }
-    
+
     @Test
     public void testCache() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-test.txt", "this is a text file");
@@ -46,20 +47,20 @@ public class TestCache {
             Assert.assertEquals(2, Service.service().cache().hits());
         }
     }
-    
+
     @Test
     public void testImage() throws IOException, InterruptedException, ExecutionException {
         TestUtils.copyFile("imgs/label-1.jpg", src, "1-dir1.vis.prm/1-label.jpg");
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r", "-x");
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-r");
         Assert.assertEquals(3, Service.service().cache().hits());
-        
+
     }
 
     @Test
     public void testPromoteCache() throws IOException, InterruptedException, ExecutionException {
         TestUtils.createFile(src, "1-test.txt", "1");
-        TestUtils.createFile(src, "1-dir|prm/1-test2.txt", "2");
+        TestUtils.createFile(src, "1-dir|prm/1-test2|prm.txt", "2");
         Service.main("-s", src.toString(), "-g", gen.toString(), "-c", cache.toString() , "-x");
         while(Service.service().runCounter() < 1) {
             Thread.sleep(200);
@@ -67,7 +68,7 @@ public class TestCache {
         Assert.assertEquals("2", FileUtils.readFileToString(gen.resolve("dir/index.html").toFile()));
         Assert.assertEquals("2", FileUtils.readFileToString(gen.resolve("dir/test2.html").toFile()));
         Assert.assertEquals("21", FileUtils.readFileToString(gen.resolve("index.html").toFile()));
-        TestUtils.replaceFile(src, "1-dir|prm/1-test2.txt", "3");
+        TestUtils.replaceFile(src, "1-dir|prm/1-test2|prm.txt", "3");
         while(Service.service().runCounter() < 2) {
             Thread.sleep(200);
         }

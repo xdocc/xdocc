@@ -73,14 +73,14 @@ public class TestXPath {
         Assert.assertEquals(0, x.extensionList().size());
         Assert.assertEquals(false, x.isVisible());
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testException() throws IOException {
         Site site = new Site(src, gen);
         Path p = Paths.get("/tmp/1.txt");
         XPath.get(site, p);
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testException2() throws IOException {
         Site site = new Site(src, gen);
@@ -99,7 +99,7 @@ public class TestXPath {
         x = XPath.get(site, p);
         Assert.assertTrue(x.isVisible());
     }
-    
+
     @Test
     public void testURL() throws IOException {
         Site site = new Site(src, gen);
@@ -161,4 +161,7 @@ public class TestXPath {
         Assert.assertTrue(x.containsExtension("md"));
         Assert.assertTrue(x.isNavigation());
     }
+
+    //@Test
+    //public void test
 }
